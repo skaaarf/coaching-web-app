@@ -2,6 +2,7 @@
 
 import { signOut, useSession } from "next-auth/react"
 import { useState, useRef, useEffect } from "react"
+import Link from "next/link"
 
 export default function UserMenu() {
   const { data: session } = useSession()
@@ -19,8 +20,16 @@ export default function UserMenu() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  // Show login button for guest users
   if (!session?.user) {
-    return null
+    return (
+      <Link
+        href="/login"
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
+      >
+        ログイン
+      </Link>
+    )
   }
 
   return (
