@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json();
+    const { messages, systemPrompt } = await request.json();
 
     if (!Array.isArray(messages)) {
       return NextResponse.json(
@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemPrompt = `あなたは高校生の進路相談に特化したAI「みかたくん」です。
+    // Use provided systemPrompt or fall back to default
+    const defaultSystemPrompt = `あなたは高校生の進路相談に特化したAI「みかたくん」です。
 
 【役割】
 - ユーザーが「大学に行くか行かないか」を考え尽くすことをサポート
@@ -44,6 +45,8 @@ export async function POST(request: NextRequest) {
 
 常に日本語で応答し、ユーザーの発言を丁寧に受け止めたうえで1〜2つの問いかけを返してください。`;
 
+    const finalSystemPrompt = systemPrompt || defaultSystemPrompt;
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: finalSystemPrompt },
           ...messages.map((msg: { role: string; content: string }) => ({
             role: msg.role === "user" ? "user" : "assistant",
             content: msg.content,
