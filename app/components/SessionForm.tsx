@@ -18,6 +18,8 @@ export default function SessionForm({ onSubmit }: SessionFormProps) {
     }
   };
 
+  const isSubmitDisabled = question.trim().length === 0;
+
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-4">
       <div>
@@ -39,7 +41,8 @@ export default function SessionForm({ onSubmit }: SessionFormProps) {
       </div>
       <button
         type="submit"
-        className="w-full rounded-lg bg-zinc-900 px-6 py-3 font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-zinc-600 sm:w-auto sm:px-8"
+        disabled={isSubmitDisabled}
+        className="w-full rounded-lg bg-zinc-900 px-6 py-3 font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-zinc-600 sm:w-auto sm:px-8"
       >
         セッションを開始
       </button>

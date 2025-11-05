@@ -9,26 +9,28 @@ import TalkView from "./components/TalkView";
 const STORAGE_KEY = "coaching-sessions";
 
 export default function Home() {
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
-
-  // ローカルストレージからセッションを読み込む
-  useEffect(() => {
-    const storedSessions = localStorage.getItem(STORAGE_KEY);
-    if (storedSessions) {
-      try {
-        const parsed = JSON.parse(storedSessions);
-        // 既存のセッションにmessagesプロパティがない場合、空配列を追加
-        const sessionsWithMessages = parsed.map((session: Session) => ({
-          ...session,
-          messages: session.messages || [],
-        }));
-        setSessions(sessionsWithMessages);
-      } catch (error) {
-        console.error("Failed to parse stored sessions:", error);
-      }
+  const [sessions, setSessions] = useState<Session[]>(() => {
+    if (typeof window === "undefined") {
+      return [];
     }
-  }, []);
+
+    const storedSessions = window.localStorage.getItem(STORAGE_KEY);
+    if (!storedSessions) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(storedSessions);
+      return parsed.map((session: Session) => ({
+        ...session,
+        messages: session.messages || [],
+      }));
+    } catch (error) {
+      console.error("Failed to parse stored sessions:", error);
+      return [];
+    }
+  });
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
   // セッションが変更されたらローカルストレージに保存
   useEffect(() => {
