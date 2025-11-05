@@ -11,8 +11,13 @@ export default function ModuleCard({ module, progress }: ModuleCardProps) {
   const isStarted = messageCount > 0;
   const isCompleted = progress?.completed || false;
 
+  // Determine the correct path based on module type
+  const modulePath = module.moduleType === 'interactive'
+    ? `/interactive/${module.id}`
+    : `/module/${module.id}`;
+
   return (
-    <Link href={`/module/${module.id}`}>
+    <Link href={modulePath}>
       <div className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:border-gray-300">
         {/* Progress indicator */}
         {isStarted && (
