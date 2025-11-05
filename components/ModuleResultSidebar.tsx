@@ -191,7 +191,7 @@ function ParentSelfScaleResultSummary({ responses }: { responses: Record<number,
   );
 }
 
-function TimeMachineResultSummary({ letters }: { pastLetter: string; futureLetter: string }) {
+function TimeMachineResultSummary({ letters }: { letters: { pastLetter: string; futureLetter: string } }) {
   return (
     <div className="space-y-4">
       <div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-xl p-4 border border-indigo-200">
