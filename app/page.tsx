@@ -2,28 +2,31 @@
 
 import { useEffect, useState } from 'react';
 import { CAREER_MODULES } from '@/lib/modules';
-import { getAllModuleProgress, getUserInsights, saveUserInsights } from '@/lib/storage';
+import { getAllModuleProgress, getAllInteractiveModuleProgress, getUserInsights, saveUserInsights } from '@/lib/storage';
 import { generateInsights } from '@/lib/insights';
-import { ModuleProgress, UserInsights } from '@/types';
+import { ModuleProgress, InteractiveModuleProgress, UserInsights } from '@/types';
 import ModuleCard from '@/components/ModuleCard';
 import InsightsPanel from '@/components/InsightsPanel';
 import UserMenu from '@/components/UserMenu';
 
 export default function Home() {
   const [allProgress, setAllProgress] = useState<Record<string, ModuleProgress>>({});
+  const [allInteractiveProgress, setAllInteractiveProgress] = useState<Record<string, InteractiveModuleProgress>>({});
   const [insights, setInsights] = useState<UserInsights | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
 
   useEffect(() => {
     // Load progress and insights on mount
     const progress = getAllModuleProgress();
+    const interactiveProgress = getAllInteractiveModuleProgress();
     setAllProgress(progress);
+    setAllInteractiveProgress(interactiveProgress);
 
     const savedInsights = getUserInsights();
     setInsights(savedInsights);
 
     // Generate insights if we have progress but no insights
-    const hasProgress = Object.keys(progress).length > 0;
+    const hasProgress = Object.keys(progress).length > 0 || Object.keys(interactiveProgress).length > 0;
     if (hasProgress && !savedInsights) {
       regenerateInsights(progress);
     }
@@ -43,7 +46,7 @@ export default function Home() {
     }
   };
 
-  const hasAnyProgress = Object.keys(allProgress).length > 0;
+  const hasAnyProgress = Object.keys(allProgress).length > 0 || Object.keys(allInteractiveProgress).length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -74,14 +77,14 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Insights Panel */}
         {hasAnyProgress && (
-          <div className="mb-8">
+          <div className="mb-8 animate-fade-in">
             <InsightsPanel insights={insights} isLoading={isLoadingInsights} />
           </div>
         )}
 
         {/* Welcome message for new users */}
         {!hasAnyProgress && (
-          <div className="mb-8 bg-white rounded-2xl p-8 border border-gray-200 text-center">
+          <div className="mb-8 bg-white rounded-2xl p-8 border border-gray-200 text-center animate-fade-in">
             <div className="text-6xl mb-4">👋</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
               ようこそ！
@@ -105,6 +108,7 @@ export default function Home() {
                 key={module.id}
                 module={module}
                 progress={allProgress[module.id]}
+                interactiveProgress={allInteractiveProgress[module.id]}
               />
             ))}
           </div>
@@ -115,6 +119,22 @@ export default function Home() {
           <p>各モジュールは独立しているので、好きな順番で進められます</p>
         </div>
       </main>
+
+      <style jsx global>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.4s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,8 +1,9 @@
-import { ModuleProgress, UserInsights, Message } from '@/types';
+import { ModuleProgress, UserInsights, Message, InteractiveModuleProgress } from '@/types';
 
 const STORAGE_PREFIX = 'mikata-';
 const PROGRESS_KEY = `${STORAGE_PREFIX}progress`;
 const INSIGHTS_KEY = `${STORAGE_PREFIX}insights`;
+const INTERACTIVE_PROGRESS_KEY = `${STORAGE_PREFIX}interactive-progress`;
 
 export function getModuleProgress(moduleId: string): ModuleProgress | null {
   if (typeof window === 'undefined') return null;
@@ -107,7 +108,69 @@ export function clearAllData(): void {
   try {
     localStorage.removeItem(PROGRESS_KEY);
     localStorage.removeItem(INSIGHTS_KEY);
+    localStorage.removeItem(INTERACTIVE_PROGRESS_KEY);
   } catch (error) {
     console.error('Error clearing data:', error);
+  }
+}
+
+// Interactive module progress functions
+export function getInteractiveModuleProgress(moduleId: string): InteractiveModuleProgress | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const allProgress = localStorage.getItem(INTERACTIVE_PROGRESS_KEY);
+    if (!allProgress) return null;
+
+    const progressMap = JSON.parse(allProgress) as Record<string, InteractiveModuleProgress>;
+    const progress = progressMap[moduleId];
+
+    if (!progress) return null;
+
+    return {
+      ...progress,
+      lastUpdated: new Date(progress.lastUpdated)
+    };
+  } catch (error) {
+    console.error('Error loading interactive module progress:', error);
+    return null;
+  }
+}
+
+export function saveInteractiveModuleProgress(moduleId: string, progress: InteractiveModuleProgress): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const allProgress = localStorage.getItem(INTERACTIVE_PROGRESS_KEY);
+    const progressMap = allProgress ? JSON.parse(allProgress) : {};
+
+    progressMap[moduleId] = progress;
+    localStorage.setItem(INTERACTIVE_PROGRESS_KEY, JSON.stringify(progressMap));
+  } catch (error) {
+    console.error('Error saving interactive module progress:', error);
+  }
+}
+
+export function getAllInteractiveModuleProgress(): Record<string, InteractiveModuleProgress> {
+  if (typeof window === 'undefined') return {};
+
+  try {
+    const allProgress = localStorage.getItem(INTERACTIVE_PROGRESS_KEY);
+    if (!allProgress) return {};
+
+    const progressMap = JSON.parse(allProgress) as Record<string, InteractiveModuleProgress>;
+
+    // Parse dates
+    Object.keys(progressMap).forEach(moduleId => {
+      progressMap[moduleId] = {
+        ...progressMap[moduleId],
+        lastUpdated: new Date(progressMap[moduleId].lastUpdated)
+      };
+    });
+
+    return progressMap;
+  } catch (error) {
+    console.error('Error loading all interactive module progress:', error);
+    return {};
   }
 }

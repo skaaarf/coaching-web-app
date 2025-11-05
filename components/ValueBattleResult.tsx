@@ -2,14 +2,33 @@
 
 import { ValueBattleResult } from '@/types';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface Props {
   results: ValueBattleResult;
   onStartDialogue: () => void;
 }
 
+function ShareIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+  );
+}
+
 export default function ValueBattleResultView({ results, onStartDialogue }: Props) {
   const router = useRouter();
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Sort results by count
   const sortedResults = Object.entries(results)
@@ -18,12 +37,86 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
 
   const topValue = sortedResults[0];
 
+  const handleShare = async () => {
+    const shareText = `価値観バトルの結果！\n\n${sortedResults
+      .map(([value, count], i) => `${i + 1}位: ${value} (${count}回選択)`)
+      .join('\n')}\n\nみかたくんで自分の価値観を発見しよう`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: '価値観バトルの結果',
+          text: shareText
+        });
+      } catch (error) {
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (error) {
+        console.error('Failed to copy:', error);
+      }
+    }
+    setShowShareMenu(false);
+  };
+
+  const handleDownload = () => {
+    const text = sortedResults
+      .map(([value, count], i) => `${i + 1}位: ${value} (${count}回選択)`)
+      .join('\n');
+    const blob = new Blob([`価値観バトルの結果\n\n${text}`], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '価値観バトル結果.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setShowShareMenu(false);
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
+      <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg relative">
+        {/* Share button */}
+        <div className="absolute top-6 right-6">
+          <div className="relative">
+            <button
+              onClick={() => setShowShareMenu(!showShareMenu)}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="共有"
+            >
+              <ShareIcon />
+            </button>
+            {showShareMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 animate-fade-in">
+                <button
+                  onClick={handleShare}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                >
+                  <ShareIcon />
+                  <span className="ml-2">{copied ? 'コピーしました！' : '共有する'}</span>
+                </button>
+                <button
+                  onClick={handleDownload}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                >
+                  <DownloadIcon />
+                  <span className="ml-2">ダウンロード</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🎯</div>
+          <div className="text-6xl mb-4 animate-bounce-in">🎯</div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             あなたの価値観ランキング
           </h2>
@@ -37,7 +130,8 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
           {sortedResults.map(([value, count], index) => (
             <div
               key={value}
-              className="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200"
+              className="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 animate-slide-in"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 text-blue-700 font-bold text-lg rounded-full">
                 {index + 1}
@@ -90,6 +184,49 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        @keyframes slide-in {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes bounce-in {
+          0% {
+            transform: scale(0);
+          }
+          50% {
+            transform: scale(1.1);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+        .animate-slide-in {
+          animation: slide-in 0.4s ease-out both;
+        }
+        .animate-bounce-in {
+          animation: bounce-in 0.6s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
