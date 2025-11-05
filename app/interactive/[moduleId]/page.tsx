@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
-import { getInteractiveModuleProgress, saveInteractiveModuleProgress } from '@/lib/storage';
+import { getInteractiveModuleProgress, saveInteractiveModuleProgress, getAllInteractiveModuleProgress } from '@/lib/storage';
 import { Message, InteractiveModuleProgress } from '@/types';
 import ValueBattle from '@/components/ValueBattle';
 import ValueBattleResultView from '@/components/ValueBattleResult';
@@ -14,6 +14,8 @@ import ParentSelfScaleResult from '@/components/ParentSelfScaleResult';
 import TimeMachine from '@/components/TimeMachine';
 import BranchMap from '@/components/BranchMap';
 import ChatInterface from '@/components/ChatInterface';
+import ModuleResultSidebar from '@/components/ModuleResultSidebar';
+import DialogueHistorySidebar from '@/components/DialogueHistorySidebar';
 
 type InteractiveState =
   | { phase: 'activity'; activityData?: any }
@@ -31,6 +33,9 @@ export default function InteractiveModulePage() {
   const [error, setError] = useState<string | null>(null);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [savedProgress, setSavedProgress] = useState<InteractiveModuleProgress | null>(null);
+  const [showResultSidebar, setShowResultSidebar] = useState(true);
+  const [showHistorySidebar, setShowHistorySidebar] = useState(false);
+  const [allProgress, setAllProgress] = useState<Record<string, InteractiveModuleProgress>>({});
 
   useEffect(() => {
     if (!module || module.moduleType !== 'interactive') {
@@ -44,6 +49,10 @@ export default function InteractiveModulePage() {
       setSavedProgress(progress);
       setShowResumePrompt(true);
     }
+
+    // Load all progress for history sidebar
+    const allInteractiveProgress = getAllInteractiveModuleProgress();
+    setAllProgress(allInteractiveProgress);
   }, [module, router, moduleId]);
 
   const handleResumeProgress = () => {
@@ -334,6 +343,24 @@ export default function InteractiveModulePage() {
               {state.phase === 'dialogue' && (
                 <>
                   <button
+                    onClick={() => setShowHistorySidebar(!showHistorySidebar)}
+                    className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                    title="対話履歴"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setShowResultSidebar(!showResultSidebar)}
+                    className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                    title="結果を表示"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </button>
+                  <button
                     onClick={handleBackToResult}
                     className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors hidden sm:block"
                   >
@@ -440,13 +467,62 @@ export default function InteractiveModulePage() {
           )}
 
           {state.phase === 'dialogue' && (
-            <div className="max-w-5xl mx-auto h-[calc(100vh-180px)]">
-              <ChatInterface
-                messages={state.messages}
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                placeholder="メッセージを入力... (Enterで送信、Shift+Enterで改行)"
-              />
+            <div className="flex h-[calc(100vh-180px)] relative">
+              {/* History Sidebar - Left */}
+              {showHistorySidebar && (
+                <>
+                  {/* Mobile Overlay */}
+                  <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+                    onClick={() => setShowHistorySidebar(false)}
+                  />
+                  {/* Sidebar */}
+                  <div className={`${
+                    showHistorySidebar
+                      ? 'fixed lg:relative left-0 top-0 bottom-0 z-50 lg:z-0'
+                      : 'hidden'
+                  } w-80 lg:w-80 flex-shrink-0`}>
+                    <DialogueHistorySidebar
+                      allProgress={allProgress}
+                      currentModuleId={moduleId}
+                      onClose={() => setShowHistorySidebar(false)}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Chat Interface - Center */}
+              <div className="flex-1 min-w-0 max-w-5xl mx-auto w-full">
+                <ChatInterface
+                  messages={state.messages}
+                  onSendMessage={handleSendMessage}
+                  isLoading={isLoading}
+                  placeholder="メッセージを入力... (Enterで送信、Shift+Enterで改行)"
+                />
+              </div>
+
+              {/* Result Sidebar - Right */}
+              {showResultSidebar && (
+                <>
+                  {/* Mobile Overlay */}
+                  <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+                    onClick={() => setShowResultSidebar(false)}
+                  />
+                  {/* Sidebar */}
+                  <div className={`${
+                    showResultSidebar
+                      ? 'fixed lg:relative right-0 top-0 bottom-0 z-50 lg:z-0'
+                      : 'hidden'
+                  } w-80 lg:w-96 flex-shrink-0`}>
+                    <ModuleResultSidebar
+                      moduleId={moduleId}
+                      data={state.data}
+                      onClose={() => setShowResultSidebar(false)}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

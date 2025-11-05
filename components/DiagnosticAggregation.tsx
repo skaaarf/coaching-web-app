@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function DiagnosticAggregation({ interactiveProgress }: Props) {
-  // Extract insights from completed modules
+  // Extract insights from modules with progress (not just completed)
   const insights: Array<{
     moduleId: string;
     moduleName: string;
@@ -16,14 +16,13 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
     color: string;
   }> = [];
 
-  // Value Battle
-  if (interactiveProgress['value-battle']?.completed) {
+  // Value Battle - show if result or dialogue phase
+  if (interactiveProgress['value-battle']) {
     const data = interactiveProgress['value-battle'].data as any;
     if (data.phase === 'dialogue' || data.phase === 'result') {
       const results = data.data as Record<string, number>;
       const sortedResults = Object.entries(results)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 3);
+        .sort(([, a], [, b]) => b - a);
 
       insights.push({
         moduleId: 'value-battle',
@@ -32,14 +31,14 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
         color: 'from-blue-500 to-purple-600',
         findings: [
           `最重視: ${sortedResults[0][0]}`,
-          `上位3つ: ${sortedResults.map(([v]) => v).join('、')}`
+          `タイプ: ${sortedResults[0][1] >= 15 ? '明確な価値観' : sortedResults[0][1] >= 10 ? 'バランス型' : '多様な価値観'}`
         ]
       });
     }
   }
 
-  // Life Simulator
-  if (interactiveProgress['life-simulator']?.completed) {
+  // Life Simulator - show if result or dialogue phase
+  if (interactiveProgress['life-simulator']) {
     const data = interactiveProgress['life-simulator'].data as any;
     if (data.phase === 'dialogue' || data.phase === 'result') {
       const selections = data.data as Record<string, string[]>;
@@ -75,8 +74,8 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
     }
   }
 
-  // Parent Self Scale
-  if (interactiveProgress['parent-self-scale']?.completed) {
+  // Parent Self Scale - show if result or dialogue phase
+  if (interactiveProgress['parent-self-scale']) {
     const data = interactiveProgress['parent-self-scale'].data as any;
     if (data.phase === 'dialogue' || data.phase === 'result') {
       const responses = data.data as Record<number, number>;
@@ -93,8 +92,7 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
         icon: '⚖️',
         color: 'from-orange-500 to-purple-600',
         findings: [
-          `傾向: ${tendency}`,
-          `バランス: ${Math.round(100 - average)}% / ${Math.round(average)}%`
+          `傾向: ${tendency}`
         ]
       });
     }
@@ -111,7 +109,7 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
           あなたについて分かったこと
         </h2>
         <span className="text-sm text-gray-500">
-          {insights.length}個のモジュール完了
+          {insights.length}個のモジュール
         </span>
       </div>
 

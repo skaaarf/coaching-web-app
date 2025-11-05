@@ -150,7 +150,7 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
             あなたの価値観ランキング
           </h2>
           <p className="text-gray-600">
-            20回の選択から見えてきたもの
+            47回の選択から見えてきたもの
           </p>
         </div>
 
@@ -236,14 +236,14 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
               <div className="ml-4 flex-grow">
                 <div className="font-semibold text-gray-900">{value}</div>
                 <div className="text-sm text-gray-500">
-                  {count}回選択 ({Math.round((count / 20) * 100)}%)
+                  {count}回選択 ({Math.round((count / total) * 100)}%)
                 </div>
               </div>
               <div className="flex-shrink-0">
                 <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-blue-500"
-                    style={{ width: `${(count / 20) * 100}%` }}
+                    style={{ width: `${(count / total) * 100}%` }}
                   />
                 </div>
               </div>
@@ -266,7 +266,7 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
                   <div className="flex items-start">
                     <span className="text-blue-600 mr-2">•</span>
                     <p className="text-gray-700">
-                      <strong>最重視する価値観:</strong> {topValue[0]} ({topValue[1]}回選択)
+                      <strong>最重視する価値観:</strong> {topValue[0]}
                     </p>
                   </div>
                   <div className="flex items-start">
