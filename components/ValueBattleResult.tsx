@@ -251,6 +251,45 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
           ))}
         </div>
 
+        {/* Diagnostic Summary */}
+        <div className="mb-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-[2px] animate-fade-in" style={{ animationDelay: '1.5s' }}>
+          <div className="bg-white rounded-2xl p-6">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl">
+                📊
+              </div>
+              <div className="flex-grow">
+                <h3 className="font-bold text-gray-900 mb-2 text-lg">
+                  診断結果サマリー
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start">
+                    <span className="text-blue-600 mr-2">•</span>
+                    <p className="text-gray-700">
+                      <strong>最重視する価値観:</strong> {topValue[0]} ({topValue[1]}回選択)
+                    </p>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-blue-600 mr-2">•</span>
+                    <p className="text-gray-700">
+                      <strong>価値観タイプ:</strong> {
+                        topValue[1] >= 15 ? '明確な価値観' :
+                        topValue[1] >= 10 ? 'バランス型' : '多様な価値観'
+                      }
+                    </p>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-blue-600 mr-2">•</span>
+                    <p className="text-gray-700">
+                      <strong>上位3つの価値観:</strong> {sortedResults.slice(0, 3).map(([v]) => v).join('、')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Insight */}
         <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
           <h3 className="font-bold text-gray-900 mb-3 text-lg">

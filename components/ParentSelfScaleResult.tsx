@@ -193,6 +193,51 @@ export default function ParentSelfScaleResult({ responses, onStartDialogue }: Pr
           )}
         </div>
 
+        {/* Diagnostic Summary */}
+        <div className="mb-6 bg-gradient-to-r from-orange-500 to-purple-600 rounded-2xl p-[2px] animate-fade-in" style={{ animationDelay: '1.8s' }}>
+          <div className="bg-white rounded-2xl p-6">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-orange-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl">
+                ⚖️
+              </div>
+              <div className="flex-grow">
+                <h3 className="font-bold text-gray-900 mb-2 text-lg">
+                  診断結果サマリー
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    <p className="text-gray-700">
+                      <strong>全体的な傾向:</strong> {
+                        average < 35 ? '親の期待を強く意識' :
+                        average < 45 ? 'やや親の期待寄り' :
+                        average < 55 ? 'バランスが取れている' :
+                        average < 65 ? 'やや自分の気持ち寄り' : '自分の気持ちを優先'
+                      }
+                    </p>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    <p className="text-gray-700">
+                      <strong>バランス比:</strong> 親の期待{Math.round(100 - average)}% : 自分の気持ち{Math.round(average)}%
+                    </p>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-orange-600 mr-2">•</span>
+                    <p className="text-gray-700">
+                      <strong>特徴:</strong> {
+                        extremes.length > 0
+                          ? `${extremes.length}個の質問で明確な偏りあり`
+                          : '各質問で一貫した回答'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Insight */}
         <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
           <h3 className="font-bold text-gray-900 mb-3 text-lg">

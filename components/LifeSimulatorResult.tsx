@@ -138,6 +138,49 @@ export default function LifeSimulatorResult({ selections, onStartDialogue }: Pro
           </div>
         </div>
 
+        {/* Diagnostic Summary */}
+        <div className="mb-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl p-[2px] animate-fade-in" style={{ animationDelay: '1.5s' }}>
+          <div className="bg-white rounded-2xl p-6">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xl">
+                🎬
+              </div>
+              <div className="flex-grow">
+                <h3 className="font-bold text-gray-900 mb-2 text-lg">
+                  診断結果サマリー
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start">
+                    <span className="text-cyan-600 mr-2">•</span>
+                    <p className="text-gray-700">
+                      <strong>最重視する要素:</strong> {sortedAspects[0]?.[0]}
+                    </p>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-cyan-600 mr-2">•</span>
+                    <p className="text-gray-700">
+                      <strong>最も惹かれた人生:</strong> {
+                        pathCounts.A > pathCounts.B && pathCounts.A > pathCounts.C ? 'Aの人生（安定志向）' :
+                        pathCounts.B > pathCounts.C ? 'Bの人生（クリエイティブ志向）' : 'Cの人生（職人志向）'
+                      }
+                    </p>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-cyan-600 mr-2">•</span>
+                    <p className="text-gray-700">
+                      <strong>選択傾向:</strong> {
+                        Math.max(pathCounts.A, pathCounts.B, pathCounts.C) - Math.min(pathCounts.A, pathCounts.B, pathCounts.C) >= 2
+                          ? '特定の価値観に強く惹かれている'
+                          : 'バランスの取れた選択'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Insight */}
         <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
           <h3 className="font-bold text-gray-900 mb-3 text-lg">

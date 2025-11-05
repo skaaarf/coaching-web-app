@@ -8,6 +8,7 @@ import { ModuleProgress, InteractiveModuleProgress, UserInsights } from '@/types
 import ModuleCard from '@/components/ModuleCard';
 import InsightsPanel from '@/components/InsightsPanel';
 import UserMenu from '@/components/UserMenu';
+import DiagnosticAggregation from '@/components/DiagnosticAggregation';
 
 export default function Home() {
   const [allProgress, setAllProgress] = useState<Record<string, ModuleProgress>>({});
@@ -75,6 +76,11 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Diagnostic Aggregation */}
+        {hasAnyProgress && (
+          <DiagnosticAggregation interactiveProgress={allInteractiveProgress} />
+        )}
+
         {/* Insights Panel */}
         {hasAnyProgress && (
           <div className="mb-8 animate-fade-in">
