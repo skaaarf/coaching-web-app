@@ -33,14 +33,13 @@ export default function TalkView({
   // メッセージが更新されたら自動スクロール
   useEffect(() => {
     const lastMessage = session.messages[session.messages.length - 1];
-
     const container = scrollContainerRef.current;
 
-    if (!lastMessage || !container) {
+    if (!lastMessage || !container || lastMessage.role !== "user") {
       return;
     }
 
-    if (lastMessage.role === "user" && latestUserMessageRef.current) {
+    if (latestUserMessageRef.current) {
       const messageRect = latestUserMessageRef.current.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
       const offset = messageRect.top - containerRect.top + container.scrollTop;
