@@ -7,6 +7,7 @@ export interface Message {
 
 export interface Session {
   id: string;
+  title: string;
   question: string;
   createdAt: string;
   status: "active" | "completed";
