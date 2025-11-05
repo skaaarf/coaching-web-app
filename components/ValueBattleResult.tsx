@@ -37,6 +37,35 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
 
   const topValue = sortedResults[0];
 
+  // Prepare data for pie chart
+  const total = sortedResults.reduce((sum, [, count]) => sum + count, 0);
+  const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+
+  // Calculate pie chart segments
+  let currentAngle = -90; // Start from top
+  const pieSegments = sortedResults.map(([value, count], index) => {
+    const percentage = (count / total) * 100;
+    const angle = (percentage / 100) * 360;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + angle;
+    currentAngle = endAngle;
+
+    // Convert to radians
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+
+    // Calculate arc path
+    const x1 = 50 + 45 * Math.cos(startRad);
+    const y1 = 50 + 45 * Math.sin(startRad);
+    const x2 = 50 + 45 * Math.cos(endRad);
+    const y2 = 50 + 45 * Math.sin(endRad);
+
+    const largeArc = angle > 180 ? 1 : 0;
+    const path = `M 50 50 L ${x1} ${y1} A 45 45 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+    return { value, count, percentage, path, color: colors[index] };
+  });
+
   const handleShare = async () => {
     const shareText = `価値観バトルの結果！\n\n${sortedResults
       .map(([value, count], i) => `${i + 1}位: ${value} (${count}回選択)`)
@@ -123,6 +152,74 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
           <p className="text-gray-600">
             20回の選択から見えてきたもの
           </p>
+        </div>
+
+        {/* Pie Chart */}
+        <div className="mb-8 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-gray-200">
+          <h3 className="text-center font-semibold text-gray-900 mb-4">価値観の分布</h3>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+            {/* Chart */}
+            <div className="relative">
+              <svg viewBox="0 0 100 100" className="w-48 h-48 animate-spin-in">
+                {pieSegments.map((segment, index) => (
+                  <g key={segment.value}>
+                    <path
+                      d={segment.path}
+                      fill={segment.color}
+                      className="transition-opacity hover:opacity-80 cursor-pointer"
+                      style={{
+                        animation: `segment-appear 0.6s ease-out ${index * 0.1}s both`
+                      }}
+                    />
+                  </g>
+                ))}
+                {/* Center circle for donut effect */}
+                <circle cx="50" cy="50" r="20" fill="white" />
+                <text
+                  x="50"
+                  y="50"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="text-xs font-bold fill-gray-700"
+                >
+                  {total}
+                </text>
+                <text
+                  x="50"
+                  y="56"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="text-[0.3rem] fill-gray-500"
+                >
+                  選択
+                </text>
+              </svg>
+            </div>
+
+            {/* Legend */}
+            <div className="space-y-2">
+              {pieSegments.map((segment, index) => (
+                <div
+                  key={segment.value}
+                  className="flex items-center space-x-3 animate-slide-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div
+                    className="w-4 h-4 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: segment.color }}
+                  />
+                  <div className="flex-grow min-w-0">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {segment.value}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {segment.percentage.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Rankings */}
@@ -217,6 +314,26 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
             transform: scale(1);
           }
         }
+        @keyframes spin-in {
+          from {
+            transform: rotate(-90deg) scale(0.8);
+            opacity: 0;
+          }
+          to {
+            transform: rotate(0deg) scale(1);
+            opacity: 1;
+          }
+        }
+        @keyframes segment-appear {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
         .animate-fade-in {
           animation: fade-in 0.2s ease-out;
         }
@@ -225,6 +342,9 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
         }
         .animate-bounce-in {
           animation: bounce-in 0.6s ease-out;
+        }
+        .animate-spin-in {
+          animation: spin-in 0.8s ease-out;
         }
       `}</style>
     </div>

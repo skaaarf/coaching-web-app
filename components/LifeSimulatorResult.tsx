@@ -44,14 +44,49 @@ export default function LifeSimulatorResult({ selections, onStartDialogue }: Pro
           </p>
         </div>
 
+        {/* Bar Chart */}
+        <div className="mb-8 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-6 border border-gray-200">
+          <h3 className="text-center font-semibold text-gray-900 mb-6">惹かれたポイントTop5</h3>
+          <div className="flex items-end justify-between h-48 gap-3">
+            {sortedAspects.map(([aspect, count], index) => {
+              const maxCount = sortedAspects[0][1];
+              const heightPercent = (count / maxCount) * 100;
+              const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500', 'bg-green-500'];
+
+              return (
+                <div key={aspect} className="flex-1 flex flex-col items-center">
+                  {/* Bar */}
+                  <div className="w-full flex flex-col items-center justify-end h-full">
+                    <div className="text-sm font-bold text-gray-700 mb-2">
+                      {count}回
+                    </div>
+                    <div
+                      className={`w-full ${colors[index]} rounded-t-lg transition-all duration-700 ease-out`}
+                      style={{
+                        height: `${heightPercent}%`,
+                        animation: `bar-grow 0.8s ease-out ${index * 0.1}s both`
+                      }}
+                    />
+                  </div>
+                  {/* Label */}
+                  <div className="mt-3 text-xs text-center font-medium text-gray-700 line-clamp-2 w-full">
+                    {aspect}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Most selected aspects */}
         <div className="mb-8">
-          <h3 className="font-bold text-gray-900 mb-4">最も選んだのは:</h3>
+          <h3 className="font-bold text-gray-900 mb-4">詳細:</h3>
           <div className="space-y-3">
-            {sortedAspects.map(([aspect, count]) => (
+            {sortedAspects.map(([aspect, count], index) => (
               <div
                 key={aspect}
-                className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200"
+                className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200 animate-slide-in"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <span className="font-semibold text-gray-900">{aspect}</span>
                 <span className="text-blue-600 font-bold">({count}回)</span>
@@ -141,6 +176,30 @@ export default function LifeSimulatorResult({ selections, onStartDialogue }: Pro
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes bar-grow {
+          from {
+            height: 0%;
+          }
+          to {
+            height: var(--final-height);
+          }
+        }
+        @keyframes slide-in {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.4s ease-out both;
+        }
+      `}</style>
     </div>
   );
 }

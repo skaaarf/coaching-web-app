@@ -50,6 +50,84 @@ export default function ParentSelfScaleResult({ responses, onStartDialogue }: Pr
           </p>
         </div>
 
+        {/* Gauge Chart */}
+        <div className="mb-8 bg-gradient-to-br from-orange-50 to-purple-50 rounded-2xl p-6 border border-gray-200">
+          <div className="flex flex-col items-center">
+            {/* Semi-circular gauge */}
+            <div className="relative w-64 h-32">
+              <svg viewBox="0 0 200 100" className="w-full h-full">
+                {/* Background arc */}
+                <path
+                  d="M 10 90 A 90 90 0 0 1 190 90"
+                  fill="none"
+                  stroke="#e5e7eb"
+                  strokeWidth="20"
+                  strokeLinecap="round"
+                />
+                {/* Purple (parent) section */}
+                <path
+                  d="M 10 90 A 90 90 0 0 1 190 90"
+                  fill="none"
+                  stroke="#a855f7"
+                  strokeWidth="20"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(100 - average) * 2.83} 283`}
+                  className="transition-all duration-1000"
+                />
+                {/* Blue (self) section */}
+                <path
+                  d="M 10 90 A 90 90 0 0 1 190 90"
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="20"
+                  strokeLinecap="round"
+                  strokeDasharray={`${average * 2.83} 283`}
+                  strokeDashoffset={`-${(100 - average) * 2.83}`}
+                  className="transition-all duration-1000"
+                  style={{ animationDelay: '0.3s' }}
+                />
+                {/* Needle */}
+                <g
+                  transform={`rotate(${(average / 100) * 180 - 90} 100 90)`}
+                  className="transition-transform duration-1000"
+                  style={{ animation: 'needle-swing 1.5s ease-out' }}
+                >
+                  <line
+                    x1="100"
+                    y1="90"
+                    x2="100"
+                    y2="20"
+                    stroke="#1f2937"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="100" cy="90" r="6" fill="#1f2937" />
+                </g>
+              </svg>
+            </div>
+
+            {/* Labels */}
+            <div className="flex items-center justify-between w-full mt-4 px-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600">
+                  {Math.round(100 - average)}%
+                </div>
+                <div className="text-sm font-medium text-gray-600 mt-1">
+                  親の期待
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600">
+                  {Math.round(average)}%
+                </div>
+                <div className="text-sm font-medium text-gray-600 mt-1">
+                  自分の気持ち
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Balance display */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -59,13 +137,13 @@ export default function ParentSelfScaleResult({ responses, onStartDialogue }: Pr
 
           <div className="relative h-16 bg-gradient-to-r from-purple-100 via-gray-100 to-blue-100 rounded-full flex items-center px-4">
             <div
-              className="absolute w-6 h-6 bg-gray-800 rounded-full border-4 border-white shadow-lg transition-all duration-500"
-              style={{ left: `calc(${average}% - 12px)` }}
+              className="absolute w-6 h-6 bg-gray-800 rounded-full border-4 border-white shadow-lg transition-all duration-500 animate-slide-in"
+              style={{ left: `calc(${average}% - 12px)`, animationDelay: '1s' }}
             />
           </div>
 
           <div className="text-center mt-4">
-            <div className="inline-block px-6 py-3 bg-gray-100 rounded-xl">
+            <div className="inline-block px-6 py-3 bg-gray-100 rounded-xl animate-fade-in" style={{ animationDelay: '1.2s' }}>
               <span className="text-2xl font-bold text-gray-900">
                 {Math.round(100 - average)}% : {Math.round(average)}%
               </span>
@@ -146,6 +224,47 @@ export default function ParentSelfScaleResult({ responses, onStartDialogue }: Pr
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes needle-swing {
+          0% {
+            transform: rotate(-90deg);
+          }
+          60% {
+            transform: rotate(${(average / 100) * 180 - 85}deg);
+          }
+          80% {
+            transform: rotate(${(average / 100) * 180 - 95}deg);
+          }
+          100% {
+            transform: rotate(${(average / 100) * 180 - 90}deg);
+          }
+        }
+        @keyframes slide-in {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.6s ease-out both;
+        }
+        .animate-fade-in {
+          animation: fade-in 0.6s ease-out both;
+        }
+      `}</style>
     </div>
   );
 }
