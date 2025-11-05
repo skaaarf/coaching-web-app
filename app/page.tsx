@@ -179,6 +179,7 @@ export default function Home() {
   const [isSavingSession, setIsSavingSession] = useState(false);
   const [saveSessionError, setSaveSessionError] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<ToolCard | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const topicsSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -389,6 +390,7 @@ export default function Home() {
       messages: session.messages,
       topic: ensureTopic(session.topic),
     });
+    setIsSidebarOpen(false);
   };
   const handleUpdateActiveSession = (messages: Message[]) => {
     if (!activeSession) {
@@ -585,87 +587,12 @@ export default function Home() {
     if (tool) {
       handleOpenTool(tool);
     }
+    setIsSidebarOpen(false);
   };
   return (
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col lg:flex-row">
-        <aside className="hidden w-full max-w-sm flex-shrink-0 flex-col border-r border-zinc-200 bg-white/70 backdrop-blur lg:flex">
-          <div className="border-b border-zinc-200 px-6 py-5">
-            <p className="text-sm font-semibold text-zinc-700">みかたくん</p>
-            <p className="mt-1 text-xs text-zinc-500">これまでのトークとワーク</p>
-          </div>
-          <div className="flex-1 overflow-y-auto px-6 py-6">
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  トーク履歴
-                </h2>
-                <div className="mt-3 space-y-2">
-                  {recentSessions.length > 0 ? (
-                    recentSessions.slice(0, 8).map((session) => (
-                      <button
-                        key={session.id}
-                        onClick={() => handleResumeSession(session)}
-                        className={`w-full rounded-2xl border px-4 py-3 text-left text-sm transition hover:border-zinc-400 hover:bg-white ${
-                          activeSession?.id === session.id
-                            ? "border-zinc-900 bg-white shadow"
-                            : "border-zinc-200 bg-white/80"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between text-xs text-zinc-500">
-                          <span>{formatSidebarTimestamp(session.updatedAt || session.date)}</span>
-                          {session.topic ? (
-                            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-600">
-                              {session.topic.title}
-                            </span>
-                          ) : null}
-                        </div>
-                        <p className="mt-2 font-medium text-zinc-800">
-                          {session.insight || "気づきはまだ記録されていません"}
-                        </p>
-                      </button>
-                    ))
-                  ) : (
-                    <p className="text-xs text-zinc-500">
-                      まだトークはありません。テーマを選んで始めてみましょう。
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  ワーク
-                </h2>
-                <div className="mt-3 space-y-2">
-                  {toolHistory.length > 0 ? (
-                    toolHistory.map(({ usage, tool }) => (
-                      <button
-                        key={usage.id}
-                        onClick={() => handleSelectToolFromHistory(usage.id)}
-                        className="w-full rounded-2xl border border-zinc-200 bg-white/80 px-4 py-3 text-left text-sm transition hover:border-zinc-400 hover:bg-white"
-                      >
-                        <div className="flex items-center justify-between text-xs text-zinc-500">
-                          <span>{formatSidebarTimestamp(usage.lastOpenedAt)}</span>
-                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-                            {usage.openCount}回
-                          </span>
-                        </div>
-                        <p className="mt-2 font-medium text-zinc-800">{tool!.title}</p>
-                      </button>
-                    ))
-                  ) : (
-                    <p className="text-xs text-zinc-500">
-                      気になるワークを開くと、ここからいつでも戻れます。
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        <main className="flex-1 px-6 py-8 sm:px-10">
+      <div className="mx-auto min-h-screen w-full max-w-6xl px-6 py-8 sm:px-10">
+        <main>
           {hasSessions ? (
             <header className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-2">
@@ -675,12 +602,20 @@ export default function Home() {
                   左のバーからトークやワークを選んで、いつでも続きに戻れるよ。
                 </p>
               </div>
-              <button
-                onClick={scrollToTopics}
-                className="self-start rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
-              >
-                新しいテーマを選ぶ
-              </button>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-5 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900"
+                >
+                  履歴を開く
+                </button>
+                <button
+                  onClick={scrollToTopics}
+                  className="inline-flex items-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition hover:bg-zinc-800"
+                >
+                  新しいテーマを選ぶ
+                </button>
+              </div>
             </header>
           ) : (
             <header className="flex flex-col items-center gap-6 text-center">
@@ -693,12 +628,20 @@ export default function Home() {
                   進路のこと、一緒に考えよう。テーマを選ぶと、5分から始められるよ。
                 </p>
               </div>
-              <button
-                onClick={scrollToTopics}
-                className="mt-2 w-full max-w-xs rounded-2xl bg-zinc-900 px-6 py-3 text-lg font-medium text-white shadow transition hover:bg-zinc-800"
-              >
-                テーマを見てみる
-              </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="w-full rounded-2xl border border-zinc-200 bg-white px-6 py-3 text-lg font-medium text-zinc-700 shadow transition hover:border-zinc-400 hover:text-zinc-900 sm:w-auto"
+                >
+                  履歴を見る
+                </button>
+                <button
+                  onClick={scrollToTopics}
+                  className="w-full rounded-2xl bg-zinc-900 px-6 py-3 text-lg font-medium text-white shadow transition hover:bg-zinc-800 sm:w-auto"
+                >
+                  テーマを見てみる
+                </button>
+              </div>
             </header>
           )}
 
@@ -873,6 +816,99 @@ export default function Home() {
           )}
         </main>
       </div>
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex h-full w-full max-w-sm transform border-r border-zinc-200 bg-white/80 backdrop-blur transition-transform duration-300 ease-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-5">
+          <div>
+            <p className="text-sm font-semibold text-zinc-700">みかたくん</p>
+            <p className="mt-1 text-xs text-zinc-500">これまでのトークとワーク</p>
+          </div>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-800"
+          >
+            閉じる
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">トーク履歴</h2>
+              <div className="mt-3 space-y-2">
+                {recentSessions.length > 0 ? (
+                  recentSessions.slice(0, 8).map((session) => (
+                    <button
+                      key={session.id}
+                      onClick={() => handleResumeSession(session)}
+                      className={`w-full rounded-2xl border px-4 py-3 text-left text-sm transition hover:border-zinc-400 hover:bg-white ${
+                        activeSession?.id === session.id
+                          ? "border-zinc-900 bg-white shadow"
+                          : "border-zinc-200 bg-white/80"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-xs text-zinc-500">
+                        <span>{formatSidebarTimestamp(session.updatedAt || session.date)}</span>
+                        {session.topic ? (
+                          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-600">
+                            {session.topic.title}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 font-medium text-zinc-800">
+                        {session.insight || "気づきはまだ記録されていません"}
+                      </p>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-xs text-zinc-500">
+                    まだトークはありません。テーマを選んで始めてみましょう。
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">ワーク</h2>
+              <div className="mt-3 space-y-2">
+                {toolHistory.length > 0 ? (
+                  toolHistory.map(({ usage, tool }) => (
+                    <button
+                      key={usage.id}
+                      onClick={() => handleSelectToolFromHistory(usage.id)}
+                      className="w-full rounded-2xl border border-zinc-200 bg-white/80 px-4 py-3 text-left text-sm transition hover:border-zinc-400 hover:bg-white"
+                    >
+                      <div className="flex items-center justify-between text-xs text-zinc-500">
+                        <span>{formatSidebarTimestamp(usage.lastOpenedAt)}</span>
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                          {usage.openCount}回
+                        </span>
+                      </div>
+                      <p className="mt-2 font-medium text-zinc-800">{tool!.title}</p>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-xs text-zinc-500">
+                    気になるワークを開くと、ここからいつでも戻れます。
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {isSidebarOpen && (
+        <button
+          type="button"
+          aria-label="サイドバーを閉じる"
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/20"
+        />
+      )}
 
       {selectedTool ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 px-6 py-10">
