@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Session, Message } from "./types/session";
-import SessionForm from "./components/SessionForm";
 import SessionHistory from "./components/SessionHistory";
 import TalkView from "./components/TalkView";
 
