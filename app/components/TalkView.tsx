@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Session, Message } from "../types/session";
 
 interface TalkViewProps {
@@ -18,11 +18,86 @@ export default function TalkView({
   const [isLoading, setIsLoading] = useState(false);
   const [hasAutoReplied, setHasAutoReplied] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const latestUserMessageRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const lastUserMessageId = useMemo(() => {
+    for (let i = session.messages.length - 1; i >= 0; i--) {
+      if (session.messages[i].role === "user") {
+        return session.messages[i].id;
+      }
+    }
+    return null;
+  }, [session.messages]);
 
   // メッセージが更新されたら自動スクロール
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [session.messages, isLoading]);
+    const lastMessage = session.messages[session.messages.length - 1];
+
+    const container = scrollContainerRef.current;
+
+    if (!lastMessage || !container) {
+      return;
+    }
+
+    if (lastMessage.role === "user" && latestUserMessageRef.current) {
+      const messageRect = latestUserMessageRef.current.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const offset = messageRect.top - containerRect.top + container.scrollTop;
+
+      container.scrollTo({
+        top: Math.max(offset - 16, 0),
+        behavior: "smooth",
+      });
+      return;
+    }
+
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [session.messages]);
+
+  const fetchAIResponse = useCallback(
+    async (messages: Message[]) => {
+      setIsLoading(true);
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: messages,
+            sessionQuestion: session.question,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to get AI response");
+        }
+
+        const data = await response.json();
+        const coachMessage: Message = {
+          id: crypto.randomUUID(),
+          content: data.message,
+          role: "coach",
+          createdAt: new Date().toISOString(),
+        };
+        onUpdateSession(session.id, [...messages, coachMessage]);
+      } catch (error) {
+        console.error("Error sending message:", error);
+        const errorMessage: Message = {
+          id: crypto.randomUUID(),
+          content: "申し訳ございません。エラーが発生しました。もう一度お試しください。",
+          role: "coach",
+          createdAt: new Date().toISOString(),
+        };
+        onUpdateSession(session.id, [...messages, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [onUpdateSession, session.id, session.question]
+  );
 
   // 最初のメッセージに自動応答
   useEffect(() => {
@@ -37,48 +112,7 @@ export default function TalkView({
       setHasAutoReplied(true);
       fetchAIResponse(session.messages);
     }
-  }, [session.messages, hasAutoReplied, isLoading]);
-
-  const fetchAIResponse = async (messages: Message[]) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: messages,
-          sessionQuestion: session.question,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to get AI response");
-      }
-
-      const data = await response.json();
-      const coachMessage: Message = {
-        id: crypto.randomUUID(),
-        content: data.message,
-        role: "coach",
-        createdAt: new Date().toISOString(),
-      };
-      onUpdateSession(session.id, [...messages, coachMessage]);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      const errorMessage: Message = {
-        id: crypto.randomUUID(),
-        content: "申し訳ございません。エラーが発生しました。もう一度お試しください。",
-        role: "coach",
-        createdAt: new Date().toISOString(),
-      };
-      onUpdateSession(session.id, [...messages, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [session.messages, hasAutoReplied, isLoading, fetchAIResponse]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,33 +187,37 @@ export default function TalkView({
     </div>
   );
 
-  const renderMessageBubble = (message: Message) => (
-    <div
-      key={message.id}
-      className={`flex ${
-        message.role === "user" ? "justify-end" : "justify-start"
-      }`}
-    >
+  const renderMessageBubble = (message: Message) => {
+    const isUserMessage = message.role === "user";
+    const isLatestUserMessage = isUserMessage && message.id === lastUserMessageId;
+
+    return (
       <div
-        className={`max-w-[80%] rounded-lg px-4 py-2 ${
-          message.role === "user"
-            ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-            : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-        }`}
+        key={message.id}
+        ref={isLatestUserMessage ? latestUserMessageRef : undefined}
+        className={`flex ${isUserMessage ? "justify-end" : "justify-start"}`}
       >
-        <p className="whitespace-pre-wrap">{message.content}</p>
-        <p
-          className={`mt-1 text-xs ${
-            message.role === "user"
-              ? "text-zinc-300 dark:text-zinc-600"
-              : "text-zinc-500 dark:text-zinc-400"
+        <div
+          className={`max-w-[80%] rounded-lg px-4 py-2 ${
+            isUserMessage
+              ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+              : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
           }`}
         >
-          {formatTime(message.createdAt)}
-        </p>
+          <p className="whitespace-pre-wrap">{message.content}</p>
+          <p
+            className={`mt-1 text-xs ${
+              isUserMessage
+                ? "text-zinc-300 dark:text-zinc-600"
+                : "text-zinc-500 dark:text-zinc-400"
+            }`}
+          >
+            {formatTime(message.createdAt)}
+          </p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -217,7 +255,7 @@ export default function TalkView({
         </div>
 
         {/* メッセージエリア */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div ref={scrollContainerRef} className="relative flex-1 overflow-y-auto px-6 py-4">
           <div className="space-y-4">
             {session.messages.length === 0 && (
               <div className="flex items-center justify-center py-12">
@@ -228,7 +266,7 @@ export default function TalkView({
             )}
             {earlierMessages.map(renderMessageBubble)}
             {focusedMessages.length > 0 ? (
-              <div className="min-h-[calc(100vh-16rem)] rounded-2xl border border-zinc-200 bg-white/60 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+              <div className="min-h-[150vh] rounded-2xl border border-zinc-200 bg-white/60 p-4 pb-24 pt-20 dark:border-zinc-800 dark:bg-zinc-900/60">
                 <div className="flex h-full flex-col justify-end space-y-4">
                   {focusedMessages.map(renderMessageBubble)}
                   {isLoading && typingIndicator}
