@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, sessionQuestion } = await request.json();
+    const { session, messages } = await request.json();
+
+    if (!session || !Array.isArray(messages)) {
+      return NextResponse.json(
+        { error: "Invalid payload" },
+        { status: 400 }
+      );
+    }
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -12,17 +19,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // コーチング用のシステムプロンプト
-    const systemPrompt = `あなたは経験豊富なコーチです。ユーザーの質問や悩みに対して、共感的で建設的なフィードバックを提供してください。
-セッションの初期質問: ${sessionQuestion}
+    const modeDescription =
+      session.moduleKind === "tool"
+        ? "セルフワークをガイドする伴走役として、質問と小さな提案をバランスよく返してください。"
+        : "対話で考えを深める伴走役として、質問中心で気づきを引き出してください。";
 
-以下の原則に従って応答してください：
-- 質問をして、ユーザーに深く考えてもらう
-- 具体的で実践的なアドバイスを提供する
-- 励ましとサポートを示す
-- 日本語で応答する`;
+    const systemPrompt = `あなたは高校生の進路相談をサポートするAIコーチ「みかたくん」です。${modeDescription}
+- 断定せず、「〜かもしれないね」「どう感じた?」など柔らかい語尾を使う
+- 親や周囲の期待と本人の気持ちを分けて確認する
+- 一度に質問は2つまで
+- 日本語で応答する
 
-    // OpenAI APIを呼び出す
+セッションテーマ: ${session.title}
+補足: ${session.prompt}
+関連タグ: ${(session.tags || []).join(", ")}`;
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -70,4 +81,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

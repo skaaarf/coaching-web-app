@@ -8,16 +8,20 @@ interface SessionCardProps {
   onClick: (session: Session) => void;
 }
 
+const KIND_LABEL: Record<Session["moduleKind"], string> = {
+  talk: "トーク",
+  tool: "ワーク",
+};
+
 export default function SessionCard({
   session,
   onDelete,
   onClick,
 }: SessionCardProps) {
-  const formatDate = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "long",
+    return date.toLocaleString("ja-JP", {
+      month: "numeric",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
@@ -30,36 +34,37 @@ export default function SessionCard({
   };
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => onClick(session)}
-      className="w-full cursor-pointer rounded-lg border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+      className="w-full rounded-xl border border-zinc-200 bg-white p-5 text-left shadow-sm transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="mb-2 flex items-center gap-2">
-            <span
-              className={`rounded-full px-2 py-1 text-xs font-medium ${
-                session.status === "active"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                  : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-              }`}
-            >
-              {session.status === "active" ? "進行中" : "完了"}
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+              {KIND_LABEL[session.moduleKind]}
             </span>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              {formatDate(session.createdAt)}
-            </span>
-            {session.messages && session.messages.length > 0 && (
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                {session.messages.length}件のメッセージ
+            <span>{formatDateTime(session.updatedAt || session.createdAt)}</span>
+            {session.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200"
+              >
+                #{tag}
               </span>
-            )}
+            ))}
           </div>
-          <p className="text-zinc-900 dark:text-zinc-100">{session.title}</p>
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            {session.title}
+          </h3>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">
+            {session.insight || session.prompt}
+          </p>
         </div>
         <button
           onClick={handleDelete}
-          className="ml-4 rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-red-600 dark:hover:bg-zinc-800 dark:hover:text-red-400"
+          className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-500 dark:hover:bg-zinc-800 dark:hover:text-red-300"
           aria-label="セッションを削除"
         >
           <svg
@@ -68,17 +73,16 @@ export default function SessionCard({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            strokeWidth={1.5}
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              d="M6 18L18 6M6 6l12 12"
             />
           </svg>
         </button>
       </div>
-    </div>
+    </button>
   );
 }
-
