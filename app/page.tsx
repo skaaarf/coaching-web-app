@@ -1,196 +1,368 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Session, Message } from "./types/session";
-import SessionHistory from "./components/SessionHistory";
+import { useEffect, useMemo, useState } from "react";
 import TalkView from "./components/TalkView";
+import {
+  ActiveSession,
+  Message,
+  SessionRecord,
+  SessionStore,
+} from "./types/session";
 
-const STORAGE_KEY = "coaching-sessions";
+const STORAGE_KEY = "mikata-session-store";
 
-// タイトル生成関数：メッセージから自動的にタイトルを生成
-const generateTitle = (message: string): string => {
-  // 最初の50文字まで、または最初の句点まで
-  const firstSentence = message.split(/[。.!?！？]/)[0];
-  const title = firstSentence.length > 40
-    ? firstSentence.substring(0, 40) + "..."
-    : firstSentence;
-  return title || "新しいセッション";
+const GREETING_MESSAGE =
+  "こんにちは。前回の話の続きからでもいいし、新しいことでもいいよ。何を話したい?";
+
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+
+const loadStore = (): SessionStore => ({ sessions: [], overallSummary: "" });
+
+const formatTimelineDate = (date: string) => {
+  const target = new Date(date);
+  const month = target.getMonth() + 1;
+  const day = target.getDate();
+  const weekday = WEEKDAYS[target.getDay()];
+  return `${month}/${day}(${weekday})`;
+};
+
+const formatDuration = (minutes: number) => {
+  if (minutes <= 0) {
+    return "合計0分";
+  }
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  if (hours === 0) {
+    return `合計${mins}分`;
+  }
+  return `合計${hours}時間${mins}分`;
+};
+
+const formatLastSession = (sessions: SessionRecord[]) => {
+  if (sessions.length === 0) {
+    return "-";
+  }
+  const lastSession = sessions[sessions.length - 1];
+  const diff = Date.now() - new Date(lastSession.date).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) {
+    return "たった今";
+  }
+  if (minutes < 60) {
+    return `${minutes}分前`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours}時間前`;
+  }
+  const days = Math.floor(hours / 24);
+  return `${days}日前`;
+};
+
+const getLastUserMessage = (messages: Message[]) => {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    if (messages[i].role === "user") {
+      return messages[i];
+    }
+  }
+  return null;
 };
 
 export default function Home() {
-  const [sessions, setSessions] = useState<Session[]>(() => {
-    if (typeof window === "undefined") {
-      return [];
-    }
+  const [store, setStore] = useState<SessionStore>(loadStore);
+  const [hasHydrated, setHasHydrated] = useState(false);
+  const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
+  const [isEndingSession, setIsEndingSession] = useState(false);
+  const [endSessionError, setEndSessionError] = useState<string | null>(null);
 
-    const storedSessions = window.localStorage.getItem(STORAGE_KEY);
-    if (!storedSessions) {
-      return [];
-    }
-
-    try {
-      const parsed = JSON.parse(storedSessions);
-      return parsed.map((session: Session) => ({
-        ...session,
-        messages: session.messages || [],
-        title: session.title || generateTitle(session.question), // 既存セッションの互換性
-      }));
-    } catch (error) {
-      console.error("Failed to parse stored sessions:", error);
-      return [];
-    }
-  });
-  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
-  const [initialMessage, setInitialMessage] = useState("");
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
-
-  // セッションが変更されたらローカルストレージに保存
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-  }, [sessions]);
-
-  // 最初のメッセージ送信ハンドラー：セッションを自動作成
-  const handleInitialMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!initialMessage.trim() || isCreatingSession) return;
-
-    setIsCreatingSession(true);
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      content: initialMessage.trim(),
-      role: "user",
-      createdAt: new Date().toISOString(),
-    };
-
-    const newSession: Session = {
-      id: crypto.randomUUID(),
-      title: generateTitle(initialMessage.trim()),
-      question: initialMessage.trim(),
-      createdAt: new Date().toISOString(),
-      status: "active",
-      messages: [userMessage],
-    };
-
-    setSessions((prev) => [newSession, ...prev]);
-    setSelectedSession(newSession);
-    setInitialMessage("");
-    setIsCreatingSession(false);
-  };
-
-  const handleSessionDelete = (id: string) => {
-    if (confirm("このセッションを削除してもよろしいですか？")) {
-      setSessions((prev) => prev.filter((session) => session.id !== id));
-      if (selectedSession?.id === id) {
-        setSelectedSession(null);
+    if (typeof window === "undefined") {
+      return;
+    }
+    try {
+      const storedValue = window.localStorage.getItem(STORAGE_KEY);
+      if (!storedValue) {
+        setHasHydrated(true);
+        return;
       }
+      const parsed = JSON.parse(storedValue);
+      if (parsed.sessions && Array.isArray(parsed.sessions)) {
+        setStore({
+          sessions: parsed.sessions,
+          overallSummary: parsed.overallSummary || "",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load session store", error);
+    } finally {
+      setHasHydrated(true);
     }
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated || typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  }, [store, hasHydrated]);
+
+  const sortedSessions = useMemo(
+    () =>
+      [...store.sessions].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      ),
+    [store.sessions]
+  );
+
+  const handleStartSession = () => {
+    if (activeSession) {
+      return;
+    }
+    setEndSessionError(null);
+    const now = new Date().toISOString();
+    const greeting: Message = {
+      id: crypto.randomUUID(),
+      content: GREETING_MESSAGE,
+      role: "assistant",
+      createdAt: now,
+    };
+    setActiveSession({
+      id: crypto.randomUUID(),
+      startedAt: now,
+      messages: [greeting],
+    });
   };
 
-  const handleSessionClick = (session: Session) => {
-    setSelectedSession(session);
-  };
-
-  const handleUpdateSession = (sessionId: string, messages: Message[]) => {
-    setSessions((prev) =>
-      prev.map((session) =>
-        session.id === sessionId ? { ...session, messages } : session
-      )
-    );
-    // 選択中のセッションも更新
-    if (selectedSession?.id === sessionId) {
-      setSelectedSession({ ...selectedSession, messages });
-    }
+  const handleUpdateActiveSession = (messages: Message[]) => {
+    setActiveSession((prev) => (prev ? { ...prev, messages } : prev));
   };
 
   const handleCloseTalkView = () => {
-    setSelectedSession(null);
+    if (isEndingSession) {
+      return;
+    }
+    setActiveSession(null);
   };
 
-  // セッションを日付の新しい順にソート
-  const sortedSessions = [...sessions].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  const handleCompleteSession = async () => {
+    if (!activeSession) {
+      return;
+    }
+
+    setEndSessionError(null);
+    setIsEndingSession(true);
+
+    try {
+      const response = await fetch("/api/summarize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: activeSession.messages,
+          previousSessions: store.sessions.map((session, index) => ({
+            index: index + 1,
+            date: session.date,
+            insight: session.insight,
+            lastUserMessage: getLastUserMessage(session.messages)?.content || "",
+          })),
+          previousOverallSummary: store.overallSummary,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "要約の生成に失敗しました");
+      }
+
+      const data = await response.json();
+      const sessionInsight = data.session_insight as string;
+      const overallSummary = data.overall_summary as string;
+
+      if (!sessionInsight || !overallSummary) {
+        throw new Error("AIの応答を解析できませんでした");
+      }
+
+      const durationMinutes = Math.max(
+        1,
+        Math.round(
+          (Date.now() - new Date(activeSession.startedAt).getTime()) / 60000
+        )
+      );
+
+      const newSession: SessionRecord = {
+        id: activeSession.id,
+        date: activeSession.startedAt,
+        messages: activeSession.messages,
+        insight: sessionInsight,
+        durationMinutes,
+      };
+
+      setStore((prev) => ({
+        sessions: [...prev.sessions, newSession],
+        overallSummary,
+      }));
+      setActiveSession(null);
+    } catch (error) {
+      console.error(error);
+      setEndSessionError(
+        error instanceof Error ? error.message : "要約の生成に失敗しました"
+      );
+      if (typeof window !== "undefined") {
+        window.alert(
+          error instanceof Error ? error.message : "要約の生成に失敗しました"
+        );
+      }
+    } finally {
+      setIsEndingSession(false);
+    }
+  };
+
+  const totalMinutes = useMemo(
+    () => store.sessions.reduce((acc, session) => acc + session.durationMinutes, 0),
+    [store.sessions]
   );
 
-  const hasNoSessions = sessions.length === 0;
+  const hasSessions = store.sessions.length > 0;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      {hasNoSessions ? (
-        // 初回訪問時：大きなチャット入力を表示
-        <main className="flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-6 py-16">
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-5xl">
-              コーチングセッション
-            </h1>
-            <p className="text-xl text-zinc-600 dark:text-zinc-400">
-              質問を入力して、AIコーチングを始めましょう
-            </p>
-          </div>
-
-          <form onSubmit={handleInitialMessage} className="w-full space-y-4">
-            <div className="relative">
-              <textarea
-                value={initialMessage}
-                onChange={(e) => setInitialMessage(e.target.value)}
-                placeholder="何について話したいですか？"
-                rows={6}
-                className="w-full rounded-2xl border border-zinc-300 bg-white px-6 py-4 text-lg text-zinc-900 placeholder-zinc-400 shadow-lg focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-600"
-                disabled={isCreatingSession}
-              />
+    <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900">
+      <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-8 px-6 py-10 sm:px-10">
+        {hasSessions ? (
+          <header className="flex items-center justify-between border-b border-zinc-200 pb-6">
+            <div>
+              <p className="text-sm font-medium text-zinc-500">みかたくん</p>
+              <h1 className="mt-1 text-2xl font-bold">あなたの思考が見えるホーム</h1>
             </div>
             <button
-              type="submit"
-              disabled={!initialMessage.trim() || isCreatingSession}
-              className="w-full rounded-xl bg-zinc-900 px-8 py-4 text-lg font-medium text-white shadow-lg transition-all hover:bg-zinc-800 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              onClick={handleStartSession}
+              className="rounded-full bg-zinc-900 px-6 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
             >
-              {isCreatingSession ? "作成中..." : "セッションを開始"}
+              対話を続ける
             </button>
-          </form>
-        </main>
-      ) : (
-        // セッションがある場合：コンパクトなフォームと履歴を表示
-        <main className="flex min-h-screen w-full max-w-4xl flex-col gap-8 py-12 px-6 sm:px-8 md:px-12">
-          <div className="space-y-4">
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-              コーチングセッション
-            </h1>
+          </header>
+        ) : (
+          <header className="flex flex-col items-center gap-6 text-center">
+            <div className="rounded-full bg-zinc-900 px-5 py-1 text-sm font-medium text-white">
+              みかたくん
+            </div>
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold tracking-tight">
+                こんにちは。
+              </h1>
+              <p className="text-lg text-zinc-600">
+                進路のこと、一緒に考えよう。<br />
+                匿名だから、本音で話していいよ。
+              </p>
+            </div>
+            <button
+              onClick={handleStartSession}
+              className="mt-2 w-full max-w-xs rounded-2xl bg-zinc-900 px-6 py-3 text-lg font-medium text-white shadow transition hover:bg-zinc-800"
+            >
+              対話を始める
+            </button>
+          </header>
+        )}
 
-            <form onSubmit={handleInitialMessage} className="w-full">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={initialMessage}
-                  onChange={(e) => setInitialMessage(e.target.value)}
-                  placeholder="新しいセッションを開始..."
-                  className="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500"
-                  disabled={isCreatingSession}
-                />
-                <button
-                  type="submit"
-                  disabled={!initialMessage.trim() || isCreatingSession}
-                  className="rounded-lg bg-zinc-900 px-6 py-3 font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                >
-                  {isCreatingSession ? "作成中..." : "開始"}
-                </button>
+        {hasSessions && (
+          <div className="flex flex-col gap-10">
+            <section>
+              <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+                あなたについて
+              </h2>
+              <div className="mt-3 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+                <p className="whitespace-pre-wrap text-lg leading-relaxed text-zinc-800">
+                  {store.overallSummary || "これまでの対話の要約はまだありません。"}
+                </p>
               </div>
-            </form>
-          </div>
+            </section>
 
-          <div className="space-y-6">
-            <SessionHistory
-              sessions={sortedSessions}
-              onDelete={handleSessionDelete}
-              onSessionClick={handleSessionClick}
-            />
-          </div>
-        </main>
-      )}
+            <section>
+              <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+                思考の変化
+              </h2>
+              <div className="mt-3 space-y-6">
+                {sortedSessions.map((session, index) => {
+                  const lastUserMessage = getLastUserMessage(session.messages);
+                  return (
+                    <div
+                      key={session.id}
+                      className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm"
+                    >
+                      <div className="text-xs font-medium text-zinc-500">
+                        {formatTimelineDate(session.date)} {index + 1}回目の対話
+                      </div>
+                      <div className="mt-3 space-y-2 text-zinc-800">
+                        {lastUserMessage && (
+                          <p className="text-sm text-zinc-600">
+                            「{lastUserMessage.content}」
+                          </p>
+                        )}
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-zinc-400">→</span>
+                          <p className="font-medium text-zinc-800">
+                            {session.insight}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
 
-      {selectedSession && (
+            <section>
+              <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+                統計
+              </h2>
+              <div className="mt-3 grid gap-4 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:grid-cols-3">
+                <div>
+                  <p className="text-xs text-zinc-500">対話回数</p>
+                  <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    {store.sessions.length}回
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">考えた時間</p>
+                  <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    {formatDuration(totalMinutes)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">最後の対話</p>
+                  <p className="mt-1 text-2xl font-semibold text-zinc-900">
+                    {formatLastSession(sortedSessions)}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <div className="flex justify-center">
+              <button
+                onClick={handleStartSession}
+                className="rounded-full bg-zinc-900 px-8 py-3 text-base font-medium text-white shadow transition hover:bg-zinc-800"
+              >
+                続きを話す
+              </button>
+            </div>
+          </div>
+        )}
+
+        {endSessionError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+            {endSessionError}
+          </div>
+        )}
+      </main>
+
+      {activeSession && (
         <TalkView
-          session={selectedSession}
+          session={activeSession}
           onClose={handleCloseTalkView}
-          onUpdateSession={handleUpdateSession}
+          onUpdateSession={handleUpdateActiveSession}
+          onEndSession={handleCompleteSession}
+          isEndingSession={isEndingSession}
+          overallSummary={store.overallSummary}
         />
       )}
     </div>

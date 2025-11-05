@@ -1,20 +1,26 @@
 export interface Message {
   id: string;
   content: string;
-  role: "user" | "coach";
+  role: "user" | "assistant";
   createdAt: string;
 }
 
-export interface Session {
+export interface SessionRecord {
   id: string;
-  title: string;
-  question: string;
-  createdAt: string;
-  status: "active" | "completed";
+  date: string;
+  messages: Message[];
+  insight: string;
+  durationMinutes: number;
+}
+
+export interface SessionStore {
+  sessions: SessionRecord[];
+  overallSummary: string;
+}
+
+export interface ActiveSession {
+  id: string;
+  startedAt: string;
   messages: Message[];
 }
-
-export type SessionFormData = {
-  question: string;
-};
 
