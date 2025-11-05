@@ -20,8 +20,8 @@ export default function TalkView({
 
   // メッセージが更新されたら自動スクロール
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [session.messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [session.messages, isLoading]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +88,81 @@ export default function TalkView({
     });
   };
 
+  const { earlierMessages, focusedMessages } = (() => {
+    if (session.messages.length === 0) {
+      return { earlierMessages: [], focusedMessages: [] as Message[] };
+    }
+
+    const lastUserIndex = [...session.messages].reduce(
+      (latestIndex, message, index) =>
+        message.role === "user" ? index : latestIndex,
+      -1
+    );
+
+    if (lastUserIndex === -1) {
+      return {
+        earlierMessages: session.messages.slice(0, -1),
+        focusedMessages: [session.messages[session.messages.length - 1]],
+      };
+    }
+
+    const nextCoachIndex = session.messages.findIndex(
+      (message, index) => index > lastUserIndex && message.role === "coach"
+    );
+
+    if (nextCoachIndex === -1) {
+      return {
+        earlierMessages: session.messages.slice(0, lastUserIndex),
+        focusedMessages: session.messages.slice(lastUserIndex),
+      };
+    }
+
+    return {
+      earlierMessages: session.messages.slice(0, lastUserIndex),
+      focusedMessages: session.messages.slice(lastUserIndex, nextCoachIndex + 1),
+    };
+  })();
+
+  const typingIndicator = (
+    <div className="flex justify-start">
+      <div className="rounded-lg bg-zinc-100 px-4 py-2 dark:bg-zinc-800">
+        <div className="flex space-x-1">
+          <div className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.3s]"></div>
+          <div className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.15s]"></div>
+          <div className="h-2 w-2 animate-bounce rounded-full bg-zinc-500"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMessageBubble = (message: Message) => (
+    <div
+      key={message.id}
+      className={`flex ${
+        message.role === "user" ? "justify-end" : "justify-start"
+      }`}
+    >
+      <div
+        className={`max-w-[80%] rounded-lg px-4 py-2 ${
+          message.role === "user"
+            ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+            : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+        }`}
+      >
+        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p
+          className={`mt-1 text-xs ${
+            message.role === "user"
+              ? "text-zinc-300 dark:text-zinc-600"
+              : "text-zinc-500 dark:text-zinc-400"
+          }`}
+        >
+          {formatTime(message.createdAt)}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="flex h-full w-full max-w-4xl flex-col rounded-lg bg-white shadow-xl dark:bg-zinc-900">
@@ -133,45 +208,21 @@ export default function TalkView({
                 </p>
               </div>
             )}
-            {session.messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    message.role === "user"
-                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap">{message.content}</p>
-                  <p
-                    className={`mt-1 text-xs ${
-                      message.role === "user"
-                        ? "text-zinc-300 dark:text-zinc-600"
-                        : "text-zinc-500 dark:text-zinc-400"
-                    }`}
-                  >
-                    {formatTime(message.createdAt)}
-                  </p>
+            {earlierMessages.map(renderMessageBubble)}
+            {focusedMessages.length > 0 ? (
+              <div className="min-h-[calc(100vh-16rem)] rounded-2xl border border-zinc-200 bg-white/60 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+                <div className="flex h-full flex-col justify-end space-y-4">
+                  {focusedMessages.map(renderMessageBubble)}
+                  {isLoading && typingIndicator}
+                  <div ref={messagesEndRef} />
                 </div>
               </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="rounded-lg bg-zinc-100 px-4 py-2 dark:bg-zinc-800">
-                  <div className="flex space-x-1">
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.3s]"></div>
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.15s]"></div>
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-zinc-500"></div>
-                  </div>
-                </div>
-              </div>
+            ) : (
+              <>
+                {isLoading && typingIndicator}
+                <div ref={messagesEndRef} />
+              </>
             )}
-            <div ref={messagesEndRef} />
           </div>
         </div>
 
