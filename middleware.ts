@@ -5,19 +5,12 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth
   const isOnLogin = req.nextUrl.pathname.startsWith("/login")
 
-  // Allow login page access
-  if (isOnLogin) {
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL("/", req.url))
-    }
-    return NextResponse.next()
+  // Redirect logged-in users away from login page
+  if (isOnLogin && isLoggedIn) {
+    return NextResponse.redirect(new URL("/", req.url))
   }
 
-  // Require authentication for all other pages
-  if (!isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", req.url))
-  }
-
+  // Allow all users (logged in or guest) to access the app
   return NextResponse.next()
 })
 

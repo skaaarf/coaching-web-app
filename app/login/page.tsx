@@ -1,4 +1,5 @@
 import { signIn } from "@/auth"
+import Link from "next/link"
 
 export default function LoginPage() {
   return (
@@ -9,7 +10,7 @@ export default function LoginPage() {
             Coaching Web App
           </h1>
           <p className="text-gray-600">
-            キャリアコーチングセッションを開始するにはログインしてください
+            キャリアコーチングセッションを開始
           </p>
         </div>
 
@@ -45,8 +46,22 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>ログインすることで、利用規約とプライバシーポリシーに同意したことになります。</p>
+        <div className="mt-4">
+          <Link
+            href="/"
+            className="w-full block text-center bg-gray-100 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+          >
+            ログインせずに使う
+          </Link>
+        </div>
+
+        <div className="mt-6 text-center text-sm text-gray-500">
+          <p className="mb-2">
+            <strong>ログインすると：</strong>データが保存され、複数デバイスで利用可能
+          </p>
+          <p className="text-xs">
+            ログインすることで、利用規約とプライバシーポリシーに同意したことになります。
+          </p>
         </div>
       </div>
     </div>
