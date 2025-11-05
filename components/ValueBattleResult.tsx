@@ -37,6 +37,86 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
 
   const topValue = sortedResults[0];
 
+  // Generate comprehensive insights based on selection patterns
+  const generateInsights = () => {
+    const insights: string[] = [];
+
+    // Analyze top values
+    const top3 = sortedResults.slice(0, 3).map(([v]) => v);
+    const top3Categories = sortedResults.slice(0, 3).map(([v]) => v);
+
+    // Pattern 1: 金銭 vs 非金銭
+    const moneyRelated = ['年収800万・興味ない業界の大手企業', '年収1200万・週6勤務、休暇なし', '東京本社勤務・給与1.5倍', '年収1500万・社会貢献度低い', '営業成績で年収2000万可能・ノルマきつい'];
+    const nonMoneyRelated = ['年収400万・憧れていた業界のベンチャー', '年収600万・週4勤務、長期休暇OK', '地元支社勤務・給与普通', '年収500万・社会問題の解決', '固定給700万・ノルマなし'];
+
+    const moneyCount = Object.keys(results).filter(k => moneyRelated.includes(k)).length;
+    const nonMoneyCount = Object.keys(results).filter(k => nonMoneyRelated.includes(k)).length;
+
+    if (moneyCount > nonMoneyCount + 2) {
+      insights.push('💰 **経済的安定を最重視するタイプ**：収入や待遇を優先する選択が多い。将来の不安を避けたい気持ちが強い。');
+    } else if (nonMoneyCount > moneyCount + 2) {
+      insights.push('❤️ **価値観・やりがい重視タイプ**：お金より大切なものがある。自分の心が動く方向を選んでいる。');
+    } else {
+      insights.push('⚖️ **バランス重視タイプ**：お金も大事だし、やりがいも欲しい。現実と理想の間で揺れている。');
+    }
+
+    // Pattern 2: 他者評価 vs 自分
+    const othersApproval = ['親が喜ぶ公務員・毎日同じルーティン', '誰もが知る大企業の歯車として働く', '同窓会で自慢できる・実はつらい', '業界で有名になれる・激務'];
+    const selfSatisfaction = ['親は反対・夢だったクリエイティブ職', '無名だが自分のアイデアが活きる会社', '同窓会で説明しにくい・実は楽しい', '誰も知らない・穏やか'];
+
+    const othersCount = Object.keys(results).filter(k => othersApproval.includes(k)).length;
+    const selfCount = Object.keys(results).filter(k => selfSatisfaction.includes(k)).length;
+
+    if (othersCount > selfCount) {
+      insights.push('👥 **他者の目を気にするタイプ**：親や周りからの評価が気になる。「どう見られるか」が選択基準になっている。');
+    } else if (selfCount > othersCount) {
+      insights.push('💪 **自分軸で生きるタイプ**：他人の評価より自分の満足。人からどう思われようと、自分が納得できる道を選ぶ。');
+    }
+
+    // Pattern 3: 安定 vs 挑戦
+    const stability = ['確実に昇進・興味のない管理職コース', '福利厚生完備・やりがい薄い事務', '固定給700万・ノルマなし', '平凡な環境・ストレスなし'];
+    const challenge = ['昇進不明・現場で技術を極める', '待遇微妙・毎日成長を感じる仕事', '営業成績で年収2000万可能・ノルマきつい', '優秀な同僚と切磋琢磨・競争激しい'];
+
+    const stabilityCount = Object.keys(results).filter(k => stability.includes(k)).length;
+    const challengeCount = Object.keys(results).filter(k => challenge.includes(k)).length;
+
+    if (stabilityCount > challengeCount) {
+      insights.push('🛡️ **リスク回避型**：確実性と安定性を求める。失敗や不確実性は避けたい。');
+    } else if (challengeCount > stabilityCount) {
+      insights.push('🚀 **挑戦志向型**：刺激と成長を求めている。安定より変化、安全より挑戦。');
+    }
+
+    // Pattern 4: Work-life balance
+    const workFirst = ['役員候補・子どもの成長を見逃す', '海外駐在のチャンス・恋人と遠距離', '激務で有名・業界トップ企業', '転勤3年ごと・昇進早い'];
+    const lifeFirst = ['昇進なし・子どもの毎日に寄り添える', '国内勤務・恋人と毎日会える', 'ホワイト企業・二流の位置づけ', '転勤なし・昇進遅い'];
+
+    const workCount = Object.keys(results).filter(k => workFirst.includes(k)).length;
+    const lifeCount = Object.keys(results).filter(k => lifeFirst.includes(k)).length;
+
+    if (workCount > lifeCount + 1) {
+      insights.push('💼 **仕事最優先タイプ**：キャリアのためなら私生活を犠牲にできる。今は仕事に集中したい時期。');
+    } else if (lifeCount > workCount + 1) {
+      insights.push('🏠 **プライベート重視タイプ**：家族や恋人、自分の時間を大切にしたい。仕事は人生の一部でしかない。');
+    }
+
+    // Pattern 5: チーム vs 個人
+    const teamOriented = ['大プロジェクト・100人チームの一員', 'フルオフィス・濃密な人間関係'];
+    const individualOriented = ['小規模・3人で全て担当', 'リモート完全在宅・人間関係希薄'];
+
+    const teamCount = Object.keys(results).filter(k => teamOriented.includes(k)).length;
+    const individualCount = Object.keys(results).filter(k => individualOriented.includes(k)).length;
+
+    if (teamCount > individualCount) {
+      insights.push('🤝 **チームプレイヤー**：人と一緒に働きたい。つながりや協力関係を大切にする。');
+    } else if (individualCount > teamCount) {
+      insights.push('🎯 **一匹狼タイプ**：一人で完結したい。人間関係より自由と裁量が欲しい。');
+    }
+
+    return insights.slice(0, 4); // 最大4つまで
+  };
+
+  const comprehensiveInsights = generateInsights();
+
   // Prepare data for pie chart
   const total = sortedResults.reduce((sum, [, count]) => sum + count, 0);
   const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
@@ -150,7 +230,7 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
             あなたの価値観ランキング
           </h2>
           <p className="text-gray-600">
-            47回の選択から見えてきたもの
+            20回の選択から見えてきたもの
           </p>
         </div>
 
@@ -290,17 +370,46 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
           </div>
         </div>
 
+        {/* Comprehensive Insights */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-2xl p-6 mb-6">
+          <div className="flex items-start mb-4">
+            <div className="text-3xl mr-3">🔍</div>
+            <div>
+              <h3 className="font-bold text-gray-900 mb-2 text-xl">
+                選択パターンから見えてきたあなた
+              </h3>
+              <p className="text-sm text-gray-600">
+                単に「何を選んだか」だけじゃない。選択の組み合わせから、あなたの深層心理が見えてくる
+              </p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {comprehensiveInsights.map((insight, index) => (
+              <div key={index} className="bg-white rounded-xl p-4 border border-blue-200">
+                <p className="text-gray-800 leading-relaxed text-sm">
+                  {insight.split('：')[0]}
+                  <br />
+                  <span className="text-gray-600">
+                    {insight.split('：')[1]}
+                  </span>
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Insight */}
         <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
           <h3 className="font-bold text-gray-900 mb-3 text-lg">
-            あなたの傾向
+            でも、これって本当？
           </h3>
           <p className="text-gray-700 leading-relaxed">
-            あなたは「{topValue[0]}」を何より大切にしている。
+            データから見えたあなたの傾向。
             <br />
-            でも、それってどうして？
+            でも、これは選択の結果でしかない。
             <br />
-            一緒に考えてみよう。
+            <br />
+            <strong>「なぜそう選んだのか」</strong>を一緒に掘り下げてみよう。
           </p>
         </div>
 

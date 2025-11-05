@@ -9,6 +9,7 @@ import ModuleCard from '@/components/ModuleCard';
 import InsightsPanel from '@/components/InsightsPanel';
 import UserMenu from '@/components/UserMenu';
 import DiagnosticAggregation from '@/components/DiagnosticAggregation';
+import DialogueHistoryHome from '@/components/DialogueHistoryHome';
 
 export default function Home() {
   const [allProgress, setAllProgress] = useState<Record<string, ModuleProgress>>({});
@@ -87,6 +88,9 @@ export default function Home() {
             <InsightsPanel insights={insights} isLoading={isLoadingInsights} />
           </div>
         )}
+
+        {/* Dialogue History */}
+        <DialogueHistoryHome allProgress={allInteractiveProgress} />
 
         {/* Welcome message for new users */}
         {!hasAnyProgress && (
