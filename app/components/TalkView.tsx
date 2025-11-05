@@ -1,34 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActiveSession, Message } from "../types/session";
 
 interface TalkViewProps {
   session: ActiveSession;
-  onClose: () => void;
+  onRequestClose: () => Promise<void> | void;
   onUpdateSession: (messages: Message[]) => void;
-  onEndSession: () => void;
-  isEndingSession: boolean;
+  isProcessing: boolean;
   overallSummary: string;
 }
 
 export default function TalkView({
   session,
-  onClose,
+  onRequestClose,
   onUpdateSession,
-  onEndSession,
-  isEndingSession,
+  isProcessing,
   overallSummary,
 }: TalkViewProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const hasUserMessage = useMemo(
-    () => session.messages.some((message) => message.role === "user"),
-    [session.messages]
-  );
 
   useEffect(() => {
     if (!messagesEndRef.current) {
@@ -92,7 +85,7 @@ export default function TalkView({
 
   const handleSendMessage = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!inputMessage.trim() || isLoading) {
+    if (!inputMessage.trim() || isLoading || isProcessing) {
       return;
     }
 
@@ -108,16 +101,11 @@ export default function TalkView({
     setInputMessage("");
   };
 
-  const handleClose = () => {
-    if (session.messages.some((message) => message.role === "user")) {
-      const confirmClose = window.confirm(
-        "対話を終了せずにホームへ戻りますか?"
-      );
-      if (!confirmClose) {
-        return;
-      }
+  const handleClose = async () => {
+    if (isProcessing) {
+      return;
     }
-    onClose();
+    await onRequestClose();
   };
 
   const formatTime = (dateString: string) => {
@@ -175,6 +163,11 @@ export default function TalkView({
           <span>みかたくん</span>
         </button>
         <div className="flex items-center gap-3">
+          {isProcessing ? (
+            <div className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+              要約を更新中...
+            </div>
+          ) : null}
           <div className="hidden text-right text-xs font-medium text-zinc-400 sm:block">
             今回のテーマ
           </div>
@@ -208,23 +201,16 @@ export default function TalkView({
             onChange={(event) => setInputMessage(event.target.value)}
             placeholder="メッセージを入力..."
             className="flex-1 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300"
-            disabled={isLoading || isEndingSession}
+            disabled={isLoading || isProcessing}
           />
           <button
             type="submit"
-            disabled={!inputMessage.trim() || isLoading || isEndingSession}
+            disabled={!inputMessage.trim() || isLoading || isProcessing}
             className="rounded-2xl bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             送信
           </button>
         </form>
-        <button
-          onClick={onEndSession}
-          disabled={isLoading || isEndingSession || !hasUserMessage}
-          className="mt-3 w-full rounded-2xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isEndingSession ? "要約を作成中..." : "対話を終える"}
-        </button>
       </div>
     </div>
   );

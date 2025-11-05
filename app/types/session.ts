@@ -14,15 +14,19 @@ export interface SessionTopic {
 export interface SessionRecord {
   id: string;
   date: string;
+  updatedAt: string;
   messages: Message[];
-  insight: string;
-  durationMinutes: number;
+  insight?: string;
+  durationMinutes?: number;
   topic?: SessionTopic;
+  lastSummaryMessageCount?: number;
+  needsSummary?: boolean;
 }
 
 export interface SessionStore {
   sessions: SessionRecord[];
   overallSummary: string;
+  tools: ToolUsage[];
 }
 
 export interface ActiveSession {
@@ -30,5 +34,11 @@ export interface ActiveSession {
   startedAt: string;
   messages: Message[];
   topic: SessionTopic;
+}
+
+export interface ToolUsage {
+  id: string;
+  lastOpenedAt: string;
+  openCount: number;
 }
 
