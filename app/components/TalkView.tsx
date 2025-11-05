@@ -49,6 +49,7 @@ export default function TalkView({
           body: JSON.stringify({
             messages,
             overallSummary,
+            topic: session.topic,
           }),
         });
 
@@ -78,7 +79,7 @@ export default function TalkView({
         setIsLoading(false);
       }
     },
-    [onUpdateSession, overallSummary]
+    [onUpdateSession, overallSummary, session.topic]
   );
 
   useEffect(() => {
@@ -165,7 +166,7 @@ export default function TalkView({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-zinc-100">
-      <header className="flex items-center gap-2 border-b border-zinc-200 bg-white px-6 py-4 shadow-sm">
+      <header className="flex items-center justify-between gap-4 border-b border-zinc-200 bg-white px-6 py-4 shadow-sm">
         <button
           onClick={handleClose}
           className="flex items-center gap-2 text-sm font-medium text-zinc-600 transition hover:text-zinc-900"
@@ -173,6 +174,14 @@ export default function TalkView({
           <span className="text-lg">←</span>
           <span>みかたくん</span>
         </button>
+        <div className="flex items-center gap-3">
+          <div className="hidden text-right text-xs font-medium text-zinc-400 sm:block">
+            今回のテーマ
+          </div>
+          <div className="rounded-full border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs font-medium text-zinc-700">
+            {session.topic.title}
+          </div>
+        </div>
       </header>
 
       <div
@@ -180,6 +189,11 @@ export default function TalkView({
         className="flex-1 overflow-y-auto bg-zinc-100 px-4 py-6"
       >
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+          <div className="flex justify-center">
+            <div className="max-w-xl rounded-3xl border border-zinc-200 bg-white px-4 py-3 text-xs text-zinc-600 shadow-sm">
+              {session.topic.description}
+            </div>
+          </div>
           {session.messages.map(renderMessage)}
           {isLoading && typingIndicator}
           <div ref={messagesEndRef} />

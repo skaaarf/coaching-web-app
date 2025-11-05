@@ -5,12 +5,19 @@ export interface Message {
   createdAt: string;
 }
 
+export interface SessionTopic {
+  id: string;
+  title: string;
+  description: string;
+}
+
 export interface SessionRecord {
   id: string;
   date: string;
   messages: Message[];
   insight: string;
   durationMinutes: number;
+  topic?: SessionTopic;
 }
 
 export interface SessionStore {
@@ -22,5 +29,6 @@ export interface ActiveSession {
   id: string;
   startedAt: string;
   messages: Message[];
+  topic: SessionTopic;
 }
 

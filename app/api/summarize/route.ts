@@ -6,6 +6,7 @@ interface PreviousSessionSummary {
   date: string;
   insight: string;
   lastUserMessage: string;
+  topicTitle?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -14,10 +15,12 @@ export async function POST(request: NextRequest) {
       messages,
       previousSessions,
       previousOverallSummary,
+      topic,
     }: {
       messages: Message[];
       previousSessions?: PreviousSessionSummary[];
       previousOverallSummary?: string;
+      topic?: { title?: string; description?: string };
     } = await request.json();
 
     const apiKey = process.env.OPENAI_API_KEY;
@@ -40,9 +43,24 @@ export async function POST(request: NextRequest) {
         const userLine = session.lastUserMessage
           ? `ユーザー: ${session.lastUserMessage}`
           : "ユーザー: (記録なし)";
-        return `第${session.index}回 (${session.date})\n${userLine}\n気づき: ${session.insight}`;
+        const topicLine = session.topicTitle
+          ? `テーマ: ${session.topicTitle}`
+          : undefined;
+        const lines = [
+          `第${session.index}回 (${session.date})`,
+          ...(topicLine ? [topicLine] : []),
+          userLine,
+          `気づき: ${session.insight}`,
+        ];
+        return lines.join("\n");
       })
       .join("\n\n");
+
+    const topicSnippet = topic?.title
+      ? `今回のセッションテーマ: ${topic.title}。${
+          topic.description || ""
+        }`
+      : "今回のセッションテーマ: (未設定)";
 
     const systemPrompt = `あなたは高校生の進路相談を記録するアシスタントです。
 
@@ -59,7 +77,8 @@ export async function POST(request: NextRequest) {
 
 【参考情報】
 過去の全体要約: ${previousOverallSummary || "(なし)"}
-過去のセッション: ${previousTimeline || "(記録なし)"}`;
+過去のセッション: ${previousTimeline || "(記録なし)"}
+${topicSnippet}`;
 
     const payload = {
       model: "gpt-4o-mini",

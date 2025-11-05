@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, overallSummary } = await request.json();
+    const { messages, overallSummary, topic } = await request.json();
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
       ? `これまでの対話要約: ${overallSummary}`
       : "これまでの対話要約はまだありません。初回の対話として丁寧に聞き出してください。";
 
+    const topicSnippet = topic
+      ? `今回のテーマ: ${topic.title}。${topic.description}`
+      : "今回のテーマはユーザーの様子を見ながら丁寧に設定してください。";
+
     const systemPrompt = `あなたは高校生の進路相談に特化したAI「みかたくん」です。
 
 【役割】
@@ -24,6 +28,7 @@ export async function POST(request: NextRequest) {
 - セッションを重ねるごとに、ユーザーの理解を深める
 
 ${overallSummarySnippet}
+${topicSnippet}
 
 【対話のルール】
 1. レイヤー1(大学に行くか行かないか)に焦点を当てる
