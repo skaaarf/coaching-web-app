@@ -7,6 +7,7 @@ import { generateInsights } from '@/lib/insights';
 import { ModuleProgress, UserInsights } from '@/types';
 import ModuleCard from '@/components/ModuleCard';
 import InsightsPanel from '@/components/InsightsPanel';
+import UserMenu from '@/components/UserMenu';
 
 export default function Home() {
   const [allProgress, setAllProgress] = useState<Record<string, ModuleProgress>>({});
@@ -54,15 +55,18 @@ export default function Home() {
               <h1 className="text-3xl font-bold text-gray-900">みかたくん</h1>
               <p className="text-sm text-gray-600 mt-1">キャリアについて一緒に考えよう</p>
             </div>
-            {hasAnyProgress && insights && (
-              <button
-                onClick={() => regenerateInsights()}
-                disabled={isLoadingInsights}
-                className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
-              >
-                {isLoadingInsights ? '分析中...' : 'インサイトを更新'}
-              </button>
-            )}
+            <div className="flex items-center gap-4">
+              {hasAnyProgress && insights && (
+                <button
+                  onClick={() => regenerateInsights()}
+                  disabled={isLoadingInsights}
+                  className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {isLoadingInsights ? '分析中...' : 'インサイトを更新'}
+                </button>
+              )}
+              <UserMenu />
+            </div>
           </div>
         </div>
       </header>

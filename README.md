@@ -4,13 +4,37 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ### Environment Variables
 
-Create a `.env.local` file in the root directory and add your OpenAI API key:
+Create a `.env.local` file in the root directory and add the following environment variables:
 
 ```bash
+# OpenAI API Key for AI coaching features
 OPENAI_API_KEY=your_openai_api_key_here
+
+# Google OAuth credentials for authentication
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+
+# NextAuth secret (generate with: openssl rand -base64 32)
+AUTH_SECRET=your_auth_secret_here
+
+# Application URL (use http://localhost:3000 for development)
+AUTH_URL=http://localhost:3000
 ```
 
-You can get your API key from [OpenAI Platform](https://platform.openai.com/api-keys).
+#### Getting API Keys:
+
+1. **OpenAI API Key**: Get it from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. **Google OAuth Credentials**:
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable Google+ API
+   - Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
+   - Set application type to "Web application"
+   - Add authorized redirect URIs:
+     - For development: `http://localhost:3000/api/auth/callback/google`
+     - For production: `https://your-domain.com/api/auth/callback/google`
+   - Copy the Client ID and Client Secret
+3. **AUTH_SECRET**: Generate a random string using `openssl rand -base64 32`
 
 ### Run the Development Server
 
