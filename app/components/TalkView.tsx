@@ -16,6 +16,7 @@ export default function TalkView({
 }: TalkViewProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [hasAutoReplied, setHasAutoReplied] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // メッセージが更新されたら自動スクロール
@@ -23,31 +24,31 @@ export default function TalkView({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [session.messages, isLoading]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+  // 最初のメッセージに自動応答
+  useEffect(() => {
+    const lastMessage = session.messages[session.messages.length - 1];
+    const shouldAutoReply =
+      !hasAutoReplied &&
+      session.messages.length > 0 &&
+      lastMessage?.role === "user" &&
+      !isLoading;
 
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      content: inputMessage.trim(),
-      role: "user",
-      createdAt: new Date().toISOString(),
-    };
+    if (shouldAutoReply) {
+      setHasAutoReplied(true);
+      fetchAIResponse(session.messages);
+    }
+  }, [session.messages, hasAutoReplied, isLoading]);
 
-    const updatedMessages = [...session.messages, userMessage];
-    onUpdateSession(session.id, updatedMessages);
-    setInputMessage("");
+  const fetchAIResponse = async (messages: Message[]) => {
     setIsLoading(true);
-
     try {
-      // GPT APIを呼び出す
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: updatedMessages,
+          messages: messages,
           sessionQuestion: session.question,
         }),
       });
@@ -64,20 +65,37 @@ export default function TalkView({
         role: "coach",
         createdAt: new Date().toISOString(),
       };
-      onUpdateSession(session.id, [...updatedMessages, coachMessage]);
+      onUpdateSession(session.id, [...messages, coachMessage]);
     } catch (error) {
       console.error("Error sending message:", error);
-      // エラー時のフォールバックメッセージ
       const errorMessage: Message = {
         id: crypto.randomUUID(),
         content: "申し訳ございません。エラーが発生しました。もう一度お試しください。",
         role: "coach",
         createdAt: new Date().toISOString(),
       };
-      onUpdateSession(session.id, [...updatedMessages, errorMessage]);
+      onUpdateSession(session.id, [...messages, errorMessage]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputMessage.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      content: inputMessage.trim(),
+      role: "user",
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedMessages = [...session.messages, userMessage];
+    onUpdateSession(session.id, updatedMessages);
+    setInputMessage("");
+
+    await fetchAIResponse(updatedMessages);
   };
 
   const formatTime = (dateString: string) => {
@@ -170,10 +188,10 @@ export default function TalkView({
         <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              コーチングセッション
+              {session.title}
             </h2>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              {session.question}
+              コーチングセッション
             </p>
           </div>
           <button

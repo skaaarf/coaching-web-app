@@ -55,7 +55,7 @@ export default function SessionCard({
               </span>
             )}
           </div>
-          <p className="text-zinc-900 dark:text-zinc-100">{session.question}</p>
+          <p className="text-zinc-900 dark:text-zinc-100">{session.title}</p>
         </div>
         <button
           onClick={handleDelete}
