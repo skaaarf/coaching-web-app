@@ -17,16 +17,53 @@ export default function ChatInterface({
   placeholder = 'メッセージを入力...'
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Separate messages into older and latest two
   const olderMessages = messages.length > 2 ? messages.slice(0, -2) : [];
   const latestMessages = messages.length > 2 ? messages.slice(-2) : messages;
 
+  // Fetch suggested questions based on conversation
+  const fetchSuggestedQuestions = async () => {
+    if (messages.length === 0 || isLoading) return;
+
+    setLoadingSuggestions(true);
+    try {
+      const response = await fetch('/api/suggest-questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSuggestedQuestions(data.questions || []);
+      } else {
+        setSuggestedQuestions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching suggested questions:', error);
+      setSuggestedQuestions([]);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
   useEffect(() => {
     // Scroll to bottom whenever messages or loading state changes
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    // Generate new questions when conversation updates (but not while AI is responding)
+    if (messages.length > 0 && !isLoading) {
+      fetchSuggestedQuestions();
+    }
+  }, [messages.length, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +79,12 @@ export default function ChatInterface({
       e.preventDefault();
       handleSubmit(e);
     }
+  };
+
+  const handleSuggestedQuestionClick = (question: string) => {
+    setInput(question);
+    // Clear suggestions after selecting one
+    setSuggestedQuestions([]);
   };
 
   const renderMessage = (message: Message, index: number) => (
@@ -104,6 +147,25 @@ export default function ChatInterface({
 
       {/* Input area */}
       <div className="border-t border-gray-200 bg-white px-4 py-4">
+        {/* Suggested Questions */}
+        {suggestedQuestions.length > 0 && !isLoading && (
+          <div className="mb-3 space-y-2">
+            <div className="text-xs text-gray-500 font-medium mb-2">💡 こんな質問はどう？</div>
+            <div className="flex flex-wrap gap-2">
+              {suggestedQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleSuggestedQuestionClick(question)}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 rounded-full text-sm text-gray-700 hover:text-gray-900 transition-all hover:shadow-md"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex items-end space-x-3">
           <textarea
             value={input}
