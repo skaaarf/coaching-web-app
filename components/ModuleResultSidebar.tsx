@@ -50,40 +50,53 @@ export default function ModuleResultSidebar({ moduleId, data, onClose }: Props) 
 }
 
 function ValueBattleResultSummary({ results }: { results: Record<string, number> }) {
-  const sortedResults = Object.entries(results)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5);
+  // Analyze patterns
+  const moneyRelated = ['年収800万・興味ない業界の大手企業', '年収1200万・週6勤務、休暇なし', '東京本社勤務・給与1.5倍', '年収1500万・社会貢献度低い', '営業成績で年収2000万可能・ノルマきつい'];
+  const nonMoneyRelated = ['年収400万・憧れていた業界のベンチャー', '年収600万・週4勤務、長期休暇OK', '地元支社勤務・給与普通', '年収500万・社会問題の解決', '固定給700万・ノルマなし'];
 
-  const topValue = sortedResults[0];
+  const moneyCount = Object.keys(results).filter(k => moneyRelated.includes(k)).length;
+  const nonMoneyCount = Object.keys(results).filter(k => nonMoneyRelated.includes(k)).length;
+
+  const othersApproval = ['親が喜ぶ公務員・毎日同じルーティン', '誰もが知る大企業の歯車として働く', '同窓会で自慢できる・実はつらい'];
+  const selfSatisfaction = ['親は反対・夢だったクリエイティブ職', '無名だが自分のアイデアが活きる会社', '同窓会で説明しにくい・実は楽しい'];
+
+  const othersCount = Object.keys(results).filter(k => othersApproval.includes(k)).length;
+  const selfCount = Object.keys(results).filter(k => selfSatisfaction.includes(k)).length;
+
+  const insights = [];
+  if (moneyCount > nonMoneyCount + 1) {
+    insights.push({ icon: '💰', label: '経済的安定重視' });
+  } else if (nonMoneyCount > moneyCount + 1) {
+    insights.push({ icon: '❤️', label: 'やりがい重視' });
+  } else {
+    insights.push({ icon: '⚖️', label: 'バランス型' });
+  }
+
+  if (othersCount > selfCount) {
+    insights.push({ icon: '👥', label: '他者評価を気にする' });
+  } else if (selfCount > othersCount) {
+    insights.push({ icon: '💪', label: '自分軸で生きる' });
+  }
 
   return (
     <div className="space-y-4">
       <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200">
         <div className="text-3xl mb-2">🎯</div>
-        <h4 className="font-bold text-gray-900 mb-2">最重視する価値観</h4>
-        <p className="text-lg font-semibold text-blue-600">{topValue[0]}</p>
-        <p className="text-sm text-gray-600 mt-1">
-          タイプ: {topValue[1] >= 15 ? '明確な価値観' : topValue[1] >= 10 ? 'バランス型' : '多様な価値観'}
-        </p>
-      </div>
-
-      <div>
-        <h4 className="font-semibold text-gray-900 mb-3 text-sm">価値観ランキング</h4>
+        <h4 className="font-bold text-gray-900 mb-3">あなたの傾向</h4>
         <div className="space-y-2">
-          {sortedResults.map(([value, count], index) => (
-            <div key={value} className="flex items-center text-sm">
-              <div className="w-6 h-6 flex items-center justify-center bg-blue-100 text-blue-700 font-bold text-xs rounded-full flex-shrink-0">
-                {index + 1}
-              </div>
-              <div className="ml-2 flex-grow min-w-0">
-                <div className="text-gray-900 truncate">{value}</div>
-              </div>
-              <div className="ml-2 flex-shrink-0 text-xs text-gray-500">
-                {Math.round((count / 20) * 100)}%
-              </div>
+          {insights.map((insight, index) => (
+            <div key={index} className="flex items-center text-sm">
+              <span className="text-xl mr-2">{insight.icon}</span>
+              <span className="text-gray-800 font-medium">{insight.label}</span>
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+        <p className="text-xs text-gray-600">
+          💡 詳しい分析は結果画面で確認できます
+        </p>
       </div>
     </div>
   );
