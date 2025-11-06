@@ -23,6 +23,12 @@ export default function ModulePage() {
       return;
     }
 
+    // Redirect interactive modules to the correct route
+    if (module.moduleType === 'interactive') {
+      router.push(`/interactive/${moduleId}`);
+      return;
+    }
+
     // Load existing progress
     const progress = getModuleProgress(moduleId);
 

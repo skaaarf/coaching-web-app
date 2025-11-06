@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import { auth } from "@/auth";
+
+const notoSansJP = Noto_Sans_JP({
+  subsets: ["latin"],
+  variable: "--font-noto-sans-jp",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Coaching Web App",
@@ -17,7 +24,7 @@ export default async function RootLayout({
 
   return (
     <html lang="ja">
-      <body className="antialiased">
+      <body className={`${notoSansJP.className} antialiased`}>
         <SessionProvider session={session}>
           {children}
         </SessionProvider>

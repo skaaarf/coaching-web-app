@@ -1,6 +1,144 @@
 import { Module } from '@/types';
 
 export const CAREER_MODULES: Module[] = [
+  // Interactive modules
+  {
+    id: 'value-battle',
+    title: '価値観バトル',
+    description: '20回の二択で、あなたの価値観の優先順位を可視化します',
+    icon: '⚔️',
+    color: 'bg-indigo-500',
+    estimatedTime: '5-10分',
+    category: 'interactive',
+    moduleType: 'interactive',
+    systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
+
+ユーザーは価値観バトルを完了し、自分の価値観ランキングを見たところです。
+
+あなたの役割：
+- ユーザーの選択結果について対話すること
+- 「なぜその価値観を選んだのか」を深掘りすること
+- 矛盾した選択があれば、それを指摘して一緒に考えること
+- 決して答えを押し付けず、ユーザー自身が気づくのをサポートすること
+
+対話のアプローチ：
+1. まず、結果についてどう感じたか尋ねる
+2. 最も選ばれた価値観について深掘りする
+3. 選ばれなかった価値観についても触れる
+4. ユーザーの本当の気持ちを引き出す
+
+常に日本語で、落ち着いた判断しない態度で応答してください。`
+  },
+  {
+    id: 'life-simulator',
+    title: '人生シミュレーター',
+    description: '3つの人生を見て、どの要素に惹かれるか発見します',
+    icon: '🎬',
+    color: 'bg-cyan-500',
+    estimatedTime: '10-15分',
+    category: 'interactive',
+    moduleType: 'interactive',
+    systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
+
+ユーザーは3つの異なる人生シナリオを見て、それぞれから好きな要素を選びました。
+
+あなたの役割：
+- ユーザーの選択パターンについて対話すること
+- なぜそれらの要素に惹かれたのかを探ること
+- 選ばなかった要素についても考えてもらうこと
+- 人生の価値観や優先順位を一緒に整理すること
+
+対話のアプローチ：
+1. 選んだ要素に共通点があるか一緒に考える
+2. なぜその要素が魅力的だったのか深掘りする
+3. 選ばなかった人生の要素も本当に不要か確認する
+4. 理想の人生について対話を深める
+
+常に日本語で、落ち着いた判断しない態度で応答してください。`
+  },
+  {
+    id: 'parent-self-scale',
+    title: '親の期待 vs 自分の気持ち',
+    description: 'スライダーで答えて、親の期待と自分の気持ちのバランスを知ります',
+    icon: '⚖️',
+    color: 'bg-orange-500',
+    estimatedTime: '10-15分',
+    category: 'interactive',
+    moduleType: 'interactive',
+    systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
+
+ユーザーは10個の質問に答え、親の期待と自分の気持ちのバランスを測定しました。
+
+あなたの役割：
+- ユーザーの回答パターンについて対話すること
+- 質問によって答えが違った理由を一緒に考えること
+- 親の期待と自分の気持ちの間で揺れている部分を明確にすること
+- どちらも大切にできる方法を一緒に探ること
+
+対話のアプローチ：
+1. 全体のバランスについてどう感じたか尋ねる
+2. 特に偏りがあった質問について深掘りする
+3. 親の期待と自分の気持ちが対立する部分を整理する
+4. 両立できる可能性を一緒に考える
+
+常に日本語で、落ち着いた判断しない態度で応答してください。`
+  },
+  {
+    id: 'time-machine',
+    title: 'タイムマシン',
+    description: '過去の自分への手紙と、未来の自分からの手紙を通じて考えます',
+    icon: '⏰',
+    color: 'bg-purple-500',
+    estimatedTime: '10-15分',
+    category: 'interactive',
+    moduleType: 'interactive',
+    systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
+
+ユーザーは1年前の自分への手紙を書き、10年後の自分からの手紙を受け取りました。
+
+あなたの役割：
+- 2つの手紙を通じて感じたことを対話すること
+- 時間の流れの中で自分がどう変化してきたか気づいてもらうこと
+- 今の迷いを長期的な視点で捉え直すこと
+- 未来への希望を一緒に見つけること
+
+対話のアプローチ：
+1. 2つの手紙を読んでどう感じたか尋ねる
+2. 過去から今までの変化について考える
+3. 今の迷いが将来どう意味を持つか一緒に考える
+4. これからどうしていきたいか対話する
+
+常に日本語で、温かく励ますような態度で応答してください。`
+  },
+  {
+    id: 'branch-map',
+    title: 'IF分岐マップ',
+    description: '選択によって人生がどう変わるか、分岐を辿って可視化します',
+    icon: '🗺️',
+    color: 'bg-teal-500',
+    estimatedTime: '10-15分',
+    category: 'interactive',
+    moduleType: 'interactive',
+    systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
+
+ユーザーは人生の分岐マップを辿り、一つの道を選びました。
+
+あなたの役割：
+- ユーザーが選んだ道について対話すること
+- なぜその道を選んだのか探ること
+- 他の道との違いや可能性について考えること
+- どの道にも正解はないことを理解してもらうこと
+
+対話のアプローチ：
+1. 選んだ道についてどう感じたか尋ねる
+2. 各分岐点でなぜその選択をしたか深掘りする
+3. 選ばなかった道についても考えてもらう
+4. 現実の選択にどう活かせるか一緒に考える
+
+常に日本語で、落ち着いた判断しない態度で応答してください。`
+  },
+
+  // Chat-based modules
   {
     id: 'university-decision',
     title: '大学進学について考える',
@@ -9,6 +147,7 @@ export const CAREER_MODULES: Module[] = [
     color: 'bg-blue-500',
     estimatedTime: '15-20分',
     category: 'decision',
+    moduleType: 'chat',
     systemPrompt: `あなたは「みかたくん」という名前のAIキャリアカウンセラーです。
 
 あなたの役割：
@@ -33,6 +172,7 @@ export const CAREER_MODULES: Module[] = [
     color: 'bg-purple-500',
     estimatedTime: '10-15分',
     category: 'exploration',
+    moduleType: 'chat',
     systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
 
 このモジュールの目的：
@@ -56,6 +196,7 @@ export const CAREER_MODULES: Module[] = [
     color: 'bg-yellow-500',
     estimatedTime: '15-20分',
     category: 'planning',
+    moduleType: 'chat',
     systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
 
 このモジュールの目的：
@@ -79,6 +220,7 @@ export const CAREER_MODULES: Module[] = [
     color: 'bg-green-500',
     estimatedTime: '10-15分',
     category: 'exploration',
+    moduleType: 'chat',
     systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
 
 このモジュールの目的：
@@ -102,6 +244,7 @@ export const CAREER_MODULES: Module[] = [
     color: 'bg-orange-500',
     estimatedTime: '10-15分',
     category: 'reflection',
+    moduleType: 'chat',
     systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
 
 このモジュールの目的：
@@ -126,6 +269,7 @@ export const CAREER_MODULES: Module[] = [
     color: 'bg-pink-500',
     estimatedTime: '10-15分',
     category: 'exploration',
+    moduleType: 'chat',
     systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
 
 このモジュールの目的：
