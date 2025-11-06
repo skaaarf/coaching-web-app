@@ -18,16 +18,16 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    // Use setTimeout to ensure DOM has updated
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-        inline: 'nearest'
-      });
-    }, 100);
+    // Only scroll if there are 2 or more messages (user has sent at least one message)
+    if (messages.length < 2) return;
+
+    // Use scrollTop for more reliable scrolling
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -41,8 +41,6 @@ export default function ChatInterface({
     const userInput = input;
     setInput('');
     await onSendMessage(userInput);
-    // Scroll after message is sent
-    scrollToBottom();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -55,7 +53,7 @@ export default function ChatInterface({
   return (
     <div className="flex flex-col h-full">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
         {messages.map((message, index) => (
           <div
             key={index}
