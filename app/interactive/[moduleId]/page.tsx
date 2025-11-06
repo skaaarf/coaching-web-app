@@ -467,8 +467,8 @@ export default function InteractiveModulePage() {
           )}
 
           {state.phase === 'dialogue' && (
-            <div className="flex h-[calc(100vh-180px)] relative">
-              {/* History Sidebar - Left */}
+            <div className="flex flex-col lg:flex-row h-[calc(100vh-180px)] relative">
+              {/* History Sidebar - Left (Desktop only) */}
               {showHistorySidebar && (
                 <>
                   {/* Mobile Overlay */}
@@ -491,38 +491,46 @@ export default function InteractiveModulePage() {
                 </>
               )}
 
-              {/* Chat Interface - Center */}
-              <div className="flex-1 min-w-0 max-w-5xl mx-auto w-full">
-                <ChatInterface
-                  messages={state.messages}
-                  onSendMessage={handleSendMessage}
-                  isLoading={isLoading}
-                  placeholder="メッセージを入力... (Enterで送信、Shift+Enterで改行)"
-                />
+              {/* Main Content Area */}
+              <div className="flex-1 min-w-0 max-w-5xl mx-auto w-full flex flex-col">
+                {/* Mobile Result Section - Top (Mobile only) */}
+                <div className="lg:hidden">
+                  {showResultSidebar && (
+                    <div className="border-b border-gray-200 bg-white">
+                      <div className="max-h-[40vh] overflow-y-auto">
+                        <ModuleResultSidebar
+                          moduleId={moduleId}
+                          data={state.data}
+                          onClose={() => setShowResultSidebar(false)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Chat Interface */}
+                <div className="flex-1 min-h-0">
+                  <ChatInterface
+                    messages={state.messages}
+                    onSendMessage={handleSendMessage}
+                    isLoading={isLoading}
+                    placeholder="メッセージを入力... (Enterで送信、Shift+Enterで改行)"
+                  />
+                </div>
               </div>
 
-              {/* Result Sidebar - Right */}
-              {showResultSidebar && (
-                <>
-                  {/* Mobile Overlay */}
-                  <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-                    onClick={() => setShowResultSidebar(false)}
-                  />
-                  {/* Sidebar */}
-                  <div className={`${
-                    showResultSidebar
-                      ? 'fixed lg:relative right-0 top-0 bottom-0 z-50 lg:z-0'
-                      : 'hidden'
-                  } w-80 lg:w-96 flex-shrink-0`}>
+              {/* Result Sidebar - Right (Desktop only) */}
+              <div className="hidden lg:block">
+                {showResultSidebar && (
+                  <div className="w-96 flex-shrink-0">
                     <ModuleResultSidebar
                       moduleId={moduleId}
                       data={state.data}
                       onClose={() => setShowResultSidebar(false)}
                     />
                   </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
           )}
         </div>
