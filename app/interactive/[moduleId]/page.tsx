@@ -423,7 +423,7 @@ export default function InteractiveModulePage() {
       )}
 
       {/* Content */}
-      <main className="py-8">
+      <main className={state.phase === 'dialogue' ? '' : 'py-8'}>
         <div className="animate-fade-in">
           {state.phase === 'activity' && (
             <>
@@ -473,7 +473,7 @@ export default function InteractiveModulePage() {
           )}
 
           {state.phase === 'dialogue' && (
-            <div className="flex flex-col lg:flex-row h-[calc(100vh-180px)] relative">
+            <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)] sm:h-[calc(100vh-160px)] lg:h-[calc(100vh-180px)] relative">
               {/* History Sidebar - Left (Desktop only) */}
               {showHistorySidebar && (
                 <>
