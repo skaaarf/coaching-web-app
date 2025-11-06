@@ -81,10 +81,11 @@ export default function ChatInterface({
     }
   };
 
-  const handleSuggestedQuestionClick = (question: string) => {
-    setInput(question);
-    // Clear suggestions after selecting one
+  const handleSuggestedQuestionClick = async (question: string) => {
+    // Clear suggestions immediately
     setSuggestedQuestions([]);
+    // Send the question directly without populating input field
+    await onSendMessage(question);
   };
 
   const renderMessage = (message: Message, index: number) => (
