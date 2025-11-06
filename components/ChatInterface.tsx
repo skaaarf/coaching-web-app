@@ -20,7 +20,14 @@ export default function ChatInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Use setTimeout to ensure DOM has updated
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest'
+      });
+    }, 100);
   };
 
   useEffect(() => {
@@ -34,6 +41,8 @@ export default function ChatInterface({
     const userInput = input;
     setInput('');
     await onSendMessage(userInput);
+    // Scroll after message is sent
+    scrollToBottom();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
