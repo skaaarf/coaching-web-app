@@ -68,14 +68,14 @@ export default function ValueBattle({ onComplete }: Props) {
   const progress = ((currentRound + 1) / BATTLE_CHOICES.length) * 100;
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
       {/* Progress bar */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-xs sm:text-sm font-medium text-gray-700">
             ラウンド {currentRound + 1} / {BATTLE_CHOICES.length}
           </span>
-          <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
+          <span className="text-xs sm:text-sm text-gray-500">{Math.round(progress)}%</span>
         </div>
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
@@ -86,33 +86,33 @@ export default function ValueBattle({ onComplete }: Props) {
       </div>
 
       {/* Battle card */}
-      <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      <div className="bg-white rounded-2xl border-2 border-gray-200 p-4 sm:p-8 shadow-lg">
+        <div className="text-center mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
             どっちを選ぶ？
           </h2>
-          <p className="text-sm text-gray-500">{current.category}</p>
+          <p className="text-xs sm:text-sm text-gray-500">{current.category}</p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <button
             onClick={() => handleChoice('A')}
-            className="w-full p-6 text-center bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 hover:border-blue-400 rounded-xl transition-all duration-200 group"
+            className="w-full p-4 sm:p-6 text-center bg-blue-50 hover:bg-blue-100 active:bg-blue-100 border-2 border-blue-200 hover:border-blue-400 rounded-xl transition-all duration-200 group"
           >
-            <div className="text-xl font-semibold text-gray-900 group-hover:text-blue-700">
+            <div className="text-base sm:text-xl font-semibold text-gray-900 group-hover:text-blue-700">
               {current.optionA}
             </div>
           </button>
 
-          <div className="text-center py-2">
-            <span className="text-2xl font-bold text-gray-400">vs</span>
+          <div className="text-center py-1 sm:py-2">
+            <span className="text-xl sm:text-2xl font-bold text-gray-400">vs</span>
           </div>
 
           <button
             onClick={() => handleChoice('B')}
-            className="w-full p-6 text-center bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 hover:border-purple-400 rounded-xl transition-all duration-200 group"
+            className="w-full p-4 sm:p-6 text-center bg-purple-50 hover:bg-purple-100 active:bg-purple-100 border-2 border-purple-200 hover:border-purple-400 rounded-xl transition-all duration-200 group"
           >
-            <div className="text-xl font-semibold text-gray-900 group-hover:text-purple-700">
+            <div className="text-base sm:text-xl font-semibold text-gray-900 group-hover:text-purple-700">
               {current.optionB}
             </div>
           </button>
@@ -120,7 +120,7 @@ export default function ValueBattle({ onComplete }: Props) {
       </div>
 
       {/* Instruction */}
-      <div className="mt-6 text-center text-sm text-gray-500">
+      <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
         直感で選んでOK。深く考えすぎないで！
       </div>
     </div>

@@ -15,6 +15,12 @@ export const metadata: Metadata = {
   description: "A coaching web application for managing coaching sessions",
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
