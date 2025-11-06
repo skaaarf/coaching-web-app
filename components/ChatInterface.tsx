@@ -18,20 +18,14 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    // Only scroll if there are 2 or more messages (user has sent at least one message)
-    if (messages.length < 2) return;
-
-    // Use scrollTop for more reliable scrolling
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-  };
+  // Separate messages into older and latest two
+  const olderMessages = messages.length > 2 ? messages.slice(0, -2) : [];
+  const latestMessages = messages.length > 2 ? messages.slice(-2) : messages;
 
   useEffect(() => {
-    scrollToBottom();
+    // Scroll to bottom whenever messages or loading state changes
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,50 +44,62 @@ export default function ChatInterface({
     }
   };
 
+  const renderMessage = (message: Message, index: number) => (
+    <div
+      key={index}
+      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+    >
+      <div
+        className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+          message.role === 'user'
+            ? 'bg-blue-500 text-white'
+            : 'bg-gray-100 text-gray-900'
+        }`}
+      >
+        <div className="whitespace-pre-wrap break-words">{message.content}</div>
+        <div
+          className={`text-xs mt-2 ${
+            message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+          }`}
+        >
+          {new Date(message.timestamp).toLocaleTimeString('ja-JP', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col h-full">
       {/* Messages area */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                message.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-900'
-              }`}
-            >
-              <div className="whitespace-pre-wrap break-words">{message.content}</div>
-              <div
-                className={`text-xs mt-2 ${
-                  message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                }`}
-              >
-                {new Date(message.timestamp).toLocaleTimeString('ja-JP', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+        {/* Older messages (if any) */}
+        {olderMessages.map((message, index) => renderMessage(message, index))}
 
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-2xl px-4 py-3">
-              <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        {/* Latest two messages in a min-height container */}
+        {latestMessages.length > 0 && (
+          <div className="min-h-[100vh] space-y-6">
+            {latestMessages.map((message, index) =>
+              renderMessage(message, olderMessages.length + index)
+            )}
+
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 rounded-2xl px-4 py-3">
+                  <div className="flex space-x-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            <div ref={messagesEndRef} />
           </div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input area */}
