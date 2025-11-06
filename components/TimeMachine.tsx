@@ -118,7 +118,7 @@ export default function TimeMachine({ onComplete }: Props) {
 
 あの時は進路で悩んでたよね。
 今もまだ答えは出てないけど、でも少しずつ考えられるようになってきたよ。"
-              className="w-full h-64 p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none resize-none text-gray-800"
+              className="w-full h-64 p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none resize-none text-gray-900"
               maxLength={500}
             />
             <div className="text-right text-sm text-gray-500 mt-2">
