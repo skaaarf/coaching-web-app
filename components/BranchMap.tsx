@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 interface Branch {
   id: string;
@@ -127,7 +127,7 @@ export default function BranchMap({ onComplete }: Props) {
   const nextOptions = BRANCHES.filter(b => b.parent === currentBranch.id);
 
   // Helper function to render tree recursively
-  const renderTreeNode = (branchId: string, depth: number = 0): JSX.Element[] => {
+  const renderTreeNode = (branchId: string, depth: number = 0): React.ReactElement[] => {
     const branch = BRANCHES.find(b => b.id === branchId);
     if (!branch) return [];
 
@@ -135,7 +135,7 @@ export default function BranchMap({ onComplete }: Props) {
     const isCurrent = currentBranch.id === branchId;
     const children = BRANCHES.filter(b => b.parent === branchId);
 
-    const result: JSX.Element[] = [
+    const result: React.ReactElement[] = [
       <div key={branchId} className={`flex items-start ${depth > 0 ? 'ml-6' : ''}`}>
         <div className="flex-shrink-0 w-1 bg-gray-300 mr-2" style={{ height: '100%' }} />
         <div className={`flex-1 mb-2 p-3 rounded-lg border-2 transition-all ${
