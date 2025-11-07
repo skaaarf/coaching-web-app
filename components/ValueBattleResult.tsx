@@ -43,79 +43,207 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
 
     // Analyze top values
     const top3 = sortedResults.slice(0, 3).map(([v]) => v);
-    const top3Categories = sortedResults.slice(0, 3).map(([v]) => v);
 
     // Pattern 1: 金銭 vs 非金銭
-    const moneyRelated = ['年収800万・興味ない業界の大手企業', '年収1200万・週6勤務、休暇なし', '東京本社勤務・給与1.5倍', '年収1500万・社会貢献度低い', '営業成績で年収2000万可能・ノルマきつい'];
-    const nonMoneyRelated = ['年収400万・憧れていた業界のベンチャー', '年収600万・週4勤務、長期休暇OK', '地元支社勤務・給与普通', '年収500万・社会問題の解決', '固定給700万・ノルマなし'];
+    const moneyRelated = [
+      '年収750万・製造業の大手メーカー（残業少なめ）',
+      '年収900万・月の残業60時間',
+      '総合職（転勤あり・昇進早い・年収高い）',
+      '海外赴任（3年・手当込み年収1.5倍）',
+      'コンサル・外資系（年収高・激務）',
+      '東京勤務（年収800万・物価高い）',
+      '営業職（成果報酬・年収の幅大きい）',
+      '金融・不動産（年収1200万・業務内容への共感薄）',
+      'BtoB企業（顧客の顔見えない・給与高い）',
+      '歩合制（実績次第で年収500-1500万）'
+    ];
+    const nonMoneyRelated = [
+      '年収450万・ITスタートアップ（成長中・裁量大）',
+      'Web制作会社（案件次第で忙しい・自由度高い）',
+      'スペシャリスト職（現場で専門スキルを磨く）',
+      '年収600万・月の残業10時間',
+      '地域限定職（転勤なし・昇進遅い・年収普通）',
+      '国内勤務（転勤なし・年収据え置き）',
+      '地方都市勤務（年収550万・物価安い）',
+      '教育・福祉（年収500万・社会的意義大きい）',
+      'BtoC企業（顧客の反応直接・給与普通）',
+      'ニッチ企業（周囲に説明しづらい・仕事は面白い）'
+    ];
 
     const moneyCount = Object.keys(results).filter(k => moneyRelated.includes(k)).length;
     const nonMoneyCount = Object.keys(results).filter(k => nonMoneyRelated.includes(k)).length;
 
     if (moneyCount > nonMoneyCount + 2) {
-      insights.push('💰 **経済的安定を最重視するタイプ**：収入や待遇を優先する選択が多い。将来の不安を避けたい気持ちが強い。');
+      insights.push('💰 **経済的安定を最重視するタイプ**：収入や待遇の良さを優先する選択が目立ちます。経済基盤をしっかり築くことで、将来の選択肢を広げたいという考えが強いようです。お金があることで得られる安心感や自由を大切にしています。');
     } else if (nonMoneyCount > moneyCount + 2) {
-      insights.push('❤️ **価値観・やりがい重視タイプ**：お金より大切なものがある。自分の心が動く方向を選んでいる。');
+      insights.push('❤️ **価値観・やりがい重視タイプ**：収入よりも仕事の内容や自己実現を優先する傾向が見られます。お金では買えない充実感や成長を求めており、自分が心から納得できる選択を重視しています。');
     } else {
-      insights.push('⚖️ **バランス重視タイプ**：お金も大事だし、やりがいも欲しい。現実と理想の間で揺れている。');
+      insights.push('⚖️ **バランス重視タイプ**：収入とやりがいの両方を大切にしたいという姿勢が見られます。極端な選択を避け、現実的な収入を確保しながらも、仕事の意義や満足度も諦めたくないという思いがあるようです。');
     }
 
-    // Pattern 2: 他者評価 vs 自分
-    const othersApproval = ['親が喜ぶ公務員・毎日同じルーティン', '誰もが知る大企業の歯車として働く', '同窓会で自慢できる・実はつらい', '業界で有名になれる・激務'];
-    const selfSatisfaction = ['親は反対・夢だったクリエイティブ職', '無名だが自分のアイデアが活きる会社', '同窓会で説明しにくい・実は楽しい', '誰も知らない・穏やか'];
-
-    const othersCount = Object.keys(results).filter(k => othersApproval.includes(k)).length;
-    const selfCount = Object.keys(results).filter(k => selfSatisfaction.includes(k)).length;
-
-    if (othersCount > selfCount) {
-      insights.push('👥 **他者の目を気にするタイプ**：親や周りからの評価が気になる。「どう見られるか」が選択基準になっている。');
-    } else if (selfCount > othersCount) {
-      insights.push('💪 **自分軸で生きるタイプ**：他人の評価より自分の満足。人からどう思われようと、自分が納得できる道を選ぶ。');
-    }
-
-    // Pattern 3: 安定 vs 挑戦
-    const stability = ['確実に昇進・興味のない管理職コース', '福利厚生完備・やりがい薄い事務', '固定給700万・ノルマなし', '平凡な環境・ストレスなし'];
-    const challenge = ['昇進不明・現場で技術を極める', '待遇微妙・毎日成長を感じる仕事', '営業成績で年収2000万可能・ノルマきつい', '優秀な同僚と切磋琢磨・競争激しい'];
+    // Pattern 2: 安定性 vs 挑戦・成長
+    const stability = [
+      '年収750万・製造業の大手メーカー（残業少なめ）',
+      '地方公務員（定時退社・転勤なし）',
+      '大手銀行（年功序列・ルール厳格）',
+      '上場企業（ネームバリュー有・手続き多い）',
+      '地域限定職（転勤なし・昇進遅い・年収普通）',
+      'マイペースな環境（和気あいあい・目標緩め）',
+      '企画職（固定給・年収安定）',
+      '固定給制（年収700万で安定）',
+      '事業会社（年収普通・定時退社多い）'
+    ];
+    const challenge = [
+      '年収450万・ITスタートアップ（成長中・裁量大）',
+      'Web制作会社（案件次第で忙しい・自由度高い）',
+      'IT企業（実力主義・カジュアルな文化）',
+      'スペシャリスト職（現場で専門スキルを磨く）',
+      'ハイレベルな環境（優秀な人材・高い目標）',
+      'コンサル・外資系（年収高・激務）',
+      '営業職（成果報酬・年収の幅大きい）',
+      '歩合制（実績次第で年収500-1500万）',
+      '業界トップ（認知度高・長時間労働）'
+    ];
 
     const stabilityCount = Object.keys(results).filter(k => stability.includes(k)).length;
     const challengeCount = Object.keys(results).filter(k => challenge.includes(k)).length;
 
-    if (stabilityCount > challengeCount) {
-      insights.push('🛡️ **リスク回避型**：確実性と安定性を求める。失敗や不確実性は避けたい。');
-    } else if (challengeCount > stabilityCount) {
-      insights.push('🚀 **挑戦志向型**：刺激と成長を求めている。安定より変化、安全より挑戦。');
+    if (stabilityCount > challengeCount + 1) {
+      insights.push('🛡️ **安定性重視タイプ**：予測可能で確実性の高い環境を好む傾向があります。リスクを最小限に抑え、長期的に安心して働ける環境を求めています。急激な変化よりも、着実な積み重ねを大切にするタイプです。');
+    } else if (challengeCount > stabilityCount + 1) {
+      insights.push('🚀 **挑戦・成長志向タイプ**：刺激的な環境で自分を試したいという気持ちが強いようです。安定よりも成長機会を優先し、不確実性を恐れずに新しいことに挑戦できるタイプです。変化を楽しめる柔軟性があります。');
     }
 
-    // Pattern 4: Work-life balance
-    const workFirst = ['役員候補・子どもの成長を見逃す', '海外駐在のチャンス・恋人と遠距離', '激務で有名・業界トップ企業', '転勤3年ごと・昇進早い'];
-    const lifeFirst = ['昇進なし・子どもの毎日に寄り添える', '国内勤務・恋人と毎日会える', 'ホワイト企業・二流の位置づけ', '転勤なし・昇進遅い'];
+    // Pattern 3: ワークライフバランス
+    const workFocus = [
+      '年収900万・月の残業60時間',
+      '総合職（転勤あり・昇進早い・年収高い）',
+      '海外赴任（3年・手当込み年収1.5倍）',
+      'コンサル・外資系（年収高・激務）',
+      '希望職種・片道1.5時間通勤',
+      '業界トップ（認知度高・長時間労働）'
+    ];
+    const lifeFocus = [
+      '年収600万・月の残業10時間',
+      '地域限定職（転勤なし・昇進遅い・年収普通）',
+      '国内勤務（転勤なし・年収据え置き）',
+      '事業会社（年収普通・定時退社多い）',
+      '希望外職種・片道20分通勤',
+      '中堅企業（無名・定時退社）'
+    ];
 
-    const workCount = Object.keys(results).filter(k => workFirst.includes(k)).length;
-    const lifeCount = Object.keys(results).filter(k => lifeFirst.includes(k)).length;
+    const workCount = Object.keys(results).filter(k => workFocus.includes(k)).length;
+    const lifeCount = Object.keys(results).filter(k => lifeFocus.includes(k)).length;
 
     if (workCount > lifeCount + 1) {
-      insights.push('💼 **仕事最優先タイプ**：キャリアのためなら私生活を犠牲にできる。今は仕事に集中したい時期。');
+      insights.push('💼 **キャリア優先タイプ**：今はキャリア形成に注力したい時期のようです。プライベートの時間を犠牲にしてでも、仕事で成果を出すことや経験を積むことを優先する姿勢が見られます。');
     } else if (lifeCount > workCount + 1) {
-      insights.push('🏠 **プライベート重視タイプ**：家族や恋人、自分の時間を大切にしたい。仕事は人生の一部でしかない。');
+      insights.push('🏠 **ワークライフバランス重視タイプ**：仕事は大切だけど、人生の全てではないという考えが強いようです。プライベートの時間や心の余裕を確保し、仕事以外の人生も大切にしたいという価値観が見られます。');
     }
 
-    // Pattern 5: チーム vs 個人
-    const teamOriented = ['大プロジェクト・100人チームの一員', 'フルオフィス・濃密な人間関係'];
-    const individualOriented = ['小規模・3人で全て担当', 'リモート完全在宅・人間関係希薄'];
+    // Pattern 4: 組織規模・働き方
+    const largeCorp = [
+      '年収750万・製造業の大手メーカー（残業少なめ）',
+      '上場企業（ネームバリュー有・手続き多い）',
+      '大手銀行（年功序列・ルール厳格）',
+      '100人規模プロジェクト（役割明確・分業制）',
+      'オフィス出社（対面・チームで働く）'
+    ];
+    const smallAgile = [
+      '年収450万・ITスタートアップ（成長中・裁量大）',
+      '中小企業（知名度低・意思決定早い）',
+      '5人チーム（企画から実装まで全部）',
+      'フルリモート（在宅・全国どこでも）'
+    ];
 
-    const teamCount = Object.keys(results).filter(k => teamOriented.includes(k)).length;
-    const individualCount = Object.keys(results).filter(k => individualOriented.includes(k)).length;
+    const largeCount = Object.keys(results).filter(k => largeCorp.includes(k)).length;
+    const smallCount = Object.keys(results).filter(k => smallAgile.includes(k)).length;
 
-    if (teamCount > individualCount) {
-      insights.push('🤝 **チームプレイヤー**：人と一緒に働きたい。つながりや協力関係を大切にする。');
-    } else if (individualCount > teamCount) {
-      insights.push('🎯 **一匹狼タイプ**：一人で完結したい。人間関係より自由と裁量が欲しい。');
+    if (largeCount > smallCount + 1) {
+      insights.push('🏢 **大規模組織向きタイプ**：整った制度や明確な役割分担がある環境を好むようです。組織の一員として、確立されたシステムの中で力を発揮するタイプです。');
+    } else if (smallCount > largeCount + 1) {
+      insights.push('⚡ **小規模・機動力重視タイプ**：意思決定が早く、自分の裁量が大きい環境を好む傾向があります。幅広い業務に関わり、自分の影響を直接感じられる環境で働きたいという思いが強いようです。');
     }
 
-    return insights.slice(0, 4); // 最大4つまで
+    // Pattern 5: 外的評価 vs 内的満足
+    const externalFocus = [
+      '上場企業（ネームバリュー有・手続き多い）',
+      '大手銀行（年功序列・ルール厳格）',
+      '総合職（転勤あり・昇進早い・年収高い）',
+      '有名企業（周囲に説明しやすい・仕事は退屈）',
+      '業界トップ（認知度高・長時間労働）'
+    ];
+    const internalFocus = [
+      'スペシャリスト職（現場で専門スキルを磨く）',
+      'ニッチ企業（周囲に説明しづらい・仕事は面白い）',
+      'BtoC企業（顧客の反応直接・給与普通）',
+      '中堅企業（無名・定時退社）'
+    ];
+
+    const externalCount = Object.keys(results).filter(k => externalFocus.includes(k)).length;
+    const internalCount = Object.keys(results).filter(k => internalFocus.includes(k)).length;
+
+    if (externalCount > internalCount + 1) {
+      insights.push('👔 **社会的評価を意識するタイプ**：企業の知名度や社会的地位を重視する傾向が見られます。周囲に説明しやすく、理解されやすい選択を好むようです。キャリアの「見え方」も大切にしています。');
+    } else if (internalCount > externalCount + 1) {
+      insights.push('✨ **内的満足を重視するタイプ**：周囲の評価よりも、自分自身の満足度や成長実感を優先する傾向があります。他人にどう見られるかよりも、自分が納得できるかどうかを判断基準にしています。');
+    }
+
+    return insights;
+  };
+
+  // Generate questions/contradictions to explore in dialogue
+  const generateQuestions = () => {
+    const questions: string[] = [];
+    const allChoices = Object.keys(results);
+
+    // Check for contradictions
+    if (allChoices.includes('年収900万・月の残業60時間') &&
+        allChoices.includes('年収600万・月の残業10時間')) {
+      questions.push('「高収入だけど残業多い」と「収入低めだけど残業少ない」の両方を選んでいます。あなたにとって、お金と時間のどちらが本当に大切なのでしょうか？');
+    }
+
+    if (allChoices.includes('総合職（転勤あり・昇進早い・年収高い）') &&
+        allChoices.includes('地域限定職（転勤なし・昇進遅い・年収普通）')) {
+      questions.push('「転勤ありの総合職」と「転勤なしの地域限定職」の両方に魅力を感じています。キャリアアップと生活の安定、どちらを優先したいのでしょうか？');
+    }
+
+    if (allChoices.includes('上場企業（ネームバリュー有・手続き多い）') &&
+        allChoices.includes('中小企業（知名度低・意思決定早い）')) {
+      questions.push('大企業の安定感と中小企業のスピード感、両方を選んでいます。組織規模についてどう考えていますか？');
+    }
+
+    if (allChoices.includes('ハイレベルな環境（優秀な人材・高い目標）') &&
+        allChoices.includes('マイペースな環境（和気あいあい・目標緩め）')) {
+      questions.push('「ハイレベルな環境」と「マイペースな環境」の両方を選択しています。今のあなたにとって、成長とストレス管理のバランスをどう取りたいですか？');
+    }
+
+    // Check for strong patterns
+    const moneyChoices = [
+      '年収900万・月の残業60時間',
+      '総合職（転勤あり・昇進早い・年収高い）',
+      'コンサル・外資系（年収高・激務）'
+    ].filter(c => allChoices.includes(c));
+
+    if (moneyChoices.length >= 2) {
+      questions.push('収入を重視する選択が多く見られますが、その背景には何がありますか？将来への不安、達成したい目標、守りたい人がいるなど、具体的な理由はありますか？');
+    }
+
+    const balanceChoices = [
+      '年収600万・月の残業10時間',
+      '地域限定職（転勤なし・昇進遅い・年収普通）',
+      '中堅企業（無名・定時退社）'
+    ].filter(c => allChoices.includes(c));
+
+    if (balanceChoices.length >= 2) {
+      questions.push('ワークライフバランスを重視する選択が目立ちます。プライベートの時間で何を大切にしたいですか？');
+    }
+
+    return questions.slice(0, 3); // 最大3つまで
   };
 
   const comprehensiveInsights = generateInsights();
+  const explorationQuestions = generateQuestions();
 
   // Prepare data for pie chart
   const total = sortedResults.reduce((sum, [, count]) => sum + count, 0);
@@ -262,18 +390,96 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
           </div>
         </div>
 
-        {/* Insight */}
+        {/* Top 5 Choices */}
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl p-6 mb-6">
+          <div className="flex items-start mb-4">
+            <div className="text-3xl mr-3">🏆</div>
+            <div>
+              <h3 className="font-bold text-gray-900 mb-2 text-xl">
+                あなたが選んだTOP5
+              </h3>
+              <p className="text-sm text-gray-600">
+                20回の選択の中で、最も多く選んだ価値観
+              </p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {sortedResults.map(([value, count], index) => {
+              const percentage = ((count / 20) * 100).toFixed(0);
+              const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+              return (
+                <div key={index} className="bg-white rounded-xl p-4 border border-purple-200">
+                  <div className="flex items-start mb-2">
+                    <span className="text-2xl mr-3">{medals[index]}</span>
+                    <div className="flex-grow">
+                      <p className="text-gray-800 font-semibold text-sm leading-relaxed">
+                        {value}
+                      </p>
+                      <div className="mt-2 flex items-center">
+                        <div className="flex-grow bg-gray-200 rounded-full h-2 mr-3">
+                          <div
+                            className="bg-purple-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-purple-600 whitespace-nowrap">
+                          {count}回選択 ({percentage}%)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Exploration Questions */}
+        {explorationQuestions.length > 0 && (
+          <div className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-2xl p-6 mb-6">
+            <div className="flex items-start mb-4">
+              <div className="text-3xl mr-3">💭</div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-2 text-xl">
+                  一緒に考えたいこと
+                </h3>
+                <p className="text-sm text-gray-600">
+                  あなたの選択から見えてきた矛盾や疑問。対話を通じて掘り下げてみましょう
+                </p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {explorationQuestions.map((question, index) => (
+                <div key={index} className="bg-white rounded-xl p-4 border border-amber-200">
+                  <p className="text-gray-700 leading-relaxed text-sm">
+                    {question}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Call to Action */}
         <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
           <h3 className="font-bold text-gray-900 mb-3 text-lg">
-            でも、これって本当？
+            ここからが本番
           </h3>
-          <p className="text-gray-700 leading-relaxed">
-            データから見えたあなたの傾向。
-            <br />
-            でも、これは選択の結果でしかない。
+          <p className="text-gray-700 leading-relaxed text-sm">
+            これらは20回の選択から見えてきた「あなたの傾向」です。
             <br />
             <br />
-            <strong>「なぜそう選んだのか」</strong>を一緒に掘り下げてみよう。
+            でも、選択の結果だけでは見えないことがたくさんあります。
+            <br />
+            <br />
+            💡 <strong>「なぜそう選んだのか」</strong>
+            <br />
+            💡 <strong>「本当に大切にしたいことは何か」</strong>
+            <br />
+            💡 <strong>「矛盾する選択の背景にある想い」</strong>
+            <br />
+            <br />
+            対話を通じて、一緒に深く掘り下げていきましょう。
           </p>
         </div>
 
