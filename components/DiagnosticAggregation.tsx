@@ -112,35 +112,35 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900">
           あなたについて分かったこと
         </h2>
-        <span className="text-sm text-gray-500">
-          {insights.length}個のモジュール
+        <span className="text-sm text-gray-500 font-medium">
+          {insights.length}個
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-4">
         {insights.map((insight, index) => (
           <div
             key={insight.moduleId}
             className="animate-slide-in"
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            <div className={`bg-gradient-to-r ${insight.color} rounded-xl p-[2px] h-full`}>
-              <div className="bg-white rounded-xl p-5 h-full">
-                <div className="flex items-center space-x-2 mb-3">
-                  <span className="text-2xl">{insight.icon}</span>
-                  <h3 className="font-bold text-gray-900 text-sm">
+            <div className={`bg-gradient-to-r ${insight.color} rounded-xl p-[2px]`}>
+              <div className="bg-white rounded-xl p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className="text-4xl">{insight.icon}</span>
+                  <h3 className="font-bold text-gray-900 text-lg">
                     {insight.moduleName}
                   </h3>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {insight.findings.map((finding, i) => (
-                    <div key={i} className="flex items-start text-xs">
-                      <span className="text-blue-600 mr-1.5 flex-shrink-0">•</span>
-                      <span className="text-gray-700">{finding}</span>
+                    <div key={i} className="flex items-start">
+                      <span className="text-blue-600 mr-2 flex-shrink-0 text-lg">•</span>
+                      <span className="text-gray-700 text-base leading-relaxed">{finding}</span>
                     </div>
                   ))}
                 </div>
