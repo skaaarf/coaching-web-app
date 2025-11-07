@@ -173,30 +173,30 @@ export default function ModulePage() {
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 flex-shrink-0">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
               <button
                 onClick={() => router.push('/')}
                 className="text-gray-600 hover:text-gray-900 active:text-gray-900 transition-colors flex-shrink-0 p-2 -ml-2 touch-manipulation"
                 aria-label="ホームに戻る"
                 type="button"
               >
-                <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
               </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl sm:text-2xl flex-shrink-0">{module.icon}</span>
-                  <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{module.title}</h1>
+                  <span className="text-xl flex-shrink-0">{module.icon}</span>
+                  <h1 className="text-base font-semibold text-gray-900 truncate">{module.title}</h1>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block truncate">{module.description}</p>
+                <p className="text-xs text-gray-500 truncate">{module.description}</p>
               </div>
             </div>
             <button
               onClick={handleMarkComplete}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
+              className="px-3 py-2 text-xs font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
             >
               完了
             </button>

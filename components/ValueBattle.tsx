@@ -68,14 +68,14 @@ export default function ValueBattle({ onComplete }: Props) {
   const progress = ((currentRound + 1) / BATTLE_CHOICES.length) * 100;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+    <div className="max-w-2xl mx-auto px-4 py-4">
       {/* Progress bar */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-6">
         <div className="flex justify-between items-center mb-3">
-          <span className="text-sm sm:text-base font-semibold text-gray-900">
+          <span className="text-sm font-semibold text-gray-900">
             ラウンド {currentRound + 1} / {BATTLE_CHOICES.length}
           </span>
-          <span className="text-sm sm:text-base font-semibold text-blue-600">{Math.round(progress)}%</span>
+          <span className="text-sm font-semibold text-blue-600">{Math.round(progress)}%</span>
         </div>
         <div className="h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
           <div
@@ -86,37 +86,37 @@ export default function ValueBattle({ onComplete }: Props) {
       </div>
 
       {/* Battle card */}
-      <div className="bg-white rounded-2xl border-2 border-gray-300 p-5 sm:p-8 shadow-lg">
-        <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+      <div className="bg-white rounded-2xl border-2 border-gray-300 p-5 shadow-lg">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-3">
             どっちを選ぶ？
           </h2>
-          <p className="text-sm sm:text-base font-medium text-gray-700 bg-gray-100 px-4 py-2 rounded-lg inline-block">
+          <p className="text-sm font-medium text-gray-700 bg-gray-100 px-4 py-2 rounded-lg inline-block">
             {current.category}
           </p>
         </div>
 
-        <div className="space-y-4 sm:space-y-5">
+        <div className="space-y-4">
           <button
             onClick={() => handleChoice('A')}
-            className="w-full p-5 sm:p-6 text-left bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border-3 border-blue-300 hover:border-blue-500 active:border-blue-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:shadow-xl group touch-manipulation"
+            className="w-full p-5 text-left bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border-3 border-blue-300 hover:border-blue-500 active:border-blue-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:shadow-xl group touch-manipulation"
             type="button"
           >
-            <div className="text-base sm:text-xl font-bold text-gray-900 group-hover:text-blue-800 leading-relaxed">
+            <div className="text-base font-bold text-gray-900 group-hover:text-blue-800 leading-relaxed">
               {current.optionA}
             </div>
           </button>
 
           <div className="text-center py-2">
-            <span className="text-2xl sm:text-3xl font-bold text-gray-600 bg-white px-4 py-2 rounded-full border-2 border-gray-300 inline-block shadow-sm">vs</span>
+            <span className="text-2xl font-bold text-gray-600 bg-white px-4 py-2 rounded-full border-2 border-gray-300 inline-block shadow-sm">vs</span>
           </div>
 
           <button
             onClick={() => handleChoice('B')}
-            className="w-full p-5 sm:p-6 text-left bg-purple-50 hover:bg-purple-100 active:bg-purple-200 border-3 border-purple-300 hover:border-purple-500 active:border-purple-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:shadow-xl group touch-manipulation"
+            className="w-full p-5 text-left bg-purple-50 hover:bg-purple-100 active:bg-purple-200 border-3 border-purple-300 hover:border-purple-500 active:border-purple-600 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:shadow-xl group touch-manipulation"
             type="button"
           >
-            <div className="text-base sm:text-xl font-bold text-gray-900 group-hover:text-purple-800 leading-relaxed">
+            <div className="text-base font-bold text-gray-900 group-hover:text-purple-800 leading-relaxed">
               {current.optionB}
             </div>
           </button>
@@ -124,8 +124,8 @@ export default function ValueBattle({ onComplete }: Props) {
       </div>
 
       {/* Instruction */}
-      <div className="mt-6 sm:mt-8 text-center">
-        <p className="text-sm sm:text-base text-gray-700 font-medium bg-yellow-50 border-2 border-yellow-200 px-4 py-3 rounded-lg inline-block">
+      <div className="mt-6 text-center">
+        <p className="text-sm text-gray-700 font-medium bg-yellow-50 border-2 border-yellow-200 px-4 py-3 rounded-lg inline-block">
           💡 直感で選んでOK。深く考えすぎないで！
         </p>
       </div>

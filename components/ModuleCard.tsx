@@ -25,7 +25,7 @@ export default function ModuleCard({ module, progress, interactiveProgress }: Mo
 
   return (
     <Link href={modulePath}>
-      <div className="group relative overflow-hidden rounded-2xl border-2 border-gray-300 bg-white p-5 sm:p-6 shadow-md transition-all duration-200 hover:shadow-xl hover:border-blue-400 hover:-translate-y-1 touch-manipulation">
+      <div className="group relative overflow-hidden rounded-2xl border-2 border-gray-300 bg-white p-5 shadow-md transition-all duration-200 hover:shadow-xl hover:border-blue-400 hover:-translate-y-1 touch-manipulation">
         {/* Progress indicator */}
         {isStarted && (
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gray-200">
@@ -38,7 +38,7 @@ export default function ModuleCard({ module, progress, interactiveProgress }: Mo
 
         {/* Icon and status */}
         <div className="flex items-start justify-between mb-4">
-          <div className={`text-5xl sm:text-4xl transition-all duration-200 ${isCompleted ? 'opacity-100 scale-110' : 'opacity-90'} group-hover:scale-125`}>
+          <div className={`text-5xl transition-all duration-200 ${isCompleted ? 'opacity-100 scale-110' : 'opacity-90'} group-hover:scale-125`}>
             {module.icon}
           </div>
           {isCompleted && (
@@ -54,15 +54,15 @@ export default function ModuleCard({ module, progress, interactiveProgress }: Mo
         </div>
 
         {/* Title and description */}
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors leading-tight">
+        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors leading-tight">
           {module.title}
         </h3>
-        <p className="text-sm sm:text-base text-gray-700 mb-4 line-clamp-3 leading-relaxed font-medium">
+        <p className="text-sm text-gray-700 mb-4 line-clamp-3 leading-relaxed font-medium">
           {module.description}
         </p>
 
         {/* Meta info */}
-        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600 font-medium">
+        <div className="flex items-center justify-between text-xs text-gray-600 font-medium">
           <span className="flex items-center bg-gray-100 px-2 py-1 rounded-md">
             <svg className="w-4 h-4 mr-1 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

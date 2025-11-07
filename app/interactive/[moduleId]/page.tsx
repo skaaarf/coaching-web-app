@@ -277,26 +277,26 @@ export default function InteractiveModulePage() {
       {/* Resume prompt modal */}
       {showResumePrompt && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl transform transition-all animate-fade-in">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform transition-all animate-fade-in">
             <div className="text-center mb-6">
-              <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">💾</div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              <div className="text-4xl mb-3">💾</div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
                 続きから始めますか？
               </h2>
-              <p className="text-sm sm:text-base text-gray-600">
+              <p className="text-sm text-gray-600">
                 前回の進捗が保存されています
               </p>
             </div>
             <div className="space-y-3">
               <button
                 onClick={handleResumeProgress}
-                className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm sm:text-base"
+                className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm"
               >
                 続きから始める
               </button>
               <button
                 onClick={handleStartFresh}
-                className="w-full py-3 px-6 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors duration-200 text-sm sm:text-base"
+                className="w-full py-3 px-6 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors duration-200 text-sm"
               >
                 最初からやり直す
               </button>
@@ -307,9 +307,9 @@ export default function InteractiveModulePage() {
 
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
               <button
                 onClick={() => router.push('/')}
                 className="text-gray-600 hover:text-gray-900 active:text-gray-900 transition-colors flex-shrink-0 p-2 -ml-2 touch-manipulation"
@@ -332,15 +332,15 @@ export default function InteractiveModulePage() {
               </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl sm:text-2xl flex-shrink-0">{module.icon}</span>
-                  <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                  <span className="text-xl flex-shrink-0">{module.icon}</span>
+                  <h1 className="text-base font-semibold text-gray-900 truncate">
                     {module.title}
                   </h1>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block truncate">{module.description}</p>
+                <p className="text-xs text-gray-500 block truncate">{module.description}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1 flex-shrink-0">
               {state.phase === 'dialogue' && (
                 <>
                   <button
@@ -365,7 +365,7 @@ export default function InteractiveModulePage() {
                   </button>
                   <button
                     onClick={handleBackToResult}
-                    className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors hidden md:block"
+                    className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors block"
                     title="結果に戻る"
                     aria-label="結果に戻る"
                   >
@@ -375,7 +375,7 @@ export default function InteractiveModulePage() {
                   </button>
                   <button
                     onClick={handleMarkComplete}
-                    className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors whitespace-nowrap"
+                    className="px-2 py-2 text-xs font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors whitespace-nowrap"
                   >
                     完了
                   </button>
@@ -474,7 +474,7 @@ export default function InteractiveModulePage() {
           )}
 
           {state.phase === 'dialogue' && (
-            <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)] sm:h-[calc(100vh-160px)] lg:h-[calc(100vh-180px)] relative">
+            <div className="flex flex-col lg:flex-row h-[calc(100vh-120px)] relative">
               {/* History Sidebar - Left (Desktop only) */}
               {showHistorySidebar && (
                 <>
