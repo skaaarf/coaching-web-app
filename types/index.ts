@@ -39,6 +39,10 @@ export interface ValueBattleChoice {
   optionA: string;
   optionB: string;
   category: string;
+  meritsA?: string[];
+  demeritsA?: string[];
+  meritsB?: string[];
+  demeritsB?: string[];
 }
 
 export interface ValueBattleResult {
