@@ -94,16 +94,16 @@ export default function ChatInterface({
       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
     >
       <div
-        className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 sm:px-4 py-2 sm:py-3 ${
+        className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 sm:px-5 py-3 sm:py-4 shadow-md ${
           message.role === 'user'
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-100 text-gray-900'
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-200 text-gray-900 border-2 border-gray-300'
         }`}
       >
-        <div className="whitespace-pre-wrap break-words text-sm sm:text-base">{message.content}</div>
+        <div className="whitespace-pre-wrap break-words text-base sm:text-lg leading-relaxed font-medium">{message.content}</div>
         <div
-          className={`text-xs mt-1.5 sm:mt-2 ${
-            message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+          className={`text-xs sm:text-sm mt-2 font-medium ${
+            message.role === 'user' ? 'text-blue-100' : 'text-gray-600'
           }`}
         >
           {new Date(message.timestamp).toLocaleTimeString('ja-JP', {
@@ -147,18 +147,18 @@ export default function ChatInterface({
       </div>
 
       {/* Input area */}
-      <div className="border-t border-gray-200 bg-white px-3 sm:px-4 py-3 sm:py-4">
+      <div className="border-t-2 border-gray-300 bg-white px-3 sm:px-4 py-4 sm:py-5 shadow-lg">
         {/* Suggested Questions */}
         {suggestedQuestions.length > 0 && !isLoading && (
-          <div className="mb-3 space-y-2">
-            <div className="text-xs text-gray-500 font-medium mb-2">💡 こんな質問はどう？</div>
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          <div className="mb-4 space-y-2">
+            <div className="text-sm text-gray-700 font-semibold mb-2">💡 こんな質問はどう？</div>
+            <div className="flex flex-wrap gap-2">
               {suggestedQuestions.map((question, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => handleSuggestedQuestionClick(question)}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 rounded-full text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-all hover:shadow-md"
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 active:from-blue-200 active:to-indigo-200 border-2 border-blue-300 rounded-full text-xs sm:text-sm text-gray-800 hover:text-gray-900 font-medium transition-all hover:shadow-lg active:shadow-xl touch-manipulation"
                 >
                   {question}
                 </button>
@@ -175,13 +175,13 @@ export default function ChatInterface({
             placeholder={placeholder}
             disabled={isLoading}
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 text-gray-900"
+            className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 text-base sm:text-lg font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-gray-900 shadow-sm"
             style={{ maxHeight: '120px' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="rounded-xl bg-blue-500 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+            className="rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 px-5 sm:px-7 py-3 sm:py-3.5 text-base sm:text-lg font-bold text-white focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:shadow-xl whitespace-nowrap touch-manipulation"
           >
             送信
           </button>

@@ -312,19 +312,20 @@ export default function InteractiveModulePage() {
             <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
               <button
                 onClick={() => router.push('/')}
-                className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-                aria-label="戻る"
+                className="text-gray-600 hover:text-gray-900 active:text-gray-900 transition-colors flex-shrink-0 p-2 -ml-2 touch-manipulation"
+                aria-label="ホームに戻る"
+                type="button"
               >
                 <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  className="w-6 h-6 sm:w-7 sm:h-7"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  strokeWidth={2.5}
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
                     d="M10 19l-7-7m0 0l7-7m-7 7h18"
                   />
                 </svg>
