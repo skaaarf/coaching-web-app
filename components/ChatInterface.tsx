@@ -81,11 +81,12 @@ export default function ChatInterface({
     }
   };
 
-  const handleSuggestedQuestionClick = async (question: string) => {
-    // Clear suggestions immediately
+  const handleSuggestedQuestionClick = (question: string) => {
+    // Populate the input field with the question instead of sending directly
+    // This allows users to edit the question before sending
+    setInput(question);
+    // Clear suggestions after selecting one
     setSuggestedQuestions([]);
-    // Send the question directly without populating input field
-    await onSendMessage(question);
   };
 
   const renderMessage = (message: Message, index: number) => (
@@ -94,16 +95,16 @@ export default function ChatInterface({
       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
     >
       <div
-        className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+        className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-md ${
           message.role === 'user'
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-100 text-gray-900'
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-200 text-gray-900 border-2 border-gray-300'
         }`}
       >
-        <div className="whitespace-pre-wrap break-words">{message.content}</div>
+        <div className="whitespace-pre-wrap break-words text-base leading-relaxed font-medium">{message.content}</div>
         <div
-          className={`text-xs mt-2 ${
-            message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+          className={`text-xs mt-2 font-medium ${
+            message.role === 'user' ? 'text-blue-100' : 'text-gray-600'
           }`}
         >
           {new Date(message.timestamp).toLocaleTimeString('ja-JP', {
@@ -118,13 +119,13 @@ export default function ChatInterface({
   return (
     <div className="flex flex-col h-full">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
         {/* Older messages (if any) */}
         {olderMessages.map((message, index) => renderMessage(message, index))}
 
         {/* Latest two messages in a min-height container */}
         {latestMessages.length > 0 && (
-          <div className="min-h-[50vh] space-y-6">
+          <div className="min-h-[50vh] space-y-4">
             {latestMessages.map((message, index) =>
               renderMessage(message, olderMessages.length + index)
             )}
@@ -147,27 +148,32 @@ export default function ChatInterface({
       </div>
 
       {/* Input area */}
-      <div className="border-t border-gray-200 bg-white px-4 py-4">
+      <div className="border-t-2 border-gray-300 bg-white px-3 py-4 shadow-lg">
         {/* Suggested Questions */}
         {suggestedQuestions.length > 0 && !isLoading && (
-          <div className="mb-3 space-y-2">
-            <div className="text-xs text-gray-500 font-medium mb-2">💡 こんな質問はどう？</div>
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="text-sm text-gray-700 font-bold">💡 こんな質問はどう？</div>
+              <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                タップして編集可能
+              </div>
+            </div>
             <div className="flex flex-wrap gap-2">
               {suggestedQuestions.map((question, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => handleSuggestedQuestionClick(question)}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 rounded-full text-sm text-gray-700 hover:text-gray-900 transition-all hover:shadow-md"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 active:from-blue-200 active:to-indigo-200 border-2 border-blue-400 hover:border-blue-500 rounded-xl text-sm text-gray-800 hover:text-gray-900 font-medium transition-all shadow-sm hover:shadow-md active:shadow-lg touch-manipulation"
                 >
-                  {question}
+                  ✏️ {question}
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex items-end space-x-3">
+        <form onSubmit={handleSubmit} className="flex items-end space-x-2">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -175,13 +181,13 @@ export default function ChatInterface({
             placeholder={placeholder}
             disabled={isLoading}
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 text-gray-900"
+            className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 text-base font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-gray-900 shadow-sm"
             style={{ maxHeight: '120px' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="rounded-xl bg-blue-500 px-6 py-3 font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 px-5 py-3 text-base font-bold text-white focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:shadow-xl whitespace-nowrap touch-manipulation"
           >
             送信
           </button>

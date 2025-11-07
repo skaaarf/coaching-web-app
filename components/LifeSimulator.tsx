@@ -174,19 +174,19 @@ export default function LifeSimulator({ onComplete }: Props) {
 
   const path = LIFE_PATHS[currentPath];
   const currentSelections = selections[path.id] || [];
-  const canProceed = currentSelections.length === 3;
+  const canProceed = currentSelections.length >= 1 && currentSelections.length <= 3;
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto px-4 py-6">
       {/* Progress */}
-      <div className="mb-8">
-        <div className="flex justify-center space-x-4 mb-4">
+      <div className="mb-6">
+        <div className="flex justify-center space-x-3 mb-4">
           {LIFE_PATHS.map((_, index) => (
             <div
               key={index}
-              className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
                 index === currentPath
-                  ? 'bg-blue-500 text-white'
+                  ? 'bg-blue-500 text-white shadow-lg'
                   : index < currentPath
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-200 text-gray-400'
@@ -196,25 +196,29 @@ export default function LifeSimulator({ onComplete }: Props) {
             </div>
           ))}
         </div>
+        <p className="text-center text-xs text-gray-600 font-medium">
+          {currentPath + 1} / {LIFE_PATHS.length} の人生
+        </p>
       </div>
 
-      <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
+      <div className="bg-white rounded-2xl border-2 border-gray-300 p-5 shadow-lg">
         {/* Title */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
             {path.title}
           </h2>
-          <p className="text-sm text-gray-500">
-            この人生の好きなポイントを3つ選んで
-          </p>
         </div>
 
-        {/* Timeline */}
-        <div className="mb-8">
-          <div className="space-y-3">
+        {/* Timeline - AT THE TOP */}
+        <div className="mb-6 bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
+          <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center">
+            <span className="text-lg mr-2">📖</span>
+            人生の詳細
+          </h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
             {path.timeline.map((event, index) => (
-              <div key={index} className="flex items-start">
-                <div className="flex-shrink-0 w-16 font-semibold text-blue-600">
+              <div key={index} className="flex items-start text-sm">
+                <div className="flex-shrink-0 w-12 font-semibold text-blue-600">
                   {event.age}歳:
                 </div>
                 <div className="flex-grow text-gray-700">{event.event}</div>
@@ -223,9 +227,24 @@ export default function LifeSimulator({ onComplete }: Props) {
           </div>
         </div>
 
+        {/* Selection Counter - PROMINENT */}
+        <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl p-4">
+          <div className="text-center">
+            <p className="text-base font-bold text-gray-900 mb-2">
+              💡 好きなポイントを1〜3つ選んでください
+            </p>
+            <div className="flex items-center justify-center gap-2">
+              <div className={`text-3xl font-bold ${currentSelections.length >= 1 ? 'text-green-600' : 'text-blue-600'}`}>
+                {currentSelections.length}
+              </div>
+              <span className="text-sm text-gray-700">/ 最大3つ</span>
+            </div>
+          </div>
+        </div>
+
         {/* Aspects selection */}
         <div className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-3">
             {path.aspects.map((aspect) => {
               const isSelected = currentSelections.includes(aspect);
               const isDisabled = !isSelected && currentSelections.length >= 3;
@@ -235,39 +254,29 @@ export default function LifeSimulator({ onComplete }: Props) {
                   key={aspect}
                   onClick={() => handleAspectToggle(path.id, aspect)}
                   disabled={isDisabled}
-                  className={`p-4 rounded-xl border-2 text-left transition-all duration-200 ${
+                  className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 touch-manipulation ${
                     isSelected
-                      ? 'bg-blue-100 border-blue-400 text-blue-900'
+                      ? 'bg-blue-100 border-blue-500 text-blue-900 shadow-md'
                       : isDisabled
-                      ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
+                      ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed opacity-50'
+                      : 'bg-white border-gray-300 hover:border-blue-300 text-gray-700 hover:bg-blue-50'
                   }`}
                 >
                   <div className="flex items-center">
                     <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center mr-3 ${
+                      className={`w-6 h-6 rounded border-2 flex items-center justify-center mr-3 flex-shrink-0 ${
                         isSelected
                           ? 'bg-blue-500 border-blue-500'
-                          : 'border-gray-300'
+                          : 'bg-white border-gray-400'
                       }`}
                     >
                       {isSelected && (
-                        <svg
-                          className="w-3 h-3 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={3}
-                            d="M5 13l4 4L19 7"
-                          />
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                     </div>
-                    <span className="font-medium">{aspect}</span>
+                    <span className="text-sm font-medium leading-relaxed">{aspect}</span>
                   </div>
                 </button>
               );
@@ -275,22 +284,21 @@ export default function LifeSimulator({ onComplete }: Props) {
           </div>
         </div>
 
-        {/* Selection counter */}
-        <div className="text-center text-sm text-gray-500 mb-6">
-          {currentSelections.length} / 3 選択済み
-        </div>
-
         {/* Next button */}
         <button
           onClick={handleNext}
           disabled={!canProceed}
-          className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-200 ${
+          className={`w-full py-4 rounded-xl font-bold text-white text-base transition-all shadow-md touch-manipulation ${
             canProceed
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 hover:shadow-lg'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
-          {currentPath < LIFE_PATHS.length - 1 ? '次の人生へ' : '結果を見る'}
+          {canProceed ? (
+            currentPath < LIFE_PATHS.length - 1 ? '次の人生へ →' : '完了'
+          ) : (
+            currentSelections.length === 0 ? '1つ以上選んでください' : ''
+          )}
         </button>
       </div>
     </div>

@@ -81,21 +81,33 @@ export default function ParentSelfScale({ onComplete }: Props) {
 
           {/* Scale */}
           <div className="relative">
-            {/* Labels */}
-            <div className="flex justify-between mb-4">
-              <span className="text-sm font-medium text-purple-600">親の期待</span>
-              <span className="text-sm font-medium text-blue-600">自分の気持ち</span>
+            {/* Labels - Now tappable for quick selection */}
+            <div className="flex justify-between mb-6">
+              <button
+                type="button"
+                onClick={() => setSliderValue(0)}
+                className="px-4 py-3 rounded-xl bg-purple-50 border-2 border-purple-300 active:bg-purple-100 transition-colors touch-manipulation"
+              >
+                <span className="text-sm font-bold text-purple-700">← 親の期待</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSliderValue(100)}
+                className="px-4 py-3 rounded-xl bg-blue-50 border-2 border-blue-300 active:bg-blue-100 transition-colors touch-manipulation"
+              >
+                <span className="text-sm font-bold text-blue-700">自分の気持ち →</span>
+              </button>
             </div>
 
-            {/* Slider */}
-            <div className="relative mb-4">
+            {/* Slider - Enhanced for mobile touch */}
+            <div className="relative mb-6 py-4">
               <input
                 type="range"
                 min="0"
                 max="100"
                 value={sliderValue}
                 onChange={(e) => setSliderValue(Number(e.target.value))}
-                className="w-full h-3 bg-gradient-to-r from-purple-200 via-gray-200 to-blue-200 rounded-full appearance-none cursor-pointer slider"
+                className="w-full h-5 bg-gradient-to-r from-purple-200 via-gray-200 to-blue-200 rounded-full appearance-none cursor-pointer slider touch-manipulation"
                 style={{
                   background: `linear-gradient(to right,
                     #c084fc ${sliderValue}%,
@@ -105,50 +117,65 @@ export default function ParentSelfScale({ onComplete }: Props) {
               <style jsx>{`
                 .slider::-webkit-slider-thumb {
                   appearance: none;
-                  width: 24px;
-                  height: 24px;
+                  width: 44px;
+                  height: 44px;
                   border-radius: 50%;
-                  background: #4b5563;
+                  background: #1f2937;
                   cursor: pointer;
-                  border: 3px solid white;
-                  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+                  border: 4px solid white;
+                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                  transition: all 0.2s;
+                }
+                .slider::-webkit-slider-thumb:active {
+                  transform: scale(1.1);
+                  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
                 }
                 .slider::-moz-range-thumb {
-                  width: 24px;
-                  height: 24px;
+                  width: 44px;
+                  height: 44px;
                   border-radius: 50%;
-                  background: #4b5563;
+                  background: #1f2937;
                   cursor: pointer;
-                  border: 3px solid white;
-                  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+                  border: 4px solid white;
+                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                  transition: all 0.2s;
+                }
+                .slider::-moz-range-thumb:active {
+                  transform: scale(1.1);
+                  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
                 }
               `}</style>
             </div>
 
             {/* Value indicator */}
             <div className="text-center">
-              <div className="inline-block px-4 py-2 bg-gray-100 rounded-full">
-                <span className="text-sm font-medium text-gray-700">
-                  {sliderValue < 40 && '親の期待寄り'}
-                  {sliderValue >= 40 && sliderValue <= 60 && 'どちらとも言えない'}
-                  {sliderValue > 60 && '自分の気持ち寄り'}
-                </span>
+              <div className="inline-block px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-50 rounded-xl border-2 border-gray-300 shadow-sm">
+                <div className="text-base font-bold text-gray-900">
+                  {sliderValue < 40 && '← 親の期待寄り'}
+                  {sliderValue >= 40 && sliderValue <= 60 && '⚖️ どちらとも言えない'}
+                  {sliderValue > 60 && '自分の気持ち寄り →'}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">
+                  {sliderValue}%
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Instruction */}
-        <div className="text-center text-sm text-gray-500 mb-6">
-          スライダーを動かして、あなたの気持ちの位置を決めてください
+        <div className="text-center bg-blue-50 border-2 border-blue-200 rounded-lg px-4 py-3 mb-6">
+          <p className="text-sm font-medium text-gray-700">
+            💡 スライダーを動かすか、両端のボタンをタップしてください
+          </p>
         </div>
 
         {/* Next button */}
         <button
           onClick={handleNext}
-          className="w-full py-4 px-6 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-colors duration-200"
+          className="w-full py-4 px-6 bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-bold text-base rounded-xl transition-colors duration-200 shadow-md hover:shadow-lg touch-manipulation"
         >
-          {currentQuestion < QUESTIONS.length - 1 ? '次へ' : '結果を見る'}
+          {currentQuestion < QUESTIONS.length - 1 ? '次へ →' : '完了して結果を見る'}
         </button>
       </div>
     </div>
