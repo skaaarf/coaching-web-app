@@ -5,7 +5,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'value-battle',
     title: '価値観バトル',
-    description: '20回の二択で、あなたの価値観の優先順位を可視化します',
+    description: '年収、やりがい、安定性、ワークライフバランス…20回の二択を通じて、あなたが本当に大切にしている価値観の優先順位を可視化します。頭で考えるのではなく、直感で選ぶことで、自分でも気づいていなかった本音が見えてきます。',
     icon: '⚔️',
     color: 'bg-indigo-500',
     estimatedTime: '5-10分',
@@ -32,7 +32,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'life-simulator',
     title: '人生シミュレーター',
-    description: '3つの人生を見て、どの要素に惹かれるか発見します',
+    description: '大企業の安定キャリア、ベンチャーの挑戦、クリエイティブ職、地元密着、専門職…5つの異なる人生を18歳から60歳まで追体験します。各人生から「いいな」と思う要素を3つずつ選ぶことで、あなたが惹かれる人生の要素が明確になります。',
     icon: '🎬',
     color: 'bg-cyan-500',
     estimatedTime: '10-15分',
@@ -59,7 +59,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'parent-self-scale',
     title: '親の期待 vs 自分の気持ち',
-    description: 'スライダーで答えて、親の期待と自分の気持ちのバランスを知ります',
+    description: '「大学に行くべき？」「安定した仕事につきたい？」…10の質問に、親の期待と自分の気持ちの間のどこにいるかをスライダーで答えます。自分がどれくらい親の期待を意識しているか、どこで自分の気持ちとズレているかが見えてきます。',
     icon: '⚖️',
     color: 'bg-orange-500',
     estimatedTime: '10-15分',
@@ -86,7 +86,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'time-machine',
     title: 'タイムマシン',
-    description: '過去の自分への手紙と、未来の自分からの手紙を通じて考えます',
+    description: 'まず1年前の自分に向けて手紙を書きます。「あの時悩んでいたこと、今どうなっているか」を振り返ることで、自分の成長に気づけます。そして10年後の自分からの手紙を受け取り、今の迷いを長期的な視点から捉え直します。',
     icon: '⏰',
     color: 'bg-purple-500',
     estimatedTime: '10-15分',
@@ -113,7 +113,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'branch-map',
     title: 'IF分岐マップ',
-    description: '選択によって人生がどう変わるか、分岐を辿って可視化します',
+    description: '18歳の高校卒業から始まり、進学先、学部、就職先、転職…人生の分岐点を一つずつ選んでいきます。「もしこの道を選んでいたら、人生はどうなっていた？」をシミュレーションすることで、選択の意味や可能性を実感できます。',
     icon: '🗺️',
     color: 'bg-teal-500',
     estimatedTime: '10-15分',
@@ -142,7 +142,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'university-decision',
     title: '大学進学について考える',
-    description: '大学に行くべきか、他の選択肢はあるかを一緒に整理します',
+    description: '「大学に行った方がいいのかな？」「専門学校や就職という選択肢もあるけど…」そんなモヤモヤを対話を通じて整理します。親の期待や周りの目ではなく、あなた自身がどう考えているかを一緒に探っていきましょう。',
     icon: '🎓',
     color: 'bg-blue-500',
     estimatedTime: '15-20分',
@@ -167,7 +167,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'self-values',
     title: '自分の価値観を知る',
-    description: 'あなたが大切にしていることや、人生で重視したいことを探索します',
+    description: '「何を大切にして生きていきたいか」「どんな人生を送りたいか」…漠然としたこれらの問いを、具体的なエピソードから一緒に探っていきます。自分でも気づいていなかった価値観が見えてくることで、キャリア選択の軸が明確になります。',
     icon: '💎',
     color: 'bg-purple-500',
     estimatedTime: '10-15分',
@@ -191,7 +191,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'future-vision',
     title: '未来の自分を想像する',
-    description: '5年後、10年後のなりたい姿をイメージして、そこから逆算して考えます',
+    description: '5年後、10年後のあなたはどんな生活を送っていますか？どんな仕事をして、どんな人と一緒にいて、何にワクワクしているでしょう？理想の未来を自由に描き、そこから逆算して「今できること」を一緒に考えます。',
     icon: '🌟',
     color: 'bg-yellow-500',
     estimatedTime: '15-20分',
@@ -215,7 +215,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'skills-interests',
     title: '得意なことと好きなことを整理する',
-    description: 'あなたの強み、興味、好きなことを棚卸しして整理します',
+    description: '「得意だけど好きじゃない」「好きだけど得意じゃない」…この違いって大事です。これまでの経験を振り返りながら、あなたの強みや興味関心を整理します。小さな成功体験から、意外な才能が見つかるかもしれません。',
     icon: '⚡',
     color: 'bg-green-500',
     estimatedTime: '10-15分',
@@ -239,7 +239,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'worry-fears',
     title: '不安や心配を言葉にする',
-    description: '進路について感じている不安や恐れを整理して、向き合い方を考えます',
+    description: '「失敗したらどうしよう」「間違った選択をしたくない」…進路について抱えている不安を、安心して話せる場所です。漠然とした不安を言葉にすることで、その正体が見えてきます。不安との向き合い方を一緒に考えましょう。',
     icon: '🤝',
     color: 'bg-orange-500',
     estimatedTime: '10-15分',
@@ -264,7 +264,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'role-models',
     title: '憧れる人・参考にしたい人を考える',
-    description: 'ロールモデルや憧れる生き方から、自分の価値観を発見します',
+    description: '有名人でも、身近な人でも、架空のキャラクターでも構いません。「こんな風に生きたいな」と思う人について話してみましょう。その人のどこに惹かれるのかを深掘りすることで、あなた自身が大切にしたい生き方が見えてきます。',
     icon: '✨',
     color: 'bg-pink-500',
     estimatedTime: '10-15分',
