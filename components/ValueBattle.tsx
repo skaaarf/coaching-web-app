@@ -37,9 +37,18 @@ interface Props {
   onComplete: (results: ValueBattleResult) => void;
 }
 
+// Define sections for better progress tracking
+const SECTIONS = [
+  { name: 'キャリアの本質', start: 0, end: 4, icon: '💼', color: 'blue' },
+  { name: 'ワークライフバランス', start: 5, end: 9, icon: '⚖️', color: 'green' },
+  { name: '働き方と環境', start: 10, end: 14, icon: '🏢', color: 'purple' },
+  { name: '価値観と報酬', start: 15, end: 19, icon: '💎', color: 'orange' }
+];
+
 export default function ValueBattle({ onComplete }: Props) {
   const [currentRound, setCurrentRound] = useState(0);
   const [choices, setChoices] = useState<Record<string, string>>({});
+  const [showMilestone, setShowMilestone] = useState(false);
 
   const handleChoice = (choice: 'A' | 'B') => {
     const current = BATTLE_CHOICES[currentRound];
@@ -50,8 +59,20 @@ export default function ValueBattle({ onComplete }: Props) {
       [current.category]: selected
     });
 
+    // Check for milestones
+    const nextRound = currentRound + 1;
+    if (nextRound === 10) {
+      // Halfway point
+      setShowMilestone(true);
+      setTimeout(() => {
+        setShowMilestone(false);
+        setCurrentRound(nextRound);
+      }, 2000);
+      return;
+    }
+
     if (currentRound < BATTLE_CHOICES.length - 1) {
-      setCurrentRound(currentRound + 1);
+      setCurrentRound(nextRound);
     } else {
       // Calculate results
       const results: ValueBattleResult = {};
@@ -66,18 +87,66 @@ export default function ValueBattle({ onComplete }: Props) {
 
   const current = BATTLE_CHOICES[currentRound];
   const progress = ((currentRound + 1) / BATTLE_CHOICES.length) * 100;
+  const currentSection = SECTIONS.find(s => currentRound >= s.start && currentRound <= s.end)!;
+  const sectionProgress = currentRound - currentSection.start + 1;
+
+  // Show milestone celebration
+  if (showMilestone) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-4">
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border-2 border-yellow-300 p-8 shadow-lg text-center animate-pulse">
+          <div className="text-6xl mb-4">🎉</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            半分完了！
+          </h2>
+          <p className="text-base text-gray-700 font-medium">
+            あと10問です。もう少し頑張りましょう！
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      {/* Progress bar */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-sm font-semibold text-gray-900">
-            ラウンド {currentRound + 1} / {BATTLE_CHOICES.length}
-          </span>
-          <span className="text-sm font-semibold text-blue-600">{Math.round(progress)}%</span>
+      {/* Section Progress Indicators */}
+      <div className="mb-4">
+        <div className="flex justify-center gap-2 mb-3">
+          {SECTIONS.map((section, index) => {
+            const isCompleted = currentRound > section.end;
+            const isCurrent = currentRound >= section.start && currentRound <= section.end;
+            return (
+              <div
+                key={section.name}
+                className={`flex-1 h-2 rounded-full transition-all duration-300 ${
+                  isCompleted ? 'bg-green-500' :
+                  isCurrent ? 'bg-blue-500' :
+                  'bg-gray-200'
+                }`}
+              />
+            );
+          })}
         </div>
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+        <div className="text-center mb-2">
+          <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full border-2 border-gray-300 shadow-sm">
+            <span className="text-xl">{currentSection.icon}</span>
+            <span className="text-sm font-bold text-gray-900">{currentSection.name}</span>
+            <span className="text-xs font-semibold text-gray-600">
+              ({sectionProgress}/5)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Overall Progress bar */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-semibold text-gray-700">
+            全体の進捗
+          </span>
+          <span className="text-xs font-bold text-blue-600">{currentRound + 1} / 20</span>
+        </div>
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden shadow-inner">
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 shadow-sm"
             style={{ width: `${progress}%` }}
