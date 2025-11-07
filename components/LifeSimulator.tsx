@@ -174,7 +174,7 @@ export default function LifeSimulator({ onComplete }: Props) {
 
   const path = LIFE_PATHS[currentPath];
   const currentSelections = selections[path.id] || [];
-  const canProceed = currentSelections.length === 3;
+  const canProceed = currentSelections.length >= 1 && currentSelections.length <= 3;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
@@ -213,13 +213,13 @@ export default function LifeSimulator({ onComplete }: Props) {
         <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl p-4">
           <div className="text-center">
             <p className="text-base font-bold text-gray-900 mb-2">
-              💡 好きなポイントを3つ選んでください
+              💡 好きなポイントを1〜3つ選んでください
             </p>
             <div className="flex items-center justify-center gap-2">
-              <div className={`text-3xl font-bold ${currentSelections.length === 3 ? 'text-green-600' : 'text-blue-600'}`}>
-                {currentSelections.length} / 3
+              <div className={`text-3xl font-bold ${currentSelections.length >= 1 ? 'text-green-600' : 'text-blue-600'}`}>
+                {currentSelections.length}
               </div>
-              <span className="text-sm text-gray-700">選択済み</span>
+              <span className="text-sm text-gray-700">/ 最大3つ</span>
             </div>
           </div>
         </div>
@@ -296,7 +296,7 @@ export default function LifeSimulator({ onComplete }: Props) {
           {canProceed ? (
             currentPath < LIFE_PATHS.length - 1 ? '次の人生へ →' : '完了'
           ) : (
-            `あと${3 - currentSelections.length}つ選んでください`
+            currentSelections.length === 0 ? '1つ以上選んでください' : ''
           )}
         </button>
       </div>

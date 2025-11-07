@@ -205,7 +205,7 @@ export default function BranchMap({ onComplete }: Props) {
             IF分岐マップ
           </h2>
           <p className="text-gray-600">
-            あなたの選択で、人生はどう変わる？
+            これからの選択で、未来はどう変わる？
           </p>
         </div>
 
@@ -213,8 +213,8 @@ export default function BranchMap({ onComplete }: Props) {
         <div className="mb-6">
           <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-300">
             <h3 className="font-bold text-gray-900 mb-4 flex items-center">
-              <span className="text-xl mr-2">📍</span>
-              今、あなたが選んだ道
+              <span className="text-xl mr-2">🔮</span>
+              あなたが選んでいる未来
             </h3>
             <div className="space-y-3">
               {selectedPath.map((branch, index) => (
@@ -319,14 +319,14 @@ export default function BranchMap({ onComplete }: Props) {
         {canExplore && (
           <div className="space-y-4">
             <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-6 text-center shadow-md">
-              <div className="text-4xl mb-3">🎯</div>
+              <div className="text-4xl mb-3">✨</div>
               <h3 className="font-bold text-gray-900 mb-2 text-lg">
-                一つの可能性が見えた！
+                一つの未来が見えた！
               </h3>
               <p className="text-gray-700 leading-relaxed">
                 これが正解というわけではありません。
                 <br />
-                他の道も見てみますか？
+                他の未来も見てみますか？
               </p>
             </div>
 
@@ -335,13 +335,13 @@ export default function BranchMap({ onComplete }: Props) {
                 onClick={handleExploreOther}
                 className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold text-base rounded-xl transition-all shadow-md hover:shadow-lg touch-manipulation"
               >
-                🔄 別の道を探索する
+                🔄 別の未来を探索する
               </button>
               <button
                 onClick={handleComplete}
                 className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-base rounded-xl transition-all shadow-md hover:shadow-lg touch-manipulation"
               >
-                💬 この道について話す
+                💬 この未来について話す
               </button>
             </div>
           </div>
