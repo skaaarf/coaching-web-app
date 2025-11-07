@@ -209,6 +209,24 @@ export default function LifeSimulator({ onComplete }: Props) {
           </h2>
         </div>
 
+        {/* Timeline - AT THE TOP */}
+        <div className="mb-6 bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
+          <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center">
+            <span className="text-lg mr-2">📖</span>
+            人生の詳細
+          </h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {path.timeline.map((event, index) => (
+              <div key={index} className="flex items-start text-sm">
+                <div className="flex-shrink-0 w-12 font-semibold text-blue-600">
+                  {event.age}歳:
+                </div>
+                <div className="flex-grow text-gray-700">{event.event}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Selection Counter - PROMINENT */}
         <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl p-4">
           <div className="text-center">
@@ -224,7 +242,7 @@ export default function LifeSimulator({ onComplete }: Props) {
           </div>
         </div>
 
-        {/* Aspects selection - MOVED TO TOP */}
+        {/* Aspects selection */}
         <div className="mb-6">
           <div className="space-y-3">
             {path.aspects.map((aspect) => {
@@ -265,23 +283,6 @@ export default function LifeSimulator({ onComplete }: Props) {
             })}
           </div>
         </div>
-
-        {/* Timeline - MOVED TO BOTTOM, COLLAPSED */}
-        <details className="mb-6">
-          <summary className="cursor-pointer bg-gray-100 px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-200 transition-colors">
-            📖 人生の詳細を見る（タップして展開）
-          </summary>
-          <div className="mt-4 space-y-2 max-h-64 overflow-y-auto px-2">
-            {path.timeline.map((event, index) => (
-              <div key={index} className="flex items-start text-sm">
-                <div className="flex-shrink-0 w-12 font-semibold text-blue-600">
-                  {event.age}歳:
-                </div>
-                <div className="flex-grow text-gray-700">{event.event}</div>
-              </div>
-            ))}
-          </div>
-        </details>
 
         {/* Next button */}
         <button
