@@ -26,3 +26,33 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* View Mode Toggle Styles */
+.force-mobile-view {
+  max-width: 430px;
+  margin: 0 auto;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
+}
+
+.force-mobile-view body {
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+/* Force mobile breakpoints when in mobile view mode */
+.force-mobile-view .sm\:px-6,
+.force-mobile-view .sm\:px-8,
+.force-mobile-view .sm\:py-6,
+.force-mobile-view .sm\:py-4,
+.force-mobile-view .sm\:text-base,
+.force-mobile-view .sm\:text-lg,
+.force-mobile-view .sm\:text-xl,
+.force-mobile-view .sm\:text-2xl,
+.force-mobile-view .sm\:text-3xl {
+  /* Use base mobile styles */
+}
+
+/* Ensure desktop view shows full width */
+.force-desktop-view {
+  max-width: 100%;
+}

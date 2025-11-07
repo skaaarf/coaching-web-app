@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
+import ViewModeToggle from "@/components/ViewModeToggle";
 import { auth } from "@/auth";
 
 const notoSansJP = Noto_Sans_JP({
@@ -33,6 +34,7 @@ export default async function RootLayout({
       <body className={`${notoSansJP.className} antialiased`}>
         <SessionProvider session={session}>
           {children}
+          <ViewModeToggle />
         </SessionProvider>
       </body>
     </html>
