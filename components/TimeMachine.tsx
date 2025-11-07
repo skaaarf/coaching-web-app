@@ -6,11 +6,49 @@ interface Props {
   onComplete: (pastLetter: string, futureLetter: string) => void;
 }
 
+const LETTER_TEMPLATES = [
+  {
+    title: '進路の悩み',
+    content: `1年前のあなたへ。
+
+あの時は進路で悩んでたよね。
+大学に行くべきか、やりたいことを優先すべきか、毎日考えてた。
+
+今もまだ答えは出てないけど、でも少しずつ自分のペースで考えられるようになってきたよ。
+焦らなくていいんだって、ちょっとずつわかってきた。`
+  },
+  {
+    title: '将来への不安',
+    content: `1年前の自分へ。
+
+あの頃は将来が不安で、何も決められなかったよね。
+周りはどんどん決めていくのに、自分だけ取り残されてる気がしてた。
+
+今もまだ完全には不安は消えてないけど、不安を感じることは悪いことじゃないって思えるようになった。
+ゆっくり進んでいこう。`
+  },
+  {
+    title: '親との関係',
+    content: `1年前のあなたへ。
+
+親の期待と自分の気持ちの間で、すごく悩んでたよね。
+どちらも大切だから、答えが見つからなくて苦しかった。
+
+今もまだ完全には解決してないけど、親も自分も大事にする方法を少しずつ探せるようになってきたよ。
+一緒に考えていこう。`
+  },
+  {
+    title: '自分で書く',
+    content: ''
+  }
+];
+
 export default function TimeMachine({ onComplete }: Props) {
   const [step, setStep] = useState<'intro' | 'past' | 'generating' | 'future'>('intro');
   const [pastLetter, setPastLetter] = useState('');
   const [futureLetter, setFutureLetter] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(true);
 
   const handlePastSubmit = async () => {
     if (!pastLetter.trim()) return;
@@ -100,42 +138,90 @@ export default function TimeMachine({ onComplete }: Props) {
     return (
       <div className="max-w-2xl mx-auto p-6">
         <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div className="text-5xl mb-4">📝</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               1年前の自分へ
             </h2>
             <p className="text-gray-600">
-              今の気持ちを素直に書いてみよう
+              テンプレートを選ぶか、自分で書いてみよう
             </p>
           </div>
 
-          <div className="mb-6">
-            <textarea
-              value={pastLetter}
-              onChange={(e) => setPastLetter(e.target.value)}
-              placeholder="1年前のあなたへ...
-
-あの時は進路で悩んでたよね。
-今もまだ答えは出てないけど、でも少しずつ考えられるようになってきたよ。"
-              className="w-full h-64 p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none resize-none text-gray-900"
-              maxLength={500}
-            />
-            <div className="text-right text-sm text-gray-500 mt-2">
-              {pastLetter.length} / 500
+          {/* Templates */}
+          {showTemplates && (
+            <div className="mb-6">
+              <h3 className="text-sm font-bold text-gray-900 mb-3">💡 テンプレートから選ぶ（タップで使用）</h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {LETTER_TEMPLATES.map((template, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setPastLetter(template.content);
+                      if (template.content) {
+                        setShowTemplates(false);
+                      }
+                    }}
+                    className="p-4 text-left bg-gradient-to-br from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border-2 border-purple-300 hover:border-purple-500 rounded-xl transition-all shadow-sm hover:shadow-md touch-manipulation"
+                  >
+                    <div className="text-sm font-bold text-gray-900 mb-1">
+                      {template.title === '自分で書く' ? '✍️' : '📋'} {template.title}
+                    </div>
+                    {template.content && (
+                      <div className="text-xs text-gray-600 line-clamp-2">
+                        {template.content.substring(0, 40)}...
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Textarea */}
+          {(!showTemplates || pastLetter) && (
+            <div className="mb-6">
+              {showTemplates && (
+                <button
+                  onClick={() => setShowTemplates(false)}
+                  className="text-xs text-blue-600 hover:text-blue-700 mb-2 font-medium"
+                >
+                  テンプレートを隠す
+                </button>
+              )}
+              {!showTemplates && (
+                <button
+                  onClick={() => setShowTemplates(true)}
+                  className="text-xs text-blue-600 hover:text-blue-700 mb-2 font-medium"
+                >
+                  📋 テンプレートを表示
+                </button>
+              )}
+              <textarea
+                value={pastLetter}
+                onChange={(e) => setPastLetter(e.target.value)}
+                placeholder="ここに自分の言葉で書いてみよう...
+
+（テンプレートを使った場合は、自由に編集できます）"
+                className="w-full h-64 p-4 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none resize-none text-gray-900 leading-relaxed"
+                maxLength={500}
+              />
+              <div className="text-right text-sm text-gray-500 mt-2">
+                {pastLetter.length} / 500
+              </div>
+            </div>
+          )}
 
           <button
             onClick={handlePastSubmit}
             disabled={!pastLetter.trim()}
-            className={`w-full py-4 px-6 rounded-xl font-semibold transition-colors duration-200 ${
+            className={`w-full py-4 px-6 rounded-xl font-bold text-base transition-all shadow-md touch-manipulation ${
               pastLetter.trim()
-                ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white hover:shadow-lg'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            次へ（10年後の自分からの手紙）
+            次へ（10年後の自分からの手紙） →
           </button>
         </div>
       </div>
