@@ -121,9 +121,53 @@ export default function BranchMap({ onComplete }: Props) {
     BRANCHES.find(b => b.id === 'start')!
   ]);
   const [canExplore, setCanExplore] = useState(false);
+  const [showTreeView, setShowTreeView] = useState(false);
 
   const currentBranch = selectedPath[selectedPath.length - 1];
   const nextOptions = BRANCHES.filter(b => b.parent === currentBranch.id);
+
+  // Helper function to render tree recursively
+  const renderTreeNode = (branchId: string, depth: number = 0): JSX.Element[] => {
+    const branch = BRANCHES.find(b => b.id === branchId);
+    if (!branch) return [];
+
+    const isSelected = selectedPath.some(p => p.id === branchId);
+    const isCurrent = currentBranch.id === branchId;
+    const children = BRANCHES.filter(b => b.parent === branchId);
+
+    const result: JSX.Element[] = [
+      <div key={branchId} className={`flex items-start ${depth > 0 ? 'ml-6' : ''}`}>
+        <div className="flex-shrink-0 w-1 bg-gray-300 mr-2" style={{ height: '100%' }} />
+        <div className={`flex-1 mb-2 p-3 rounded-lg border-2 transition-all ${
+          isCurrent ? 'bg-blue-100 border-blue-500 shadow-md' :
+          isSelected ? 'bg-green-50 border-green-400' :
+          'bg-white border-gray-200'
+        }`}>
+          <div className="font-semibold text-sm text-gray-900">
+            {branch.label}
+          </div>
+          <div className="text-xs text-gray-600 mt-1">
+            {branch.description.substring(0, 50)}
+            {branch.description.length > 50 ? '...' : ''}
+          </div>
+          {isCurrent && (
+            <div className="mt-1 text-xs font-bold text-blue-600">
+              ← 現在地
+            </div>
+          )}
+        </div>
+      </div>
+    ];
+
+    // Only show children if this branch is in the selected path or is current
+    if ((isSelected || isCurrent) && children.length > 0) {
+      children.forEach(child => {
+        result.push(...renderTreeNode(child.id, depth + 1));
+      });
+    }
+
+    return result;
+  };
 
   const handleSelect = (branch: Branch) => {
     const newPath = [...selectedPath, branch];
@@ -166,8 +210,8 @@ export default function BranchMap({ onComplete }: Props) {
         </div>
 
         {/* Path visualization */}
-        <div className="mb-8">
-          <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+        <div className="mb-6">
+          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-300">
             <h3 className="font-bold text-gray-900 mb-4 flex items-center">
               <span className="text-xl mr-2">📍</span>
               今、あなたが選んだ道
@@ -179,7 +223,7 @@ export default function BranchMap({ onComplete }: Props) {
                     className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
                       index === selectedPath.length - 1
                         ? 'bg-blue-500'
-                        : 'bg-gray-400'
+                        : 'bg-green-500'
                     }`}
                   >
                     {index}
@@ -195,7 +239,7 @@ export default function BranchMap({ onComplete }: Props) {
                   {index > 0 && (
                     <button
                       onClick={() => handleReset(index - 1)}
-                      className="ml-2 text-sm text-blue-600 hover:text-blue-700"
+                      className="ml-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
                     >
                       やり直す
                     </button>
@@ -206,21 +250,63 @@ export default function BranchMap({ onComplete }: Props) {
           </div>
         </div>
 
+        {/* Tree View Toggle */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowTreeView(!showTreeView)}
+            className="w-full p-4 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border-2 border-purple-300 rounded-xl transition-all shadow-sm hover:shadow-md touch-manipulation"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <span className="text-xl mr-2">🌳</span>
+                <span className="font-bold text-gray-900">分岐ツリーを見る</span>
+              </div>
+              <svg className={`w-5 h-5 text-gray-600 transition-transform ${showTreeView ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </button>
+        </div>
+
+        {/* Tree View */}
+        {showTreeView && (
+          <div className="mb-8">
+            <div className="bg-white rounded-xl p-6 border-2 border-gray-300 max-h-96 overflow-y-auto">
+              <div className="mb-3 pb-3 border-b-2 border-gray-200">
+                <h3 className="font-bold text-gray-900 mb-1 flex items-center">
+                  <span className="text-lg mr-2">🌳</span>
+                  全体の道筋
+                </h3>
+                <p className="text-xs text-gray-600">
+                  <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>選択済み
+                  <span className="inline-block w-3 h-3 bg-blue-500 rounded-full ml-3 mr-1"></span>現在地
+                  <span className="inline-block w-3 h-3 bg-gray-200 rounded-full ml-3 mr-1"></span>未選択
+                </p>
+              </div>
+              <div className="space-y-1">
+                {renderTreeNode('start')}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Next options */}
         {nextOptions.length > 0 && !canExplore && (
           <div className="mb-6">
-            <h3 className="font-bold text-gray-900 mb-4">次の分岐点を選んで：</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="font-bold text-gray-900 mb-4 text-lg">
+              ⤴️ 次の分岐点を選んで：
+            </h3>
+            <div className="space-y-3">
               {nextOptions.map(branch => (
                 <button
                   key={branch.id}
                   onClick={() => handleSelect(branch)}
-                  className="p-6 text-left bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                  className="w-full p-5 text-left bg-white border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 active:bg-blue-100 rounded-xl transition-all shadow-sm hover:shadow-md touch-manipulation"
                 >
-                  <div className="font-semibold text-gray-900 mb-1">
+                  <div className="font-bold text-gray-900 mb-2 text-base">
                     {branch.label}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 leading-relaxed">
                     {branch.description}
                   </div>
                 </button>
@@ -232,30 +318,30 @@ export default function BranchMap({ onComplete }: Props) {
         {/* End of path */}
         {canExplore && (
           <div className="space-y-4">
-            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center">
-              <div className="text-3xl mb-3">🎯</div>
+            <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 rounded-xl p-6 text-center shadow-md">
+              <div className="text-4xl mb-3">🎯</div>
               <h3 className="font-bold text-gray-900 mb-2 text-lg">
                 一つの可能性が見えた！
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-700 leading-relaxed">
                 これが正解というわけではありません。
                 <br />
                 他の道も見てみますか？
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-3">
               <button
                 onClick={handleExploreOther}
-                className="py-4 px-6 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition-colors duration-200"
+                className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold text-base rounded-xl transition-all shadow-md hover:shadow-lg touch-manipulation"
               >
-                別の道を探索する
+                🔄 別の道を探索する
               </button>
               <button
                 onClick={handleComplete}
-                className="py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors duration-200"
+                className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-base rounded-xl transition-all shadow-md hover:shadow-lg touch-manipulation"
               >
-                この道について話す
+                💬 この道について話す
               </button>
             </div>
           </div>
