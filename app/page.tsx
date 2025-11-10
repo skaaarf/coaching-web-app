@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { CAREER_MODULES } from '@/lib/modules';
-import { getAllModuleProgress, getAllInteractiveModuleProgress, getUserInsights, saveUserInsights } from '@/lib/storage';
+import { useStorage } from '@/hooks/useStorage';
 import { generateInsights } from '@/lib/insights';
 import { ModuleProgress, InteractiveModuleProgress, UserInsights } from '@/types';
 import ModuleCard from '@/components/ModuleCard';
@@ -12,6 +12,7 @@ import DiagnosticAggregation from '@/components/DiagnosticAggregation';
 import DialogueHistoryHome from '@/components/DialogueHistoryHome';
 
 export default function Home() {
+  const storage = useStorage();
   const [allProgress, setAllProgress] = useState<Record<string, ModuleProgress>>({});
   const [allInteractiveProgress, setAllInteractiveProgress] = useState<Record<string, InteractiveModuleProgress>>({});
   const [insights, setInsights] = useState<UserInsights | null>(null);
@@ -19,20 +20,24 @@ export default function Home() {
 
   useEffect(() => {
     // Load progress and insights on mount
-    const progress = getAllModuleProgress();
-    const interactiveProgress = getAllInteractiveModuleProgress();
-    setAllProgress(progress);
-    setAllInteractiveProgress(interactiveProgress);
+    const loadData = async () => {
+      const progress = await storage.getAllModuleProgress();
+      const interactiveProgress = await storage.getAllInteractiveModuleProgress();
+      setAllProgress(progress);
+      setAllInteractiveProgress(interactiveProgress);
 
-    const savedInsights = getUserInsights();
-    setInsights(savedInsights);
+      const savedInsights = await storage.getUserInsights();
+      setInsights(savedInsights);
 
-    // Generate insights if we have progress but no insights
-    const hasProgress = Object.keys(progress).length > 0 || Object.keys(interactiveProgress).length > 0;
-    if (hasProgress && !savedInsights) {
-      regenerateInsights(progress);
-    }
-  }, []);
+      // Generate insights if we have progress but no insights
+      const hasProgress = Object.keys(progress).length > 0 || Object.keys(interactiveProgress).length > 0;
+      if (hasProgress && !savedInsights) {
+        regenerateInsights(progress);
+      }
+    };
+
+    loadData();
+  }, [storage.userId]); // Re-load when userId changes (login/logout)
 
   const regenerateInsights = async (progress?: Record<string, ModuleProgress>) => {
     setIsLoadingInsights(true);
@@ -40,7 +45,7 @@ export default function Home() {
       const progressToUse = progress || allProgress;
       const newInsights = await generateInsights(progressToUse);
       setInsights(newInsights);
-      saveUserInsights(newInsights);
+      await storage.saveUserInsights(newInsights);
     } catch (error) {
       console.error('Failed to generate insights:', error);
     } finally {

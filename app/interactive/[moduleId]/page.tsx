@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
-import { getInteractiveModuleProgress, saveInteractiveModuleProgress, getAllInteractiveModuleProgress } from '@/lib/storage';
+import { useStorage } from '@/hooks/useStorage';
 import { Message, InteractiveModuleProgress } from '@/types';
 import ValueBattle from '@/components/ValueBattle';
 import ValueBattleResultView from '@/components/ValueBattleResult';
@@ -26,6 +26,7 @@ export default function InteractiveModulePage() {
   const params = useParams();
   const router = useRouter();
   const moduleId = params.moduleId as string;
+  const storage = useStorage();
 
   const [module, setModule] = useState(() => getModuleById(moduleId));
   const [state, setState] = useState<InteractiveState>({ phase: 'activity' });
@@ -44,16 +45,20 @@ export default function InteractiveModulePage() {
     }
 
     // Load saved progress
-    const progress = getInteractiveModuleProgress(moduleId);
-    if (progress && !progress.completed) {
-      setSavedProgress(progress);
-      setShowResumePrompt(true);
-    }
+    const loadProgress = async () => {
+      const progress = await storage.getInteractiveModuleProgress(moduleId);
+      if (progress && !progress.completed) {
+        setSavedProgress(progress);
+        setShowResumePrompt(true);
+      }
 
-    // Load all progress for history sidebar
-    const allInteractiveProgress = getAllInteractiveModuleProgress();
-    setAllProgress(allInteractiveProgress);
-  }, [module, router, moduleId]);
+      // Load all progress for history sidebar
+      const allInteractiveProgress = await storage.getAllInteractiveModuleProgress();
+      setAllProgress(allInteractiveProgress);
+    };
+
+    loadProgress();
+  }, [module, router, moduleId, storage.userId]);
 
   const handleResumeProgress = () => {
     if (savedProgress) {
@@ -63,11 +68,11 @@ export default function InteractiveModulePage() {
     setShowResumePrompt(false);
   };
 
-  const handleStartFresh = () => {
+  const handleStartFresh = async () => {
     setShowResumePrompt(false);
     setState({ phase: 'activity' });
     // Clear saved progress
-    saveInteractiveModuleProgress(moduleId, {
+    await storage.saveInteractiveModuleProgress(moduleId, {
       moduleId,
       data: { phase: 'activity' },
       lastUpdated: new Date(),
@@ -75,14 +80,14 @@ export default function InteractiveModulePage() {
     });
   };
 
-  const saveProgress = (newState: InteractiveState, completed: boolean = false) => {
+  const saveProgress = async (newState: InteractiveState, completed: boolean = false) => {
     const progress: InteractiveModuleProgress = {
       moduleId,
       data: newState,
       lastUpdated: new Date(),
       completed
     };
-    saveInteractiveModuleProgress(moduleId, progress);
+    await storage.saveInteractiveModuleProgress(moduleId, progress);
   };
 
   const handleActivityComplete = (data: any) => {
