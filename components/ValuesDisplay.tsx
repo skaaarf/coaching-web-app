@@ -2,6 +2,7 @@
 
 import { ValueSnapshot } from '@/types';
 import ValueSlider from './ValueSlider';
+import SimpleRadarChart from './SimpleRadarChart';
 
 interface ValuesDisplayProps {
   current: ValueSnapshot;
@@ -16,6 +17,7 @@ const AXIS_CONFIG = [
     rightLabel: 'やりがい',
     leftEmoji: '💰',
     rightEmoji: '🎯',
+    tooltip: '仕事において、金銭的な報酬と仕事の意義・やりがいのどちらを重視するかを示します。左に行くほど給料や待遇を重視し、右に行くほど社会的意義や個人的な充実感を重視します。',
     getDescription: (value: number) => {
       if (value < 30) return 'お金・給料を重視';
       if (value < 70) return 'バランス型';
@@ -29,6 +31,7 @@ const AXIS_CONFIG = [
     rightLabel: '挑戦',
     leftEmoji: '🛡️',
     rightEmoji: '🚀',
+    tooltip: 'キャリアにおいて、安定性とリスクを取った挑戦のどちらを好むかを示します。左に行くほど確実性や予測可能性を重視し、右に行くほど新しいことへの挑戦や変化を求めます。',
     getDescription: (value: number) => {
       if (value < 30) return '安定を重視';
       if (value < 70) return 'バランス型';
@@ -42,6 +45,7 @@ const AXIS_CONFIG = [
     rightLabel: '一人で',
     leftEmoji: '👥',
     rightEmoji: '🧑',
+    tooltip: '仕事のスタイルとして、チームワークと個人作業のどちらを好むかを示します。左に行くほど協働や人との関わりを重視し、右に行くほど独立して作業することを好みます。',
     getDescription: (value: number) => {
       if (value < 30) return 'チームで働きたい';
       if (value < 70) return 'バランス型';
@@ -55,6 +59,7 @@ const AXIS_CONFIG = [
     rightLabel: '幅広',
     leftEmoji: '🎯',
     rightEmoji: '🌈',
+    tooltip: 'キャリアの方向性として、特定分野の専門性と幅広い経験のどちらを求めるかを示します。左に行くほど一つの分野を深く掘り下げることを好み、右に行くほど多様な経験や知識を求めます。',
     getDescription: (value: number) => {
       if (value < 30) return '専門性を極めたい';
       if (value < 70) return 'バランス型';
@@ -68,6 +73,7 @@ const AXIS_CONFIG = [
     rightLabel: 'バランス',
     leftEmoji: '📈',
     rightEmoji: '⚖️',
+    tooltip: '仕事と生活のバランスにおいて、成長・スキルアップとプライベートの充実のどちらを優先するかを示します。左に行くほど仕事での成長を重視し、右に行くほどワークライフバランスを重視します。',
     getDescription: (value: number) => {
       if (value < 30) return '成長重視';
       if (value < 70) return 'バランス型';
@@ -81,6 +87,7 @@ const AXIS_CONFIG = [
     rightLabel: '起業',
     leftEmoji: '🏢',
     rightEmoji: '💡',
+    tooltip: '働く組織の規模や形態の好みを示します。左に行くほど大企業や確立された組織を好み、右に行くほどスタートアップや起業に興味があります。中間はベンチャー企業志向を示します。',
     getDescription: (value: number) => {
       if (value < 30) return '大企業志向';
       if (value < 70) return 'ベンチャー志向';
@@ -94,6 +101,7 @@ const AXIS_CONFIG = [
     rightLabel: '自分',
     leftEmoji: '🌍',
     rightEmoji: '⭐',
+    tooltip: '仕事の目的として、社会や他者への貢献と自分自身の実現のどちらを重視するかを示します。左に行くほど社会的インパクトや他者への貢献を重視し、右に行くほど個人的な目標達成や自己表現を重視します。',
     getDescription: (value: number) => {
       if (value < 30) return '社会貢献したい';
       if (value < 70) return 'バランス型';
@@ -130,6 +138,9 @@ export default function ValuesDisplay({ current, previous }: ValuesDisplayProps)
         </div>
       )}
 
+      {/* Simple Radar Chart */}
+      <SimpleRadarChart current={current} />
+
       {/* Sliders */}
       <div>
         {AXIS_CONFIG.map((config) => {
@@ -150,6 +161,7 @@ export default function ValuesDisplay({ current, previous }: ValuesDisplayProps)
               description={config.getDescription(value)}
               reason={reasoning?.reason}
               confidence={reasoning?.confidence}
+              tooltip={config.tooltip}
             />
           );
         })}

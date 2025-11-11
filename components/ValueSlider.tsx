@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface ValueSliderProps {
   label: string;
   leftLabel: string;
@@ -11,6 +13,7 @@ interface ValueSliderProps {
   description: string;
   reason?: string;
   confidence?: number;
+  tooltip?: string;
 }
 
 export default function ValueSlider({
@@ -24,15 +27,40 @@ export default function ValueSlider({
   description,
   reason,
   confidence,
+  tooltip,
 }: ValueSliderProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
   const change = previousValue !== undefined ? value - previousValue : 0;
   const hasChange = change !== 0;
 
   return (
-    <div className="mb-8 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+    <div className="mb-8 p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
       {/* Label and value */}
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-bold text-gray-800">{label}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-800">{label}</h3>
+          {tooltip && (
+            <div className="relative">
+              <button
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+                onClick={() => setShowTooltip(!showTooltip)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="詳細を表示"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {showTooltip && (
+                <div className="absolute left-0 top-6 z-30 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg">
+                  {tooltip}
+                  <div className="absolute -top-1 left-2 w-2 h-2 bg-gray-900 transform rotate-45" />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-600">{value}%</span>
           {confidence !== undefined && (
@@ -46,7 +74,13 @@ export default function ValueSlider({
       {/* Slider track */}
       <div className="relative h-8 mb-2">
         {/* Background track */}
-        <div className="absolute top-1/2 -translate-y-1/2 w-full h-2 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-full" />
+        <div className="absolute top-1/2 -translate-y-1/2 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          {/* Gradient fill up to current value */}
+          <div
+            className="h-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 transition-all duration-700 ease-out"
+            style={{ width: `${value}%` }}
+          />
+        </div>
 
         {/* Left label */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 text-lg">
@@ -61,7 +95,7 @@ export default function ValueSlider({
         {/* Previous value marker (if exists) */}
         {previousValue !== undefined && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-gray-400 rounded-full border-2 border-white z-10"
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-gray-400 rounded-full border-2 border-white z-10 transition-all duration-500"
             style={{ left: `${previousValue}%` }}
             title={`前回: ${previousValue}%`}
           />
@@ -69,9 +103,11 @@ export default function ValueSlider({
 
         {/* Current value marker */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-blue-600 rounded-full border-2 border-white z-20 shadow-md"
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-white rounded-full border-3 border-blue-600 z-20 shadow-lg transition-all duration-700 hover:scale-110"
           style={{ left: `${value}%` }}
-        />
+        >
+          <div className="absolute inset-1 bg-blue-600 rounded-full" />
+        </div>
       </div>
 
       {/* Labels */}

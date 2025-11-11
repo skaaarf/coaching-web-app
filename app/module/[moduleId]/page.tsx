@@ -249,6 +249,26 @@ export default function ModulePage() {
               完了
             </button>
           </div>
+
+          {/* Value analysis progress */}
+          {!analysisComplete && messages.length > 0 && messages.length < 10 && (
+            <div className="mt-3 px-2">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-medium text-gray-600">
+                  価値観分析まで: あと{Math.ceil((10 - messages.length) / 2)}往復
+                </span>
+                <span className="text-xs text-gray-500">
+                  ({messages.length}/10 メッセージ)
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-1.5 rounded-full transition-all duration-500"
+                  style={{ width: `${(messages.length / 10) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
