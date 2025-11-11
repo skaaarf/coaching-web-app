@@ -7,14 +7,15 @@ export default function LoginPage() {
       <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Coaching Web App
+            みかたくん
           </h1>
           <p className="text-gray-600">
-            キャリアコーチングセッションを開始
+            キャリアについて一緒に考えよう
           </p>
         </div>
 
-        <form
+        {/* Google login temporarily disabled */}
+        {/* <form
           action={async () => {
             "use server"
             await signIn("google", { redirectTo: "/" })
@@ -44,23 +45,20 @@ export default function LoginPage() {
             </svg>
             Googleでログイン
           </button>
-        </form>
+        </form> */}
 
-        <div className="mt-4">
+        <div>
           <Link
             href="/"
-            className="w-full block text-center bg-gray-100 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+            className="w-full block text-center bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-4 rounded-lg font-bold hover:shadow-lg transition-all text-lg"
           >
-            ログインせずに使う
+            はじめる
           </Link>
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p className="mb-2">
-            <strong>ログインすると：</strong>データが保存され、複数デバイスで利用可能
-          </p>
           <p className="text-xs">
-            ログインすることで、利用規約とプライバシーポリシーに同意したことになります。
+            利用することで、利用規約とプライバシーポリシーに同意したことになります。
           </p>
         </div>
       </div>
