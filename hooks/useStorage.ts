@@ -65,6 +65,23 @@ export function useStorage() {
       return await unifiedStorage.getAllValueSnapshots();
     },
 
+    // Sessions
+    getModuleSessions: async (moduleId: string): Promise<ModuleProgress[]> => {
+      return await unifiedStorage.getModuleSessions(moduleId);
+    },
+
+    getModuleSession: async (moduleId: string, sessionId: string): Promise<ModuleProgress | null> => {
+      return await unifiedStorage.getModuleSession(moduleId, sessionId);
+    },
+
+    getInteractiveModuleSessions: async (moduleId: string): Promise<InteractiveModuleProgress[]> => {
+      return await unifiedStorage.getInteractiveModuleSessions(moduleId);
+    },
+
+    getInteractiveModuleSession: async (moduleId: string, sessionId: string): Promise<InteractiveModuleProgress | null> => {
+      return await unifiedStorage.getInteractiveModuleSession(moduleId, sessionId);
+    },
+
     // Metadata
     isAuthenticated: !!userId,
     userId: userId || null,

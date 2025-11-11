@@ -24,15 +24,6 @@ export default function ModuleCard({ module, progress, interactiveProgress, onCl
       className="w-full text-left"
     >
       <div className="group relative overflow-hidden rounded-2xl border-2 border-gray-300 bg-white p-6 shadow-lg transition-all duration-200 hover:shadow-xl hover:border-blue-400 active:scale-98 touch-manipulation">
-        {/* Progress indicator */}
-        {isStarted && (
-          <div className="absolute top-0 left-0 right-0 h-2 bg-gray-200">
-            <div
-              className={`h-full ${module.color} transition-all duration-300 shadow-sm`}
-              style={{ width: isCompleted ? '100%' : '50%' }}
-            />
-          </div>
-        )}
 
         {/* Icon and status */}
         <div className="flex items-start justify-between mb-5">

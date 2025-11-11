@@ -1,15 +1,14 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { ModuleProgress } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
 
 interface Props {
   chatProgress: Record<string, ModuleProgress>;
+  onSessionClick?: (moduleId: string, sessionId: string) => void;
 }
 
-export default function DialogueHistoryHome({ chatProgress }: Props) {
-  const router = useRouter();
+export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Props) {
 
   // Only show chat modules (exclude interactive game modules)
   const chatDialogues = Object.entries(chatProgress).filter(([moduleId, progress]) => {
@@ -37,17 +36,14 @@ export default function DialogueHistoryHome({ chatProgress }: Props) {
         {modulesWithDialogue.length === 0 ? (
           <div className="p-6 text-center">
             <p className="text-sm text-gray-500 mb-4">まだ対話履歴がありません</p>
-            <button
-              onClick={() => router.push('/module/university-decision')}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              対話を始める →
-            </button>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
             {modulesWithDialogue.map(([moduleId, progress]) => {
-              const module = CAREER_MODULES.find(m => m.id === moduleId);
+              // Handle both regular chat modules and game dialogue sessions (e.g., "value-battle-dialogue")
+              const isGameDialogue = moduleId.includes('-dialogue');
+              const baseModuleId = isGameDialogue ? moduleId.replace('-dialogue', '') : moduleId;
+              const module = CAREER_MODULES.find(m => m.id === baseModuleId);
               if (!module) return null;
 
               // Chat module only
@@ -69,7 +65,16 @@ export default function DialogueHistoryHome({ chatProgress }: Props) {
               return (
                 <button
                   key={moduleId}
-                  onClick={() => router.push(`/module/${moduleId}`)}
+                  onClick={() => {
+                    if (onSessionClick && progress.sessionId) {
+                      // For game dialogues, navigate to the interactive module with sessionId
+                      const targetModuleId = isGameDialogue ? baseModuleId : moduleId;
+                      const path = isGameDialogue
+                        ? `/interactive/${targetModuleId}?dialogueSessionId=${progress.sessionId}`
+                        : `/module/${targetModuleId}?sessionId=${progress.sessionId}`;
+                      window.location.href = path;
+                    }
+                  }}
                   className="w-full px-6 py-3 hover:bg-gray-50 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-3">

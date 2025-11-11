@@ -20,7 +20,9 @@ export interface Module {
 
 export interface ModuleProgress {
   moduleId: string;
+  sessionId: string;
   messages: Message[];
+  createdAt: Date;
   lastUpdated: Date;
   completed: boolean;
   insights?: string[];
@@ -66,7 +68,9 @@ export interface ScaleQuestion {
 
 export interface InteractiveModuleProgress {
   moduleId: string;
+  sessionId: string;
   data: any;
+  createdAt: Date;
   lastUpdated: Date;
   completed: boolean;
 }

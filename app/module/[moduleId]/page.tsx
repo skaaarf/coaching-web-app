@@ -14,7 +14,12 @@ export default function ModulePage() {
   const moduleId = params.moduleId as string;
   const storage = useStorage();
 
+  // Get sessionId from URL query params
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const sessionId = searchParams?.get('sessionId') || undefined;
+
   const [module, setModule] = useState(() => getModuleById(moduleId));
+  const [currentSessionId, setCurrentSessionId] = useState<string>(sessionId || '');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -38,13 +43,28 @@ export default function ModulePage() {
 
     // Load existing progress
     const loadProgress = async () => {
-      const progress = await storage.getModuleProgress(moduleId);
+      let progress: ModuleProgress | null = null;
+
+      if (sessionId) {
+        // Load specific session
+        progress = await storage.getModuleSession(moduleId, sessionId);
+        setCurrentSessionId(sessionId);
+      } else {
+        // Load latest session
+        progress = await storage.getModuleProgress(moduleId);
+        if (progress?.sessionId) {
+          setCurrentSessionId(progress.sessionId);
+        }
+      }
 
       if (progress && progress.messages.length > 0) {
         setMessages(progress.messages);
       } else {
         // Start new conversation with AI's greeting
-        fetchInitialMessage();
+        // Generate new sessionId if not provided
+        const newSessionId = sessionId || `session-${Date.now()}`;
+        setCurrentSessionId(newSessionId);
+        fetchInitialMessage(newSessionId);
       }
 
       setHasInitialized(true);
@@ -52,9 +72,9 @@ export default function ModulePage() {
 
     loadProgress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [moduleId, module, router, storage]);
+  }, [moduleId, module, router, storage, sessionId]);
 
-  const fetchInitialMessage = async () => {
+  const fetchInitialMessage = async (sessionIdToUse: string) => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/chat', {
@@ -84,7 +104,9 @@ export default function ModulePage() {
       // Save progress
       const progress: ModuleProgress = {
         moduleId,
+        sessionId: sessionIdToUse,
         messages: [assistantMessage],
+        createdAt: new Date(),
         lastUpdated: new Date(),
         completed: false,
       };
@@ -145,7 +167,9 @@ export default function ModulePage() {
       // Save progress
       const progress: ModuleProgress = {
         moduleId,
+        sessionId: currentSessionId,
         messages: finalMessages,
+        createdAt: new Date(), // Will be ignored if session already exists
         lastUpdated: new Date(),
         completed: false, // Could add logic to mark as completed
       };
@@ -224,7 +248,9 @@ export default function ModulePage() {
   const handleMarkComplete = async () => {
     const progress: ModuleProgress = {
       moduleId,
+      sessionId: currentSessionId,
       messages,
+      createdAt: new Date(), // Will be ignored if session already exists
       lastUpdated: new Date(),
       completed: true,
     };
@@ -261,29 +287,8 @@ export default function ModulePage() {
                 <p className="text-xs text-gray-500 truncate">{module.description}</p>
               </div>
             </div>
-            <button
-              onClick={handleMarkComplete}
-              className="px-3 py-2 text-xs font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
-            >
-              完了
-            </button>
           </div>
 
-          {/* Value analysis indicator */}
-          {messages.length > 0 && (
-            <div className="mt-3 px-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-600">
-                  💡 対話するたびに価値観を分析しています
-                </span>
-                {lastAnalyzedMessageCount > 0 && (
-                  <span className="text-xs text-green-600 font-medium">
-                    ✓ {Math.floor(lastAnalyzedMessageCount / 2)}回分析済み
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </header>
 
@@ -301,32 +306,6 @@ export default function ModulePage() {
         </div>
       </div>
 
-      {/* Analyzing animation */}
-      {isAnalyzing && <AnalyzingAnimation />}
-
-      {/* Analysis complete notification */}
-      {analysisComplete && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-lg shadow-2xl border border-blue-200 p-4 max-w-sm w-full mx-4 animate-slide-up">
-          <div className="flex items-center gap-3">
-            <div className="text-3xl">✨</div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-gray-800">
-                価値観を更新しました!
-              </p>
-              <p className="text-xs text-gray-600">
-                ホーム画面で確認できます
-              </p>
-            </div>
-            <button
-              onClick={() => setAnalysisComplete(false)}
-              className="text-gray-400 hover:text-gray-600 p-1"
-              aria-label="閉じる"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

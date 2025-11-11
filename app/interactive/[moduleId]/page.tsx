@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
-import { Message, InteractiveModuleProgress, ValueSnapshot } from '@/types';
+import { Message, ModuleProgress, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 import ValueBattle from '@/components/ValueBattle';
 import ValueBattleResultView from '@/components/ValueBattleResult';
 import LifeSimulator from '@/components/LifeSimulator';
@@ -29,12 +29,17 @@ export default function InteractiveModulePage() {
   const moduleId = params.moduleId as string;
   const storage = useStorage();
 
+  // Get sessionId and dialogueSessionId from URL query params
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const sessionId = searchParams?.get('sessionId') || undefined;
+  const urlDialogueSessionId = searchParams?.get('dialogueSessionId') || undefined;
+
   const [module, setModule] = useState(() => getModuleById(moduleId));
+  const [currentSessionId, setCurrentSessionId] = useState<string>(sessionId || '');
+  const [dialogueSessionId, setDialogueSessionId] = useState<string>(''); // Separate session for dialogue phase
   const [state, setState] = useState<InteractiveState>({ phase: 'activity' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showResumePrompt, setShowResumePrompt] = useState(false);
-  const [savedProgress, setSavedProgress] = useState<InteractiveModuleProgress | null>(null);
   const [showResultSidebar, setShowResultSidebar] = useState(true);
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
   const [allProgress, setAllProgress] = useState<Record<string, InteractiveModuleProgress>>({});
@@ -52,10 +57,58 @@ export default function InteractiveModulePage() {
 
     // Load saved progress
     const loadProgress = async () => {
-      const progress = await storage.getInteractiveModuleProgress(moduleId);
-      if (progress && !progress.completed) {
-        setSavedProgress(progress);
-        setShowResumePrompt(true);
+      let progress: InteractiveModuleProgress | null = null;
+
+      console.log('Loading interactive module, sessionId from URL:', sessionId);
+      console.log('dialogueSessionId from URL:', urlDialogueSessionId);
+
+      // If dialogueSessionId is provided, load that specific dialogue session
+      if (urlDialogueSessionId) {
+        const dialogueModuleId = `${moduleId}-dialogue`;
+        const dialogueProgress = await storage.getModuleSession(dialogueModuleId, urlDialogueSessionId);
+
+        if (dialogueProgress && dialogueProgress.messages) {
+          console.log('Loaded dialogue session:', dialogueProgress);
+          setDialogueSessionId(urlDialogueSessionId);
+          setState({
+            phase: 'dialogue',
+            data: {}, // We don't have the original activity data, but that's okay
+            messages: dialogueProgress.messages,
+          });
+          return;
+        }
+      }
+
+      if (sessionId) {
+        // Load specific session
+        progress = await storage.getInteractiveModuleSession(moduleId, sessionId);
+        console.log('Loaded session:', progress);
+        setCurrentSessionId(sessionId);
+
+        // If progress exists and has data, load it
+        if (progress && progress.data) {
+          const savedState = progress.data as InteractiveState;
+          setState(savedState);
+        } else {
+          // New session - start fresh
+          console.log('New session, starting fresh');
+          setState({ phase: 'activity' });
+        }
+      } else {
+        // No sessionId in URL - load latest session
+        progress = await storage.getInteractiveModuleProgress(moduleId);
+        if (progress?.sessionId) {
+          setCurrentSessionId(progress.sessionId);
+          if (progress.data) {
+            const savedState = progress.data as InteractiveState;
+            setState(savedState);
+          }
+        } else {
+          // No existing progress
+          const newSessionId = `session-${Date.now()}`;
+          setCurrentSessionId(newSessionId);
+          setState({ phase: 'activity' });
+        }
       }
 
       // Load all progress for history sidebar
@@ -65,36 +118,27 @@ export default function InteractiveModulePage() {
 
     loadProgress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [module, router, moduleId, storage]);
-
-  const handleResumeProgress = () => {
-    if (savedProgress) {
-      const savedState = savedProgress.data as InteractiveState;
-      setState(savedState);
-    }
-    setShowResumePrompt(false);
-  };
-
-  const handleStartFresh = async () => {
-    setShowResumePrompt(false);
-    setState({ phase: 'activity' });
-    // Clear saved progress
-    await storage.saveInteractiveModuleProgress(moduleId, {
-      moduleId,
-      data: { phase: 'activity' },
-      lastUpdated: new Date(),
-      completed: false
-    });
-  };
+  }, [module, router, moduleId, storage, sessionId, urlDialogueSessionId]);
 
   const saveProgress = async (newState: InteractiveState, completed: boolean = false) => {
+    console.log('=== saveProgress (Interactive) ===');
+    console.log('moduleId:', moduleId);
+    console.log('currentSessionId:', currentSessionId);
+    console.log('newState:', newState);
+    console.log('completed:', completed);
+
     const progress: InteractiveModuleProgress = {
       moduleId,
+      sessionId: currentSessionId,
       data: newState,
+      createdAt: new Date(), // Will be ignored if session already exists
       lastUpdated: new Date(),
       completed
     };
+
+    console.log('Saving progress:', progress);
     await storage.saveInteractiveModuleProgress(moduleId, progress);
+    console.log('Progress saved');
   };
 
   const handleActivityComplete = (data: any) => {
@@ -174,13 +218,28 @@ export default function InteractiveModulePage() {
         timestamp: new Date(),
       };
 
+      // Create a new dialogue session ID
+      const newDialogueSessionId = `session-${Date.now()}`;
+      setDialogueSessionId(newDialogueSessionId);
+
       const newState = {
         phase: 'dialogue' as const,
         data: activityData,
         messages: [assistantMessage],
       };
       setState(newState);
-      saveProgress(newState);
+
+      // Save dialogue as a regular chat module session
+      const dialogueModuleId = `${moduleId}-dialogue`;
+      const chatProgress: ModuleProgress = {
+        moduleId: dialogueModuleId,
+        sessionId: newDialogueSessionId,
+        messages: [assistantMessage],
+        createdAt: new Date(),
+        lastUpdated: new Date(),
+        completed: false,
+      };
+      await storage.saveModuleProgress(dialogueModuleId, chatProgress);
     } catch (error) {
       console.error('Error starting dialogue:', error);
       setError('対話を開始できませんでした。もう一度お試しください。');
@@ -251,6 +310,20 @@ export default function InteractiveModulePage() {
       setState(newState);
       saveProgress(newState);
 
+      // Also save to chat module session for dialogue history
+      if (dialogueSessionId) {
+        const dialogueModuleId = `${moduleId}-dialogue`;
+        const chatProgress: ModuleProgress = {
+          moduleId: dialogueModuleId,
+          sessionId: dialogueSessionId,
+          messages: finalMessages,
+          createdAt: new Date(),
+          lastUpdated: new Date(),
+          completed: false,
+        };
+        await storage.saveModuleProgress(dialogueModuleId, chatProgress);
+      }
+
       // Trigger value analysis after every message exchange (minimum 2 messages)
       if (finalMessages.length >= 2 && !isAnalyzing && (finalMessages.length - lastAnalyzedMessageCount >= 2)) {
         triggerValueAnalysis(finalMessages);
@@ -264,12 +337,27 @@ export default function InteractiveModulePage() {
         content: 'ごめんね、うまく応答できなかった。もう一度試してみてくれる？',
         timestamp: new Date(),
       };
+      const finalMessages = [...updatedMessages, errorMessage];
       const newState = {
         ...state,
-        messages: [...updatedMessages, errorMessage],
+        messages: finalMessages,
       };
       setState(newState);
       saveProgress(newState);
+
+      // Also save to chat module session for dialogue history
+      if (dialogueSessionId) {
+        const dialogueModuleId = `${moduleId}-dialogue`;
+        const chatProgress: ModuleProgress = {
+          moduleId: dialogueModuleId,
+          sessionId: dialogueSessionId,
+          messages: finalMessages,
+          createdAt: new Date(),
+          lastUpdated: new Date(),
+          completed: false,
+        };
+        await storage.saveModuleProgress(dialogueModuleId, chatProgress);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -341,36 +429,6 @@ export default function InteractiveModulePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Resume prompt modal */}
-      {showResumePrompt && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform transition-all animate-fade-in">
-            <div className="text-center mb-6">
-              <div className="text-4xl mb-3">💾</div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                続きから始めますか？
-              </h2>
-              <p className="text-sm text-gray-600">
-                前回の進捗が保存されています
-              </p>
-            </div>
-            <div className="space-y-3">
-              <button
-                onClick={handleResumeProgress}
-                className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm"
-              >
-                続きから始める
-              </button>
-              <button
-                onClick={handleStartFresh}
-                className="w-full py-3 px-6 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors duration-200 text-sm"
-              >
-                最初からやり直す
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -439,12 +497,6 @@ export default function InteractiveModulePage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                     </svg>
-                  </button>
-                  <button
-                    onClick={handleMarkComplete}
-                    className="px-2 py-2 text-xs font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors whitespace-nowrap"
-                  >
-                    完了
                   </button>
                 </>
               )}

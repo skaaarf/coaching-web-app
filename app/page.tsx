@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CAREER_MODULES } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
 import { generateInsights } from '@/lib/insights';
+import { migrateToSessions } from '@/lib/storage';
 import { ModuleProgress, InteractiveModuleProgress, UserInsights, ValueSnapshot } from '@/types';
 import ModuleCard from '@/components/ModuleCard';
 import InsightsPanel from '@/components/InsightsPanel';
@@ -25,8 +26,13 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'values' | 'insights'>('values');
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showModuleDialog, setShowModuleDialog] = useState(false);
+  const [moduleSessions, setModuleSessions] = useState<ModuleProgress[]>([]);
+  const [interactiveModuleSessions, setInteractiveModuleSessions] = useState<InteractiveModuleProgress[]>([]);
 
   useEffect(() => {
+    // Migrate old data to new sessions format on first load
+    migrateToSessions();
+
     // Load progress and insights on mount
     const loadData = async () => {
       const progress = await storage.getAllModuleProgress();
@@ -89,19 +95,50 @@ export default function Home() {
     }
   };
 
-  const handleModuleClick = (moduleId: string, moduleType: 'chat' | 'interactive') => {
+  const handleModuleClick = async (moduleId: string, moduleType: 'chat' | 'interactive') => {
+    console.log('=== handleModuleClick ===');
+    console.log('moduleId:', moduleId);
+    console.log('moduleType:', moduleType);
+
+    // Debug: Check localStorage directly
+    const sessionsKey = 'mikata-sessions';
+    const rawSessions = localStorage.getItem(sessionsKey);
+    console.log('Raw localStorage sessions:', rawSessions);
+
+    // Load all sessions for this module
+    if (moduleType === 'chat') {
+      const sessions = await storage.getModuleSessions(moduleId);
+      console.log('Chat sessions for', moduleId, ':', sessions);
+      console.log('Number of chat sessions:', sessions.length);
+      setModuleSessions(sessions);
+      setInteractiveModuleSessions([]);
+    } else {
+      const sessions = await storage.getInteractiveModuleSessions(moduleId);
+      console.log('Interactive sessions for', moduleId, ':', sessions);
+      console.log('Number of interactive sessions:', sessions.length);
+      setInteractiveModuleSessions(sessions);
+      setModuleSessions([]);
+    }
+
     // Always show dialog
     setSelectedModule(moduleId);
     setShowModuleDialog(true);
   };
 
-  const handleContinue = () => {
+  const handleContinue = (sessionId?: string) => {
     if (!selectedModule) return;
     const module = CAREER_MODULES.find(m => m.id === selectedModule);
     if (!module) return;
 
-    const path = module.moduleType === 'chat' ? `/module/${selectedModule}` : `/interactive/${selectedModule}`;
-    router.push(path);
+    if (sessionId) {
+      // Load specific session
+      const path = module.moduleType === 'chat' ? `/module/${selectedModule}?sessionId=${sessionId}` : `/interactive/${selectedModule}?sessionId=${sessionId}`;
+      router.push(path);
+    } else {
+      // Load latest session
+      const path = module.moduleType === 'chat' ? `/module/${selectedModule}` : `/interactive/${selectedModule}`;
+      router.push(path);
+    }
     setShowModuleDialog(false);
   };
 
@@ -110,31 +147,13 @@ export default function Home() {
     const module = CAREER_MODULES.find(m => m.id === selectedModule);
     if (!module) return;
 
-    // Clear progress for this module
-    if (module.moduleType === 'chat') {
-      await storage.saveModuleProgress(selectedModule, {
-        moduleId: selectedModule,
-        messages: [],
-        lastUpdated: new Date(),
-        completed: false
-      });
-    } else {
-      await storage.saveInteractiveModuleProgress(selectedModule, {
-        moduleId: selectedModule,
-        data: null,
-        lastUpdated: new Date(),
-        completed: false
-      });
-    }
+    // Generate new sessionId
+    const newSessionId = `session-${Date.now()}`;
 
-    // Reload progress
-    const progress = await storage.getAllModuleProgress();
-    const interactiveProgress = await storage.getAllInteractiveModuleProgress();
-    setAllProgress(progress);
-    setAllInteractiveProgress(interactiveProgress);
-
-    // Navigate to module
-    const path = module.moduleType === 'chat' ? `/module/${selectedModule}` : `/interactive/${selectedModule}`;
+    // Navigate to module with new sessionId
+    const path = module.moduleType === 'chat'
+      ? `/module/${selectedModule}?sessionId=${newSessionId}`
+      : `/interactive/${selectedModule}?sessionId=${newSessionId}`;
     router.push(path);
     setShowModuleDialog(false);
   };
@@ -225,6 +244,9 @@ export default function Home() {
         {/* Dialogue History */}
         <DialogueHistoryHome
           chatProgress={allProgress}
+          onSessionClick={(moduleId, sessionId) => {
+            router.push(`/module/${moduleId}?sessionId=${sessionId}`);
+          }}
         />
 
         {/* Welcome message for new users */}
@@ -280,36 +302,128 @@ export default function Home() {
       {/* Module Dialog */}
       {showModuleDialog && selectedModule && (() => {
         const module = CAREER_MODULES.find(m => m.id === selectedModule);
-        const hasProgress = module?.moduleType === 'chat'
-          ? allProgress[selectedModule] && allProgress[selectedModule].messages.length > 0
-          : allInteractiveProgress[selectedModule];
+        const isInteractive = module?.moduleType === 'interactive';
+        const sessions = isInteractive ? interactiveModuleSessions : moduleSessions;
+        const hasSessions = sessions.length > 0;
 
         return (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in border-2 border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {module?.title}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {hasProgress
-                  ? 'このモジュールには保存された進行状況があります。どうしますか？'
-                  : 'このモジュールを始めますか？'}
-              </p>
-              <div className="space-y-3">
-                {hasProgress && (
+          <div
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowModuleDialog(false)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-fade-in border-2 border-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-gray-200 flex-shrink-0">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {module?.title}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {hasSessions ? '新しく始めるか、過去のプレイから選んでください' : 'このモジュールを始めますか？'}
+                </p>
+              </div>
+
+              {/* Content - scrollable */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-3">
+                  {/* New session button - always at the top */}
                   <button
-                    onClick={handleContinue}
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
+                    onClick={handleStartNew}
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-md"
                   >
-                    続きから始める
+                    ✨ 新しく始める
                   </button>
-                )}
-                <button
-                  onClick={handleStartNew}
-                  className="w-full bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-3 rounded-lg font-bold transition-all"
-                >
-                  新しく始める
-                </button>
+
+                  {/* Past sessions list */}
+                  {hasSessions && (
+                    <>
+                      <div className="pt-2 pb-1">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">過去のプレイ履歴</p>
+                      </div>
+                      {!isInteractive && moduleSessions.map((session, index) => {
+                        const firstUserMessage = session.messages?.find(m => m.role === 'user');
+                        const sessionTitle = firstUserMessage?.content.substring(0, 30) || `セッション ${index + 1}`;
+                        const displayTitle = firstUserMessage && firstUserMessage.content.length > 30
+                          ? `${sessionTitle}...`
+                          : sessionTitle;
+
+                        return (
+                          <button
+                            key={session.sessionId}
+                            onClick={() => handleContinue(session.sessionId)}
+                            className="w-full bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-left px-4 py-3 rounded-lg transition-all group"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-700">
+                                  {displayTitle}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <p className="text-xs text-gray-500">
+                                    {session.messages?.length || 0}件のメッセージ
+                                  </p>
+                                  {session.completed && (
+                                    <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">
+                                      完了
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-xs text-gray-400">
+                                  {new Date(session.lastUpdated).toLocaleDateString('ja-JP', {
+                                    month: 'numeric',
+                                    day: 'numeric',
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                      {isInteractive && interactiveModuleSessions.map((session, index) => {
+                        const sessionTitle = `プレイ ${index + 1}`;
+
+                        return (
+                          <button
+                            key={session.sessionId}
+                            onClick={() => handleContinue(session.sessionId)}
+                            className="w-full bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-left px-4 py-3 rounded-lg transition-all group"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-700">
+                                  {sessionTitle}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {session.completed && (
+                                    <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">
+                                      完了
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-xs text-gray-400">
+                                  {new Date(session.lastUpdated).toLocaleDateString('ja-JP', {
+                                    month: 'numeric',
+                                    day: 'numeric',
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-gray-200 flex-shrink-0">
                 <button
                   onClick={() => setShowModuleDialog(false)}
                   className="w-full text-gray-500 hover:text-gray-700 px-6 py-2 text-sm font-medium transition-colors"

@@ -89,3 +89,20 @@ export async function saveValueSnapshot(snapshot: ValueSnapshot): Promise<void> 
 export async function getAllValueSnapshots(): Promise<ValueSnapshot[]> {
   return localStorageLib.getAllValueSnapshots();
 }
+
+// Session functions (localStorage only for now)
+export async function getModuleSessions(moduleId: string): Promise<ModuleProgress[]> {
+  return localStorageLib.getModuleSessions(moduleId);
+}
+
+export async function getModuleSession(moduleId: string, sessionId: string): Promise<ModuleProgress | null> {
+  return localStorageLib.getModuleSession(moduleId, sessionId);
+}
+
+export async function getInteractiveModuleSessions(moduleId: string): Promise<InteractiveModuleProgress[]> {
+  return localStorageLib.getInteractiveModuleSessions(moduleId);
+}
+
+export async function getInteractiveModuleSession(moduleId: string, sessionId: string): Promise<InteractiveModuleProgress | null> {
+  return localStorageLib.getInteractiveModuleSession(moduleId, sessionId);
+}
