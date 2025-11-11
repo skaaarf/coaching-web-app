@@ -83,6 +83,20 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Values Link */}
+        {hasAnyProgress && (
+          <div className="mb-6">
+            <a
+              href="/values"
+              className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all"
+            >
+              <span className="text-xl">✨</span>
+              <span>あなたの価値観を見る</span>
+              <span className="text-sm opacity-80">(7つの軸)</span>
+            </a>
+          </div>
+        )}
+
         {/* Diagnostic Aggregation */}
         {hasAnyProgress && (
           <DiagnosticAggregation interactiveProgress={allInteractiveProgress} />

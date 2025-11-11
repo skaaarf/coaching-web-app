@@ -6,6 +6,7 @@ import { getModuleById } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
 import { Message, ModuleProgress } from '@/types';
 import ChatInterface from '@/components/ChatInterface';
+import AnalyzingAnimation from '@/components/AnalyzingAnimation';
 
 export default function ModulePage() {
   const params = useParams();
@@ -17,6 +18,11 @@ export default function ModulePage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Value analysis state
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [hasTriggeredAnalysis, setHasTriggeredAnalysis] = useState(false);
 
   useEffect(() => {
     if (!module) {
@@ -144,6 +150,11 @@ export default function ModulePage() {
         completed: false, // Could add logic to mark as completed
       };
       await storage.saveModuleProgress(moduleId, progress);
+
+      // Trigger value analysis if we have enough messages (5 exchanges = 10 messages)
+      if (finalMessages.length >= 10 && !hasTriggeredAnalysis && !isAnalyzing && !analysisComplete) {
+        triggerValueAnalysis(finalMessages);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
 
@@ -157,6 +168,37 @@ export default function ModulePage() {
       setMessages([...updatedMessages, errorMessage]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const triggerValueAnalysis = async (messagesToAnalyze: Message[]) => {
+    setHasTriggeredAnalysis(true);
+    setIsAnalyzing(true);
+
+    try {
+      const response = await fetch('/api/extract-values', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messagesToAnalyze,
+          moduleId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze values');
+      }
+
+      // Analysis successful
+      setAnalysisComplete(true);
+    } catch (error) {
+      console.error('Error analyzing values:', error);
+      // Reset so user can try again later
+      setHasTriggeredAnalysis(false);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -223,6 +265,39 @@ export default function ModulePage() {
           )}
         </div>
       </div>
+
+      {/* Analyzing animation */}
+      {isAnalyzing && <AnalyzingAnimation />}
+
+      {/* Analysis complete notification */}
+      {analysisComplete && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-lg shadow-2xl border border-blue-200 p-4 max-w-sm w-full mx-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="text-3xl">✨</div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-gray-800">
+                あなたの価値観が見えてきた!
+              </p>
+              <p className="text-xs text-gray-600">
+                7つの軸で分析しました
+              </p>
+            </div>
+            <button
+              onClick={() => setAnalysisComplete(false)}
+              className="text-gray-400 hover:text-gray-600 p-1"
+              aria-label="閉じる"
+            >
+              ×
+            </button>
+          </div>
+          <button
+            onClick={() => router.push('/values')}
+            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors"
+          >
+            価値観を見る
+          </button>
+        </div>
+      )}
     </div>
   );
 }
