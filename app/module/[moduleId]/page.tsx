@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
-import { Message, ModuleProgress } from '@/types';
+import { Message, ModuleProgress, ValueSnapshot } from '@/types';
 import ChatInterface from '@/components/ChatInterface';
 import AnalyzingAnimation from '@/components/AnalyzingAnimation';
 
@@ -22,7 +22,7 @@ export default function ModulePage() {
   // Value analysis state
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
-  const [hasTriggeredAnalysis, setHasTriggeredAnalysis] = useState(false);
+  const [lastAnalyzedMessageCount, setLastAnalyzedMessageCount] = useState(0);
 
   useEffect(() => {
     if (!module) {
@@ -151,8 +151,9 @@ export default function ModulePage() {
       };
       await storage.saveModuleProgress(moduleId, progress);
 
-      // Trigger value analysis if we have enough messages (5 exchanges = 10 messages)
-      if (finalMessages.length >= 10 && !hasTriggeredAnalysis && !isAnalyzing && !analysisComplete) {
+      // Trigger value analysis after every message exchange (minimum 2 messages)
+      // Only analyze if we have at least 2 new messages since last analysis
+      if (finalMessages.length >= 2 && !isAnalyzing && (finalMessages.length - lastAnalyzedMessageCount >= 2)) {
         triggerValueAnalysis(finalMessages);
       }
     } catch (error) {
@@ -172,7 +173,6 @@ export default function ModulePage() {
   };
 
   const triggerValueAnalysis = async (messagesToAnalyze: Message[]) => {
-    setHasTriggeredAnalysis(true);
     setIsAnalyzing(true);
 
     try {
@@ -181,6 +181,7 @@ export default function ModulePage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({
           messages: messagesToAnalyze,
           moduleId,
@@ -188,15 +189,33 @@ export default function ModulePage() {
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Value analysis failed:', response.status, errorData);
         throw new Error('Failed to analyze values');
       }
 
-      // Analysis successful
+      const data = await response.json();
+      const snapshot = data.snapshot as ValueSnapshot;
+
+      // Save to localStorage
+      await storage.saveValueSnapshot({
+        ...snapshot,
+        user_id: storage.userId || 'local-user',
+        created_at: new Date(snapshot.created_at),
+        last_updated: new Date(),
+      });
+
+      // Analysis successful - update the count and show notification
+      setLastAnalyzedMessageCount(messagesToAnalyze.length);
       setAnalysisComplete(true);
+
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setAnalysisComplete(false);
+      }, 5000);
     } catch (error) {
       console.error('Error analyzing values:', error);
-      // Reset so user can try again later
-      setHasTriggeredAnalysis(false);
+      // Don't update count on error, so we can retry later
     } finally {
       setIsAnalyzing(false);
     }
@@ -250,22 +269,18 @@ export default function ModulePage() {
             </button>
           </div>
 
-          {/* Value analysis progress */}
-          {!analysisComplete && messages.length > 0 && messages.length < 10 && (
+          {/* Value analysis indicator */}
+          {messages.length > 0 && (
             <div className="mt-3 px-2">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-gray-600">
-                  価値観分析まで: あと{Math.ceil((10 - messages.length) / 2)}往復
+                  💡 対話するたびに価値観を分析しています
                 </span>
-                <span className="text-xs text-gray-500">
-                  ({messages.length}/10 メッセージ)
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-1.5 rounded-full transition-all duration-500"
-                  style={{ width: `${(messages.length / 10) * 100}%` }}
-                />
+                {lastAnalyzedMessageCount > 0 && (
+                  <span className="text-xs text-green-600 font-medium">
+                    ✓ {Math.floor(lastAnalyzedMessageCount / 2)}回分析済み
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -291,15 +306,15 @@ export default function ModulePage() {
 
       {/* Analysis complete notification */}
       {analysisComplete && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-lg shadow-2xl border border-blue-200 p-4 max-w-sm w-full mx-4">
-          <div className="flex items-center gap-3 mb-3">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-lg shadow-2xl border border-blue-200 p-4 max-w-sm w-full mx-4 animate-slide-up">
+          <div className="flex items-center gap-3">
             <div className="text-3xl">✨</div>
             <div className="flex-1">
               <p className="text-sm font-bold text-gray-800">
-                あなたの価値観が見えてきた!
+                価値観を更新しました!
               </p>
               <p className="text-xs text-gray-600">
-                7つの軸で分析しました
+                ホーム画面で確認できます
               </p>
             </div>
             <button
@@ -310,12 +325,6 @@ export default function ModulePage() {
               ×
             </button>
           </div>
-          <button
-            onClick={() => router.push('/values')}
-            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors"
-          >
-            価値観を見る
-          </button>
         </div>
       )}
     </div>

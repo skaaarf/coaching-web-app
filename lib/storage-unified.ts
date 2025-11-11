@@ -2,7 +2,7 @@
  * Unified storage layer that uses Supabase when authenticated, localStorage when not
  */
 
-import { ModuleProgress, UserInsights, InteractiveModuleProgress } from '@/types';
+import { ModuleProgress, UserInsights, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 import * as localStorageLib from './storage';
 import * as supabaseStorageLib from './storage-supabase';
 
@@ -75,4 +75,17 @@ export async function clearAllData(userId?: string): Promise<void> {
   } else {
     localStorageLib.clearAllData();
   }
+}
+
+// Value snapshots functions (localStorage only for now)
+export async function getCurrentValueSnapshot(): Promise<ValueSnapshot | null> {
+  return localStorageLib.getCurrentValueSnapshot();
+}
+
+export async function saveValueSnapshot(snapshot: ValueSnapshot): Promise<void> {
+  localStorageLib.saveValueSnapshot(snapshot);
+}
+
+export async function getAllValueSnapshots(): Promise<ValueSnapshot[]> {
+  return localStorageLib.getAllValueSnapshots();
 }

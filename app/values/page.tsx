@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ValuesDisplay from '@/components/ValuesDisplay';
 import { ValueSnapshot } from '@/types';
+import { useStorage } from '@/hooks/useStorage';
 
 export default function ValuesPage() {
   const router = useRouter();
+  const storage = useStorage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<ValueSnapshot | null>(null);
@@ -14,30 +16,23 @@ export default function ValuesPage() {
 
   useEffect(() => {
     fetchValues();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchValues = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/values');
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          router.push('/login');
-          return;
-        }
-        throw new Error('価値観の取得に失敗しました');
-      }
+      // Get all snapshots from localStorage
+      const snapshots = await storage.getAllValueSnapshots();
 
-      const data = await response.json();
-
-      if (!data.current) {
+      if (!snapshots || snapshots.length === 0) {
         setError('まだ価値観が抽出されていません。対話を開始してください。');
         return;
       }
 
-      setCurrent(data.current);
-      setPrevious(data.previous);
+      setCurrent(snapshots[0]); // Most recent
+      setPrevious(snapshots.length > 1 ? snapshots[1] : null); // Second most recent
     } catch (err) {
       console.error('Error fetching values:', err);
       setError(err instanceof Error ? err.message : '価値観の取得に失敗しました');
@@ -97,7 +92,10 @@ export default function ValuesPage() {
 
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <ValuesDisplay current={current} previous={previous} />
+        <ValuesDisplay
+          current={current}
+          previous={previous}
+        />
 
         {/* Action buttons */}
         <div className="mt-8 flex gap-4 justify-center">

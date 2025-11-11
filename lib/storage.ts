@@ -1,9 +1,10 @@
-import { ModuleProgress, UserInsights, Message, InteractiveModuleProgress } from '@/types';
+import { ModuleProgress, UserInsights, Message, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 
 const STORAGE_PREFIX = 'mikata-';
 const PROGRESS_KEY = `${STORAGE_PREFIX}progress`;
 const INSIGHTS_KEY = `${STORAGE_PREFIX}insights`;
 const INTERACTIVE_PROGRESS_KEY = `${STORAGE_PREFIX}interactive-progress`;
+const VALUES_KEY = `${STORAGE_PREFIX}values`;
 
 export function getModuleProgress(moduleId: string): ModuleProgress | null {
   if (typeof window === 'undefined') return null;
@@ -109,6 +110,7 @@ export function clearAllData(): void {
     localStorage.removeItem(PROGRESS_KEY);
     localStorage.removeItem(INSIGHTS_KEY);
     localStorage.removeItem(INTERACTIVE_PROGRESS_KEY);
+    localStorage.removeItem(VALUES_KEY);
   } catch (error) {
     console.error('Error clearing data:', error);
   }
@@ -172,5 +174,68 @@ export function getAllInteractiveModuleProgress(): Record<string, InteractiveMod
   } catch (error) {
     console.error('Error loading all interactive module progress:', error);
     return {};
+  }
+}
+
+// Value snapshots functions
+export function getCurrentValueSnapshot(): ValueSnapshot | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const snapshots = localStorage.getItem(VALUES_KEY);
+    if (!snapshots) return null;
+
+    const snapshotList = JSON.parse(snapshots) as ValueSnapshot[];
+    if (snapshotList.length === 0) return null;
+
+    const latest = snapshotList[0];
+    return {
+      ...latest,
+      created_at: new Date(latest.created_at),
+      last_updated: new Date(latest.last_updated),
+    };
+  } catch (error) {
+    console.error('Error loading value snapshot:', error);
+    return null;
+  }
+}
+
+export function saveValueSnapshot(snapshot: ValueSnapshot): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const snapshots = localStorage.getItem(VALUES_KEY);
+    const snapshotList = snapshots ? JSON.parse(snapshots) : [];
+
+    // Add new snapshot at the beginning
+    snapshotList.unshift(snapshot);
+
+    // Keep only the last 10 snapshots
+    if (snapshotList.length > 10) {
+      snapshotList.splice(10);
+    }
+
+    localStorage.setItem(VALUES_KEY, JSON.stringify(snapshotList));
+  } catch (error) {
+    console.error('Error saving value snapshot:', error);
+  }
+}
+
+export function getAllValueSnapshots(): ValueSnapshot[] {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const snapshots = localStorage.getItem(VALUES_KEY);
+    if (!snapshots) return [];
+
+    const snapshotList = JSON.parse(snapshots) as ValueSnapshot[];
+    return snapshotList.map(s => ({
+      ...s,
+      created_at: new Date(s.created_at),
+      last_updated: new Date(s.last_updated),
+    }));
+  } catch (error) {
+    console.error('Error loading value snapshots:', error);
+    return [];
   }
 }

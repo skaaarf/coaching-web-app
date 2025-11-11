@@ -64,16 +64,6 @@ JSONのみを返してください。説明文は不要です。
 
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "認証が必要です" },
-        { status: 401 }
-      );
-    }
-
-    const userId = session.user.id;
     const { messages, moduleId } = await request.json();
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -191,40 +181,16 @@ export async function POST(request: NextRequest) {
 
     const overallConfidence = axisCount > 0 ? Math.round(totalConfidence / axisCount) : 0;
 
-    // Save to database
-    const { data: snapshot, error: dbError } = await supabase
-      .from('value_snapshots')
-      .insert({
-        user_id: userId,
-        module_id: moduleId || null,
-        money_vs_meaning: axes.money_vs_meaning,
-        stability_vs_challenge: axes.stability_vs_challenge,
-        team_vs_solo: axes.team_vs_solo,
-        specialist_vs_generalist: axes.specialist_vs_generalist,
-        growth_vs_balance: axes.growth_vs_balance,
-        corporate_vs_startup: axes.corporate_vs_startup,
-        social_vs_self: axes.social_vs_self,
-        reasoning: reasoning,
-        overall_confidence: overallConfidence,
-      })
-      .select()
-      .single();
-
-    if (dbError) {
-      console.error("Database error:", dbError);
-      return NextResponse.json(
-        { error: "データベースへの保存に失敗しました" },
-        { status: 500 }
-      );
-    }
-
+    // Return the analysis result (client will handle storage)
+    console.log('✅ Value analysis completed successfully!', { overallConfidence });
     return NextResponse.json({
       snapshot: {
-        id: snapshot.id,
+        id: `local-${Date.now()}`, // Temporary ID for local storage
         axes: axes as ValueAxes,
         reasoning,
         overall_confidence: overallConfidence,
-        created_at: snapshot.created_at,
+        created_at: new Date().toISOString(),
+        module_id: moduleId || null,
       }
     });
 

@@ -14,6 +14,8 @@ interface ValueSliderProps {
   reason?: string;
   confidence?: number;
   tooltip?: string;
+  onChange?: (newValue: number) => void;
+  editable?: boolean;
 }
 
 export default function ValueSlider({
@@ -28,10 +30,18 @@ export default function ValueSlider({
   reason,
   confidence,
   tooltip,
+  onChange,
+  editable = false,
 }: ValueSliderProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const change = previousValue !== undefined ? value - previousValue : 0;
   const hasChange = change !== 0;
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onChange) {
+      onChange(Number(e.target.value));
+    }
+  };
 
   return (
     <div className="mb-8 p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
@@ -77,25 +87,38 @@ export default function ValueSlider({
         <div className="absolute top-1/2 -translate-y-1/2 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
           {/* Gradient fill up to current value */}
           <div
-            className="h-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 transition-all duration-700 ease-out"
+            className="h-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 transition-all duration-300 ease-out"
             style={{ width: `${value}%` }}
           />
         </div>
 
+        {/* Invisible input range slider (when editable) */}
+        {editable && (
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={value}
+            onChange={handleSliderChange}
+            className="absolute top-1/2 -translate-y-1/2 w-full h-8 opacity-0 cursor-pointer z-30"
+            aria-label={label}
+          />
+        )}
+
         {/* Left label */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 text-lg">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 text-lg pointer-events-none">
           {leftEmoji}
         </div>
 
         {/* Right label */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 text-lg">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 text-lg pointer-events-none">
           {rightEmoji}
         </div>
 
         {/* Previous value marker (if exists) */}
         {previousValue !== undefined && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-gray-400 rounded-full border-2 border-white z-10 transition-all duration-500"
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-gray-400 rounded-full border-2 border-white z-10 transition-all duration-300 pointer-events-none"
             style={{ left: `${previousValue}%` }}
             title={`前回: ${previousValue}%`}
           />
@@ -103,7 +126,7 @@ export default function ValueSlider({
 
         {/* Current value marker */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-white rounded-full border-3 border-blue-600 z-20 shadow-lg transition-all duration-700 hover:scale-110"
+          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-white rounded-full border-3 border-blue-600 z-20 shadow-lg transition-all duration-300 pointer-events-none ${editable ? 'hover:scale-110' : ''}`}
           style={{ left: `${value}%` }}
         >
           <div className="absolute inset-1 bg-blue-600 rounded-full" />

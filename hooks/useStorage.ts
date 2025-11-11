@@ -6,7 +6,7 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/components/SessionProvider';
 import * as unifiedStorage from '@/lib/storage-unified';
-import { ModuleProgress, UserInsights, InteractiveModuleProgress } from '@/types';
+import { ModuleProgress, UserInsights, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 
 export function useStorage() {
   const { userId } = useAuth();
@@ -50,6 +50,19 @@ export function useStorage() {
     // Clear all data
     clearAllData: async (): Promise<void> => {
       await unifiedStorage.clearAllData(userId || undefined);
+    },
+
+    // Value Snapshots
+    getCurrentValueSnapshot: async (): Promise<ValueSnapshot | null> => {
+      return await unifiedStorage.getCurrentValueSnapshot();
+    },
+
+    saveValueSnapshot: async (snapshot: ValueSnapshot): Promise<void> => {
+      await unifiedStorage.saveValueSnapshot(snapshot);
+    },
+
+    getAllValueSnapshots: async (): Promise<ValueSnapshot[]> => {
+      return await unifiedStorage.getAllValueSnapshots();
     },
 
     // Metadata

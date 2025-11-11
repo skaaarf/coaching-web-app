@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
-import { Message, InteractiveModuleProgress } from '@/types';
+import { Message, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 import ValueBattle from '@/components/ValueBattle';
 import ValueBattleResultView from '@/components/ValueBattleResult';
 import LifeSimulator from '@/components/LifeSimulator';
@@ -16,6 +16,7 @@ import BranchMap from '@/components/BranchMap';
 import ChatInterface from '@/components/ChatInterface';
 import ModuleResultSidebar from '@/components/ModuleResultSidebar';
 import DialogueHistorySidebar from '@/components/DialogueHistorySidebar';
+import AnalyzingAnimation from '@/components/AnalyzingAnimation';
 
 type InteractiveState =
   | { phase: 'activity'; activityData?: any }
@@ -37,6 +38,11 @@ export default function InteractiveModulePage() {
   const [showResultSidebar, setShowResultSidebar] = useState(true);
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
   const [allProgress, setAllProgress] = useState<Record<string, InteractiveModuleProgress>>({});
+
+  // Value analysis state
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [lastAnalyzedMessageCount, setLastAnalyzedMessageCount] = useState(0);
 
   useEffect(() => {
     if (!module || module.moduleType !== 'interactive') {
@@ -237,12 +243,18 @@ export default function InteractiveModulePage() {
         timestamp: new Date(),
       };
 
+      const finalMessages = [...updatedMessages, assistantMessage];
       const newState = {
         ...state,
-        messages: [...updatedMessages, assistantMessage],
+        messages: finalMessages,
       };
       setState(newState);
       saveProgress(newState);
+
+      // Trigger value analysis after every message exchange (minimum 2 messages)
+      if (finalMessages.length >= 2 && !isAnalyzing && (finalMessages.length - lastAnalyzedMessageCount >= 2)) {
+        triggerValueAnalysis(finalMessages);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       setError('メッセージを送信できませんでした。もう一度お試しください。');
@@ -260,6 +272,55 @@ export default function InteractiveModulePage() {
       saveProgress(newState);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const triggerValueAnalysis = async (messagesToAnalyze: Message[]) => {
+    setIsAnalyzing(true);
+
+    try {
+      const response = await fetch('/api/extract-values', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for authentication
+        body: JSON.stringify({
+          messages: messagesToAnalyze,
+          moduleId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Value analysis failed:', response.status, errorData);
+        throw new Error('Failed to analyze values');
+      }
+
+      const data = await response.json();
+      const snapshot = data.snapshot as ValueSnapshot;
+
+      // Save to localStorage
+      await storage.saveValueSnapshot({
+        ...snapshot,
+        user_id: storage.userId || 'local-user',
+        created_at: new Date(snapshot.created_at),
+        last_updated: new Date(),
+      });
+
+      // Analysis successful - update the count and show notification
+      setLastAnalyzedMessageCount(messagesToAnalyze.length);
+      setAnalysisComplete(true);
+
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setAnalysisComplete(false);
+      }, 5000);
+    } catch (error) {
+      console.error('Error analyzing values:', error);
+      // Don't update count on error, so we can retry later
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -548,6 +609,33 @@ export default function InteractiveModulePage() {
           )}
         </div>
       </main>
+
+      {/* Analyzing animation */}
+      {isAnalyzing && <AnalyzingAnimation />}
+
+      {/* Analysis complete notification */}
+      {analysisComplete && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-lg shadow-2xl border border-blue-200 p-4 max-w-sm w-full mx-4 animate-slide-up">
+          <div className="flex items-center gap-3">
+            <div className="text-3xl">✨</div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-gray-800">
+                価値観を更新しました!
+              </p>
+              <p className="text-xs text-gray-600">
+                ホーム画面で確認できます
+              </p>
+            </div>
+            <button
+              onClick={() => setAnalysisComplete(false)}
+              className="text-gray-400 hover:text-gray-600 p-1"
+              aria-label="閉じる"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes fade-in {

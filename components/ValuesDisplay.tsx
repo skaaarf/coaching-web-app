@@ -1,12 +1,17 @@
 'use client';
 
-import { ValueSnapshot, AxisReasoning } from '@/types';
+import { useState } from 'react';
+import { ValueSnapshot, AxisReasoning, ValueAxes } from '@/types';
 import ValueSlider from './ValueSlider';
 import SimpleRadarChart from './SimpleRadarChart';
 
 interface ValuesDisplayProps {
   current?: ValueSnapshot | null;
   previous?: ValueSnapshot | null;
+  editable?: boolean;
+  onUpdate?: (snapshot: ValueSnapshot) => void;
+  showHeader?: boolean;
+  showFooter?: boolean;
 }
 
 const AXIS_CONFIG = [
@@ -110,7 +115,11 @@ const AXIS_CONFIG = [
   },
 ];
 
-export default function ValuesDisplay({ current, previous }: ValuesDisplayProps) {
+export default function ValuesDisplay({ current, previous, editable = false, onUpdate, showHeader = true, showFooter = true }: ValuesDisplayProps) {
+  // Local state to track current values
+  const [localValues, setLocalValues] = useState<ValueAxes | null>(current?.axes || null);
+  const [isSaving, setIsSaving] = useState(false);
+
   // Create default values if no current data exists
   const displayData = current || {
     axes: {
@@ -124,47 +133,110 @@ export default function ValuesDisplay({ current, previous }: ValuesDisplayProps)
     },
     reasoning: {},
     overall_confidence: 0,
-    created_at: new Date().toISOString(),
+    created_at: new Date(),
+    last_updated: new Date(),
+    id: '',
+    user_id: '',
   };
 
   const hasData = !!current;
 
+  // Use local values if they exist (during editing), otherwise use displayData
+  const currentAxes = localValues || displayData.axes;
+
+  // Handle slider change
+  const handleValueChange = async (key: keyof ValueAxes, newValue: number) => {
+    if (!editable || !current) return;
+
+    // Update local state immediately for responsiveness
+    const updatedAxes = {
+      ...currentAxes,
+      [key]: newValue,
+    };
+    setLocalValues(updatedAxes);
+
+    // Save to API
+    try {
+      setIsSaving(true);
+      const response = await fetch('/api/values', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          axes: updatedAxes,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update values');
+      }
+
+      const data = await response.json();
+
+      // Call onUpdate callback if provided
+      if (onUpdate && data.snapshot) {
+        onUpdate(data.snapshot);
+      }
+    } catch (error) {
+      console.error('Error updating value:', error);
+      // Revert to original value on error
+      setLocalValues(current.axes);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className={`${hasData ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-gradient-to-r from-gray-400 to-gray-500'} text-white p-6 rounded-lg shadow-lg`}>
-        <h2 className="text-2xl font-bold mb-2">あなたの価値観</h2>
-        <p className="text-sm opacity-90">
-          {hasData ? '対話から抽出された、あなたのキャリア価値観です' : '対話を進めると、ここに価値観が表示されます'}
-        </p>
-        {hasData && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
-              信頼度: {displayData.overall_confidence}%
-            </span>
-            <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
-              {new Date(displayData.created_at).toLocaleDateString('ja-JP')}
-            </span>
+      {showHeader && (
+        <>
+          <div className={`${hasData ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-gradient-to-r from-gray-400 to-gray-500'} text-white p-6 rounded-lg shadow-lg`}>
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">あなたの価値観</h2>
+                <p className="text-sm opacity-90">
+                  {hasData ? (editable ? 'スライダーを動かして価値観を調整できます' : '対話から抽出された、あなたのキャリア価値観です') : '対話を進めると、ここに価値観が表示されます'}
+                </p>
+              </div>
+              {isSaving && (
+                <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs">保存中...</span>
+                </div>
+              )}
+            </div>
+            {hasData && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
+                  信頼度: {displayData.overall_confidence}%
+                </span>
+                <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
+                  {new Date(displayData.created_at).toLocaleDateString('ja-JP')}
+                </span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* Change indicator */}
-      {previous && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-          <p className="text-sm text-yellow-800">
-            📊 前回({new Date(previous.created_at).toLocaleDateString('ja-JP')})との比較を表示しています
-          </p>
-        </div>
+          {/* Change indicator */}
+          {previous && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+              <p className="text-sm text-yellow-800">
+                📊 前回({new Date(previous.created_at).toLocaleDateString('ja-JP')})との比較を表示しています
+              </p>
+            </div>
+          )}
+
+          {/* Simple Radar Chart */}
+          {hasData && <SimpleRadarChart current={current!} />}
+        </>
       )}
-
-      {/* Simple Radar Chart */}
-      {hasData && <SimpleRadarChart current={current!} />}
 
       {/* Sliders */}
       <div>
         {AXIS_CONFIG.map((config) => {
-          const value = displayData.axes[config.key];
+          const value = currentAxes[config.key];
           const previousValue = previous?.axes[config.key];
           const reasoning = (displayData.reasoning as Record<string, AxisReasoning>)?.[config.key];
 
@@ -182,17 +254,21 @@ export default function ValuesDisplay({ current, previous }: ValuesDisplayProps)
               reason={reasoning?.reason}
               confidence={reasoning?.confidence}
               tooltip={config.tooltip}
+              onChange={(newValue) => handleValueChange(config.key, newValue)}
+              editable={editable && hasData}
             />
           );
         })}
       </div>
 
       {/* Footer note */}
-      <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-        <p className="text-xs text-gray-600">
-          💡 この価値観は対話内容から自動的に抽出されたものです。もっと対話を重ねることで、より正確な分析が可能になります。
-        </p>
-      </div>
+      {showFooter && (
+        <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
+          <p className="text-xs text-gray-600">
+            💡 この価値観は対話内容から自動的に抽出されたものです。もっと対話を重ねることで、より正確な分析が可能になります。
+          </p>
+        </div>
+      )}
     </div>
   );
 }

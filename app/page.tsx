@@ -56,23 +56,16 @@ export default function Home() {
   const fetchValues = async () => {
     try {
       setLoadingValues(true);
-      const response = await fetch('/api/values');
 
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 404) {
-          // Not logged in or no values yet - this is fine
-          setCurrentValues(null);
-          setPreviousValues(null);
-          return;
-        }
-        throw new Error('価値観の取得に失敗しました');
-      }
+      // Get all snapshots from localStorage
+      const snapshots = await storage.getAllValueSnapshots();
 
-      const data = await response.json();
-
-      if (data.current) {
-        setCurrentValues(data.current);
-        setPreviousValues(data.previous || null);
+      if (snapshots && snapshots.length > 0) {
+        setCurrentValues(snapshots[0]); // Most recent
+        setPreviousValues(snapshots.length > 1 ? snapshots[1] : null); // Second most recent
+      } else {
+        setCurrentValues(null);
+        setPreviousValues(null);
       }
     } catch (err) {
       console.error('Error fetching values:', err);
@@ -97,18 +90,9 @@ export default function Home() {
   };
 
   const handleModuleClick = (moduleId: string, moduleType: 'chat' | 'interactive') => {
-    const hasProgress = moduleType === 'chat'
-      ? allProgress[moduleId] && allProgress[moduleId].messages.length > 0
-      : allInteractiveProgress[moduleId];
-
-    if (hasProgress) {
-      setSelectedModule(moduleId);
-      setShowModuleDialog(true);
-    } else {
-      // No progress, go directly to module
-      const path = moduleType === 'chat' ? `/module/${moduleId}` : `/interactive/${moduleId}`;
-      router.push(path);
-    }
+    // Always show dialog
+    setSelectedModule(moduleId);
+    setShowModuleDialog(true);
   };
 
   const handleContinue = () => {
@@ -205,7 +189,17 @@ export default function Home() {
             <div className="p-6">
               {activeTab === 'values' && !loadingValues && (
                 <div className="animate-fade-in">
-                  <ValuesDisplay current={currentValues} previous={previousValues} />
+                  {currentValues ? (
+                    <ValuesDisplay current={currentValues} previous={previousValues} showHeader={false} showFooter={false} />
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="text-6xl mb-4">💎</div>
+                      <p className="text-gray-600 mb-2">まだ価値観が抽出されていません</p>
+                      <p className="text-sm text-gray-500">
+                        対話やゲームモジュールを進めると、AIがあなたの価値観を分析します
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -284,38 +278,49 @@ export default function Home() {
       </main>
 
       {/* Module Dialog */}
-      {showModuleDialog && selectedModule && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {CAREER_MODULES.find(m => m.id === selectedModule)?.title}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              このモジュールには保存された進行状況があります。どうしますか？
-            </p>
-            <div className="space-y-3">
-              <button
-                onClick={handleContinue}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
-              >
-                続きから始める
-              </button>
-              <button
-                onClick={handleStartNew}
-                className="w-full bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-3 rounded-lg font-bold transition-all"
-              >
-                新しく始める
-              </button>
-              <button
-                onClick={() => setShowModuleDialog(false)}
-                className="w-full text-gray-500 hover:text-gray-700 px-6 py-2 text-sm font-medium transition-colors"
-              >
-                キャンセル
-              </button>
+      {showModuleDialog && selectedModule && (() => {
+        const module = CAREER_MODULES.find(m => m.id === selectedModule);
+        const hasProgress = module?.moduleType === 'chat'
+          ? allProgress[selectedModule] && allProgress[selectedModule].messages.length > 0
+          : allInteractiveProgress[selectedModule];
+
+        return (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in border-2 border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {module?.title}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {hasProgress
+                  ? 'このモジュールには保存された進行状況があります。どうしますか？'
+                  : 'このモジュールを始めますか？'}
+              </p>
+              <div className="space-y-3">
+                {hasProgress && (
+                  <button
+                    onClick={handleContinue}
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
+                  >
+                    続きから始める
+                  </button>
+                )}
+                <button
+                  onClick={handleStartNew}
+                  className="w-full bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-3 rounded-lg font-bold transition-all"
+                >
+                  新しく始める
+                </button>
+                <button
+                  onClick={() => setShowModuleDialog(false)}
+                  className="w-full text-gray-500 hover:text-gray-700 px-6 py-2 text-sm font-medium transition-colors"
+                >
+                  キャンセル
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <style jsx global>{`
         @keyframes fade-in {

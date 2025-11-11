@@ -81,3 +81,80 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    // Get authenticated user
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "認証が必要です" },
+        { status: 401 }
+      );
+    }
+
+    const userId = session.user.id;
+    const body = await request.json();
+
+    // Validate the request body
+    if (!body.axes) {
+      return NextResponse.json(
+        { error: "axes フィールドが必要です" },
+        { status: 400 }
+      );
+    }
+
+    // Get the most recent snapshot
+    const { data: currentSnapshot, error: fetchError } = await supabase
+      .from('value_snapshots')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (fetchError || !currentSnapshot) {
+      return NextResponse.json(
+        { error: "既存の価値観が見つかりません" },
+        { status: 404 }
+      );
+    }
+
+    // Update the snapshot
+    const { data: updatedSnapshot, error: updateError } = await supabase
+      .from('value_snapshots')
+      .update({
+        money_vs_meaning: body.axes.money_vs_meaning ?? currentSnapshot.money_vs_meaning,
+        stability_vs_challenge: body.axes.stability_vs_challenge ?? currentSnapshot.stability_vs_challenge,
+        team_vs_solo: body.axes.team_vs_solo ?? currentSnapshot.team_vs_solo,
+        specialist_vs_generalist: body.axes.specialist_vs_generalist ?? currentSnapshot.specialist_vs_generalist,
+        growth_vs_balance: body.axes.growth_vs_balance ?? currentSnapshot.growth_vs_balance,
+        corporate_vs_startup: body.axes.corporate_vs_startup ?? currentSnapshot.corporate_vs_startup,
+        social_vs_self: body.axes.social_vs_self ?? currentSnapshot.social_vs_self,
+        last_updated: new Date().toISOString(),
+      })
+      .eq('id', currentSnapshot.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("Database update error:", updateError);
+      return NextResponse.json(
+        { error: "価値観の更新に失敗しました" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      snapshot: dbToSnapshot(updatedSnapshot),
+    });
+
+  } catch (error) {
+    console.error("Error updating values:", error);
+    return NextResponse.json(
+      { error: "価値観の更新中にエラーが発生しました" },
+      { status: 500 }
+    );
+  }
+}
