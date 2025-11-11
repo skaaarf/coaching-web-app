@@ -58,7 +58,8 @@ export default function InteractiveModulePage() {
     };
 
     loadProgress();
-  }, [module, router, moduleId, storage.userId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [module, router, moduleId, storage]);
 
   const handleResumeProgress = () => {
     if (savedProgress) {
