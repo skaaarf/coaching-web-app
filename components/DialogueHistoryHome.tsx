@@ -1,97 +1,125 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { InteractiveModuleProgress } from '@/types';
+import { InteractiveModuleProgress, ModuleProgress } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
 
 interface Props {
   allProgress: Record<string, InteractiveModuleProgress>;
+  chatProgress?: Record<string, ModuleProgress>;
 }
 
-export default function DialogueHistoryHome({ allProgress }: Props) {
+export default function DialogueHistoryHome({ allProgress, chatProgress = {} }: Props) {
   const router = useRouter();
 
-  // Filter modules that have dialogue history
-  const modulesWithDialogue = Object.entries(allProgress).filter(([moduleId, progress]) => {
-    const data = progress.data as any;
-    return data.phase === 'dialogue' && data.messages && data.messages.length > 0;
+  // Filter interactive modules that have any progress (started or completed)
+  const interactiveDialogues = Object.entries(allProgress).filter(([moduleId, progress]) => {
+    // Show all interactive modules that have been started (regardless of phase)
+    return progress && progress.data;
   });
 
-  if (modulesWithDialogue.length === 0) {
-    return null;
-  }
+  // Filter chat modules that have messages
+  const chatDialogues = Object.entries(chatProgress).filter(([moduleId, progress]) => {
+    return progress.messages && progress.messages.length > 0;
+  });
+
+  // Combine both types of dialogues
+  const allDialogues = [...interactiveDialogues, ...chatDialogues];
+  const modulesWithDialogue = allDialogues;
 
   return (
     <div className="mb-8 animate-fade-in">
-      <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-sm">
-        <div className="flex items-center mb-6">
-          <div className="text-4xl mr-3">💬</div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">対話履歴</h2>
-            <p className="text-sm text-gray-600 font-medium">あなたとみかたくんの会話</p>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">対話履歴</h2>
+            {modulesWithDialogue.length > 0 && (
+              <span className="text-xs text-gray-500 font-medium">
+                {modulesWithDialogue.length}件
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="space-y-4">
-          {modulesWithDialogue.map(([moduleId, progress]) => {
-            const module = CAREER_MODULES.find(m => m.id === moduleId);
-            if (!module) return null;
+        {/* Content */}
+        {modulesWithDialogue.length === 0 ? (
+          <div className="p-6 text-center">
+            <p className="text-sm text-gray-500 mb-4">まだ対話履歴がありません</p>
+            <button
+              onClick={() => router.push('/module/university-decision')}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              対話を始める →
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {modulesWithDialogue.map(([moduleId, progress]) => {
+              const module = CAREER_MODULES.find(m => m.id === moduleId);
+              if (!module) return null;
 
-            const data = progress.data as any;
-            const messageCount = data.messages?.length || 0;
-            const lastMessage = data.messages?.[data.messages.length - 1];
-            const lastMessagePreview = lastMessage?.content.substring(0, 150) || '';
+              // Handle both ModuleProgress and InteractiveModuleProgress
+              const isInteractive = 'data' in progress;
+              const data = isInteractive ? (progress as InteractiveModuleProgress).data as any : null;
+              const messages = isInteractive ? data?.messages : (progress as ModuleProgress).messages;
 
-            return (
-              <button
-                key={moduleId}
-                onClick={() => router.push(`/interactive/${moduleId}`)}
-                className="text-left w-full p-6 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 border-2 border-gray-300 hover:border-blue-400 rounded-xl transition-all shadow-sm hover:shadow-md touch-manipulation"
-              >
-                <div className="flex items-start mb-4">
-                  <div className="text-5xl mr-4">{module.icon}</div>
-                  <div className="flex-grow min-w-0">
-                    <h3 className="font-bold text-gray-900 mb-2 text-lg">
-                      {module.title}
-                    </h3>
-                    <div className="flex items-center text-sm text-gray-600 font-medium space-x-3">
-                      <span>💬 {messageCount}件</span>
-                      <span>•</span>
-                      <span>
-                        {new Date(progress.lastUpdated).toLocaleDateString('ja-JP', {
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </span>
+              const messageCount = messages?.length || 0;
+              const lastMessage = messages?.[messages.length - 1];
+              const lastMessagePreview = lastMessage?.content.substring(0, 60) || '';
+              const lastUpdated = (progress as any).lastUpdated;
+
+              // For interactive modules without messages, show status
+              const hasMessages = messages && messages.length > 0;
+              const previewText = hasMessages
+                ? `${lastMessage?.role === 'assistant' ? 'みかたくん: ' : 'あなた: '}${lastMessagePreview}${lastMessage?.content.length > 60 ? '...' : ''}`
+                : isInteractive
+                ? (progress as any).completed ? 'ゲーム完了' : 'ゲーム進行中'
+                : '';
+
+              // Determine the correct path based on module type
+              const modulePath = module.moduleType === 'chat'
+                ? `/module/${moduleId}`
+                : `/interactive/${moduleId}`;
+
+              return (
+                <button
+                  key={moduleId}
+                  onClick={() => router.push(modulePath)}
+                  className="w-full px-6 py-3 hover:bg-gray-50 transition-colors text-left group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl flex-shrink-0">{module.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">
+                          {module.title}
+                        </h3>
+                        {(progress as any).completed && (
+                          <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">
+                            完了
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">
+                        {previewText}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      {lastUpdated && (
+                        <p className="text-xs text-gray-400">
+                          {new Date(lastUpdated).toLocaleDateString('ja-JP', {
+                            month: 'numeric',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      )}
+                      {hasMessages && <p className="text-xs text-gray-400 mt-0.5">{messageCount}件</p>}
                     </div>
                   </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 mb-3 border border-gray-200">
-                  <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
-                    {lastMessage?.role === 'assistant' ? '🤖 ' : '👤 '}
-                    {lastMessagePreview}
-                    {lastMessage?.content.length > 150 ? '...' : ''}
-                  </p>
-                </div>
-
-                {progress.completed && (
-                  <div className="flex items-center justify-end">
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-green-100 text-green-800 border border-green-300">
-                      ✓ 完了
-                    </span>
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {modulesWithDialogue.length > 2 && (
-          <div className="mt-6 pt-4 border-t border-gray-200 text-center">
-            <p className="text-sm text-gray-600 font-medium">
-              {modulesWithDialogue.length}個の対話が記録されています
-            </p>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

@@ -5,7 +5,7 @@ import ValueSlider from './ValueSlider';
 import SimpleRadarChart from './SimpleRadarChart';
 
 interface ValuesDisplayProps {
-  current: ValueSnapshot;
+  current?: ValueSnapshot | null;
   previous?: ValueSnapshot | null;
 }
 
@@ -111,22 +111,42 @@ const AXIS_CONFIG = [
 ];
 
 export default function ValuesDisplay({ current, previous }: ValuesDisplayProps) {
+  // Create default values if no current data exists
+  const displayData = current || {
+    axes: {
+      money_vs_meaning: 50,
+      stability_vs_challenge: 50,
+      team_vs_solo: 50,
+      specialist_vs_generalist: 50,
+      growth_vs_balance: 50,
+      corporate_vs_startup: 50,
+      social_vs_self: 50,
+    },
+    reasoning: {},
+    overall_confidence: 0,
+    created_at: new Date().toISOString(),
+  };
+
+  const hasData = !!current;
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-lg shadow-lg">
+      <div className={`${hasData ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-gradient-to-r from-gray-400 to-gray-500'} text-white p-6 rounded-lg shadow-lg`}>
         <h2 className="text-2xl font-bold mb-2">あなたの価値観</h2>
         <p className="text-sm opacity-90">
-          対話から抽出された、あなたのキャリア価値観です
+          {hasData ? '対話から抽出された、あなたのキャリア価値観です' : '対話を進めると、ここに価値観が表示されます'}
         </p>
-        <div className="mt-3 flex items-center gap-2">
-          <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
-            信頼度: {current.overall_confidence}%
-          </span>
-          <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
-            {new Date(current.created_at).toLocaleDateString('ja-JP')}
-          </span>
-        </div>
+        {hasData && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
+              信頼度: {displayData.overall_confidence}%
+            </span>
+            <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
+              {new Date(displayData.created_at).toLocaleDateString('ja-JP')}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Change indicator */}
@@ -139,14 +159,14 @@ export default function ValuesDisplay({ current, previous }: ValuesDisplayProps)
       )}
 
       {/* Simple Radar Chart */}
-      <SimpleRadarChart current={current} />
+      {hasData && <SimpleRadarChart current={current!} />}
 
       {/* Sliders */}
       <div>
         {AXIS_CONFIG.map((config) => {
-          const value = current.axes[config.key];
+          const value = displayData.axes[config.key];
           const previousValue = previous?.axes[config.key];
-          const reasoning = current.reasoning[config.key];
+          const reasoning = displayData.reasoning[config.key];
 
           return (
             <ValueSlider
@@ -158,7 +178,7 @@ export default function ValuesDisplay({ current, previous }: ValuesDisplayProps)
               rightEmoji={config.rightEmoji}
               value={value}
               previousValue={previousValue}
-              description={config.getDescription(value)}
+              description={hasData ? config.getDescription(value) : 'まだデータがありません'}
               reason={reasoning?.reason}
               confidence={reasoning?.confidence}
               tooltip={config.tooltip}

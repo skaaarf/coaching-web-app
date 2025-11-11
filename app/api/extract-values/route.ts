@@ -84,9 +84,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if there are enough messages for meaningful analysis
-    if (messages.length < 4) {
+    if (messages.length < 2) {
       return NextResponse.json(
-        { error: "分析には少なくとも2往復(4メッセージ)の対話が必要です" },
+        { error: "分析には少なくとも1往復(2メッセージ)の対話が必要です" },
         { status: 400 }
       );
     }

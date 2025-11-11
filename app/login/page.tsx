@@ -14,6 +14,25 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return 'パスワードは8文字以上である必要があります';
+    }
+    if (!/[A-Z]/.test(password)) {
+      return 'パスワードには大文字を含める必要があります';
+    }
+    if (!/[a-z]/.test(password)) {
+      return 'パスワードには小文字を含める必要があります';
+    }
+    if (!/[0-9]/.test(password)) {
+      return 'パスワードには数字を含める必要があります';
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      return 'パスワードには記号を含める必要があります';
+    }
+    return null;
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -22,6 +41,14 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
+        // Validate password for sign up
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+          setError(passwordError);
+          setLoading(false);
+          return;
+        }
+
         // Sign up
         const { error } = await supabase.auth.signUp({
           email,
@@ -58,14 +85,14 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             みかたくん
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-800 font-medium">
             {isSignUp ? 'アカウント作成' : 'ログイン'}
           </p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-1">
               メールアドレス
             </label>
             <input
@@ -74,13 +101,13 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
               placeholder="example@email.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-1">
               パスワード
             </label>
             <input
@@ -89,20 +116,25 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="6文字以上"
+              minLength={8}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+              placeholder={isSignUp ? "8文字以上（大小英数字・記号）" : "パスワード"}
             />
+            {isSignUp && (
+              <p className="mt-2 text-xs text-gray-700">
+                ※ 8文字以上、大文字・小文字・数字・記号を含める必要があります
+              </p>
+            )}
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-medium">
               {error}
             </div>
           )}
 
           {message && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm font-medium">
               {message}
             </div>
           )}
@@ -132,13 +164,13 @@ export default function LoginPage() {
         <div className="mt-4">
           <Link
             href="/"
-            className="w-full block text-center bg-gray-100 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+            className="w-full block text-center bg-gray-100 border border-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
           >
             ログインせずに使う
           </Link>
         </div>
 
-        <div className="mt-6 text-center text-sm text-gray-500">
+        <div className="mt-6 text-center text-sm text-gray-700">
           <p className="text-xs">
             利用することで、利用規約とプライバシーポリシーに同意したことになります。
           </p>

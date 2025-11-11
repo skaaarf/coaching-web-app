@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { CAREER_MODULES } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
 import { generateInsights } from '@/lib/insights';
-import { ModuleProgress, InteractiveModuleProgress, UserInsights } from '@/types';
+import { ModuleProgress, InteractiveModuleProgress, UserInsights, ValueSnapshot } from '@/types';
 import ModuleCard from '@/components/ModuleCard';
 import InsightsPanel from '@/components/InsightsPanel';
 import UserMenu from '@/components/UserMenu';
-import DiagnosticAggregation from '@/components/DiagnosticAggregation';
 import DialogueHistoryHome from '@/components/DialogueHistoryHome';
+import DiagnosticAggregation from '@/components/DiagnosticAggregation';
+import ValuesDisplay from '@/components/ValuesDisplay';
 
 export default function Home() {
   const router = useRouter();
@@ -19,6 +20,9 @@ export default function Home() {
   const [allInteractiveProgress, setAllInteractiveProgress] = useState<Record<string, InteractiveModuleProgress>>({});
   const [insights, setInsights] = useState<UserInsights | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [currentValues, setCurrentValues] = useState<ValueSnapshot | null>(null);
+  const [previousValues, setPreviousValues] = useState<ValueSnapshot | null>(null);
+  const [loadingValues, setLoadingValues] = useState(false);
 
   useEffect(() => {
     // Load progress and insights on mount
@@ -29,18 +33,52 @@ export default function Home() {
       setAllInteractiveProgress(interactiveProgress);
 
       const savedInsights = await storage.getUserInsights();
-      setInsights(savedInsights);
 
-      // Generate insights if we have progress but no insights
+      // Always regenerate insights if we have progress (auto-update)
       const hasProgress = Object.keys(progress).length > 0 || Object.keys(interactiveProgress).length > 0;
-      if (hasProgress && !savedInsights) {
-        regenerateInsights(progress);
+      if (hasProgress) {
+        setInsights(savedInsights); // Show old insights while regenerating
+        regenerateInsights(progress); // Auto-regenerate
+      } else {
+        setInsights(savedInsights);
       }
+
+      // Load values
+      fetchValues();
     };
 
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storage]); // Re-load when storage changes (userId changes)
+
+  const fetchValues = async () => {
+    try {
+      setLoadingValues(true);
+      const response = await fetch('/api/values');
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 404) {
+          // Not logged in or no values yet - this is fine
+          setCurrentValues(null);
+          setPreviousValues(null);
+          return;
+        }
+        throw new Error('価値観の取得に失敗しました');
+      }
+
+      const data = await response.json();
+
+      if (data.current) {
+        setCurrentValues(data.current);
+        setPreviousValues(data.previous || null);
+      }
+    } catch (err) {
+      console.error('Error fetching values:', err);
+      // Silent fail - values are optional
+    } finally {
+      setLoadingValues(false);
+    }
+  };
 
   const regenerateInsights = async (progress?: Record<string, ModuleProgress>) => {
     setIsLoadingInsights(true);
@@ -63,21 +101,11 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex-shrink">
-              <h1 className="text-2xl font-bold text-gray-900">みかたくん</h1>
-              <p className="text-xs text-gray-600 mt-1">キャリアについて一緒に考えよう</p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-shrink-0">
+              <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">みかたくん</h1>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              {hasAnyProgress && insights && (
-                <button
-                  onClick={() => regenerateInsights()}
-                  disabled={isLoadingInsights}
-                  className="px-3 py-2 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
-                >
-                  {isLoadingInsights ? '分析中...' : 'インサイトを更新'}
-                </button>
-              )}
               <UserMenu />
             </div>
           </div>
@@ -85,23 +113,22 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Values Link */}
-        {hasAnyProgress && (
-          <div className="mb-6">
-            <a
-              href="/values"
-              className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all"
-            >
-              <span className="text-xl">✨</span>
-              <span>あなたの価値観を見る</span>
-              <span className="text-sm opacity-80">(7つの軸)</span>
-            </a>
+        {/* Values Display */}
+        {!loadingValues && (
+          <div className="mb-8 animate-fade-in">
+            <ValuesDisplay current={currentValues} previous={previousValues} />
           </div>
         )}
 
         {/* Diagnostic Aggregation */}
-        {hasAnyProgress && (
+        {hasAnyProgress ? (
           <DiagnosticAggregation interactiveProgress={allInteractiveProgress} />
+        ) : (
+          <div className="mb-8 bg-purple-50 border border-purple-200 p-4 rounded-lg">
+            <p className="text-sm text-purple-800">
+              🎮 ゲームモジュールを完了すると、ここにあなたについて分かったことが表示されます
+            </p>
+          </div>
         )}
 
         {/* Insights Panel */}
@@ -112,7 +139,10 @@ export default function Home() {
         )}
 
         {/* Dialogue History */}
-        <DialogueHistoryHome allProgress={allInteractiveProgress} />
+        <DialogueHistoryHome
+          allProgress={allInteractiveProgress}
+          chatProgress={allProgress}
+        />
 
         {/* Welcome message for new users */}
         {!hasAnyProgress && (
@@ -128,39 +158,23 @@ export default function Home() {
           </div>
         )}
 
-        {/* Main Chat Module - Highlighted */}
-        <div className="mb-12">
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-1 rounded-2xl shadow-lg">
-            <div className="bg-white rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="text-5xl flex-shrink-0">💬</div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    みかたくんと対話する
-                  </h2>
-                  <p className="text-gray-600 mb-4">
-                    「大学に行った方がいいのかな？」「進路で悩んでる」「自分の価値観がわからない」…どんな悩みでも大丈夫。対話を通じて、あなたの考えを一緒に整理していきましょう。
-                  </p>
-                  <button
-                    onClick={() => router.push('/module/university-decision')}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-md hover:shadow-lg"
-                  >
-                    <span>対話を始める</span>
-                    <span>→</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Game Modules */}
+        {/* All Modules */}
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <span>ゲームモジュール</span>
-            <span className="text-sm font-normal text-gray-500">楽しく自分を知ろう</span>
+            <span>モジュール</span>
+            <span className="text-sm font-normal text-gray-500">対話とゲームで自分を知ろう</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-8">
+            {/* Chat module first */}
+            {CAREER_MODULES.filter(m => m.moduleType === 'chat').map(module => (
+              <ModuleCard
+                key={module.id}
+                module={module}
+                progress={allProgress[module.id]}
+                interactiveProgress={allInteractiveProgress[module.id]}
+              />
+            ))}
+            {/* Then game modules */}
             {CAREER_MODULES.filter(m => m.moduleType === 'interactive').map(module => (
               <ModuleCard
                 key={module.id}
