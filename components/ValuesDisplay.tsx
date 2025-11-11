@@ -1,6 +1,6 @@
 'use client';
 
-import { ValueSnapshot } from '@/types';
+import { ValueSnapshot, AxisReasoning } from '@/types';
 import ValueSlider from './ValueSlider';
 import SimpleRadarChart from './SimpleRadarChart';
 
@@ -166,7 +166,7 @@ export default function ValuesDisplay({ current, previous }: ValuesDisplayProps)
         {AXIS_CONFIG.map((config) => {
           const value = displayData.axes[config.key];
           const previousValue = previous?.axes[config.key];
-          const reasoning = displayData.reasoning[config.key];
+          const reasoning = (displayData.reasoning as Record<string, AxisReasoning>)?.[config.key];
 
           return (
             <ValueSlider

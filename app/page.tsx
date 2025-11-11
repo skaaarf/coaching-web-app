@@ -128,9 +128,19 @@ export default function Home() {
 
     // Clear progress for this module
     if (module.moduleType === 'chat') {
-      await storage.saveModuleProgress(selectedModule, { messages: [], completed: false });
+      await storage.saveModuleProgress(selectedModule, {
+        moduleId: selectedModule,
+        messages: [],
+        lastUpdated: new Date(),
+        completed: false
+      });
     } else {
-      await storage.saveInteractiveModuleProgress(selectedModule, { data: null, completed: false });
+      await storage.saveInteractiveModuleProgress(selectedModule, {
+        moduleId: selectedModule,
+        data: null,
+        lastUpdated: new Date(),
+        completed: false
+      });
     }
 
     // Reload progress
@@ -251,7 +261,7 @@ export default function Home() {
                 module={module}
                 progress={allProgress[module.id]}
                 interactiveProgress={allInteractiveProgress[module.id]}
-                onClick={() => handleModuleClick(module.id, module.moduleType)}
+                onClick={() => handleModuleClick(module.id, module.moduleType || 'chat')}
               />
             ))}
             {/* Then game modules */}
@@ -261,7 +271,7 @@ export default function Home() {
                 module={module}
                 progress={allProgress[module.id]}
                 interactiveProgress={allInteractiveProgress[module.id]}
-                onClick={() => handleModuleClick(module.id, module.moduleType)}
+                onClick={() => handleModuleClick(module.id, module.moduleType || 'interactive')}
               />
             ))}
           </div>
