@@ -18,10 +18,12 @@ export async function getModuleProgress(userId: string, moduleId: string): Promi
 
     return {
       moduleId: data.module_id,
+      sessionId: data.session_id || `session-${Date.now()}`,
       messages: data.messages.map((m: any) => ({
         ...m,
         timestamp: new Date(m.timestamp)
       })),
+      createdAt: data.created_at ? new Date(data.created_at) : new Date(),
       lastUpdated: new Date(data.last_updated),
       completed: data.completed,
       insights: data.insights || []
@@ -68,10 +70,12 @@ export async function getAllModuleProgress(userId: string): Promise<Record<strin
     data.forEach((item: any) => {
       progressMap[item.module_id] = {
         moduleId: item.module_id,
+        sessionId: item.session_id || `session-${Date.now()}`,
         messages: item.messages.map((m: any) => ({
           ...m,
           timestamp: new Date(m.timestamp)
         })),
+        createdAt: item.created_at ? new Date(item.created_at) : new Date(),
         lastUpdated: new Date(item.last_updated),
         completed: item.completed,
         insights: item.insights || []
@@ -102,7 +106,9 @@ export async function getInteractiveModuleProgress(userId: string, moduleId: str
 
     return {
       moduleId: data.module_id,
+      sessionId: data.session_id || `session-${Date.now()}`,
       data: data.data,
+      createdAt: data.created_at ? new Date(data.created_at) : new Date(),
       lastUpdated: new Date(data.last_updated),
       completed: data.completed
     };
@@ -147,7 +153,9 @@ export async function getAllInteractiveModuleProgress(userId: string): Promise<R
     data.forEach((item: any) => {
       progressMap[item.module_id] = {
         moduleId: item.module_id,
+        sessionId: item.session_id || `session-${Date.now()}`,
         data: item.data,
+        createdAt: item.created_at ? new Date(item.created_at) : new Date(),
         lastUpdated: new Date(item.last_updated),
         completed: item.completed
       };
