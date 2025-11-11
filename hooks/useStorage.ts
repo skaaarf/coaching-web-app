@@ -3,6 +3,7 @@
  * Automatically uses Supabase when authenticated, localStorage when not
  */
 
+import { useMemo } from 'react';
 import { useAuth } from '@/components/SessionProvider';
 import * as unifiedStorage from '@/lib/storage-unified';
 import { ModuleProgress, UserInsights, InteractiveModuleProgress } from '@/types';
@@ -10,7 +11,7 @@ import { ModuleProgress, UserInsights, InteractiveModuleProgress } from '@/types
 export function useStorage() {
   const { userId } = useAuth();
 
-  return {
+  return useMemo(() => ({
     // Module Progress
     getModuleProgress: async (moduleId: string): Promise<ModuleProgress | null> => {
       return await unifiedStorage.getModuleProgress(moduleId, userId || undefined);
@@ -54,5 +55,5 @@ export function useStorage() {
     // Metadata
     isAuthenticated: !!userId,
     userId: userId || null,
-  };
+  }), [userId]); // Only re-create when userId changes
 }

@@ -37,7 +37,8 @@ export default function Home() {
     };
 
     loadData();
-  }, [storage.userId]); // Re-load when userId changes (login/logout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storage]); // Re-load when storage changes (userId changes)
 
   const regenerateInsights = async (progress?: Record<string, ModuleProgress>) => {
     setIsLoadingInsights(true);

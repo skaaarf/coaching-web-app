@@ -45,7 +45,8 @@ export default function ModulePage() {
     };
 
     loadProgress();
-  }, [moduleId, module, router, storage.userId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moduleId, module, router, storage]);
 
   const fetchInitialMessage = async () => {
     setIsLoading(true);
