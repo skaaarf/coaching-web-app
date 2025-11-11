@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { CAREER_MODULES } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
 import { generateInsights } from '@/lib/insights';
@@ -12,6 +13,7 @@ import DiagnosticAggregation from '@/components/DiagnosticAggregation';
 import DialogueHistoryHome from '@/components/DialogueHistoryHome';
 
 export default function Home() {
+  const router = useRouter();
   const storage = useStorage();
   const [allProgress, setAllProgress] = useState<Record<string, ModuleProgress>>({});
   const [allInteractiveProgress, setAllInteractiveProgress] = useState<Record<string, InteractiveModuleProgress>>({});
@@ -120,20 +122,46 @@ export default function Home() {
               ようこそ！
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              ここには様々なキャリアについて考えるモジュールがあります。<br />
-              気になるものから始めてみてください。全て完了する必要はありません。<br />
-              あなたのペースで、考えたいことから考えていきましょう。
+              「みかたくん」は、進路やキャリアについて一緒に考えるAIカウンセラーです。<br />
+              対話を通じて、あなた自身の考えを整理していきましょう。
             </p>
           </div>
         )}
 
-        {/* Modules Grid */}
+        {/* Main Chat Module - Highlighted */}
+        <div className="mb-12">
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-1 rounded-2xl shadow-lg">
+            <div className="bg-white rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="text-5xl flex-shrink-0">💬</div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    みかたくんと対話する
+                  </h2>
+                  <p className="text-gray-600 mb-4">
+                    「大学に行った方がいいのかな？」「進路で悩んでる」「自分の価値観がわからない」…どんな悩みでも大丈夫。対話を通じて、あなたの考えを一緒に整理していきましょう。
+                  </p>
+                  <button
+                    onClick={() => router.push('/module/university-decision')}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-md hover:shadow-lg"
+                  >
+                    <span>対話を始める</span>
+                    <span>→</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Game Modules */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-6">
-            キャリアモジュール
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span>ゲームモジュール</span>
+            <span className="text-sm font-normal text-gray-500">楽しく自分を知ろう</span>
           </h2>
-          <div className="space-y-4">
-            {CAREER_MODULES.map(module => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {CAREER_MODULES.filter(m => m.moduleType === 'interactive').map(module => (
               <ModuleCard
                 key={module.id}
                 module={module}
@@ -144,9 +172,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Category filters could go here in the future */}
+        {/* Info note */}
         <div className="mt-12 text-center text-sm text-gray-500">
-          <p>各モジュールは独立しているので、好きな順番で進められます</p>
+          <p>対話の中で価値観が見えてきたら、「価値観バトル」にも挑戦してみよう！</p>
         </div>
       </main>
 
