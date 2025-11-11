@@ -40,3 +40,20 @@ export interface DBUserInsights {
   last_analyzed: string;
   created_at: string;
 }
+
+export interface DBValueSnapshot {
+  id: string;
+  user_id: string;
+  module_id: string | null;
+  money_vs_meaning: number;
+  stability_vs_challenge: number;
+  team_vs_solo: number;
+  specialist_vs_generalist: number;
+  growth_vs_balance: number;
+  corporate_vs_startup: number;
+  social_vs_self: number;
+  reasoning: any;
+  overall_confidence: number;
+  created_at: string;
+  last_updated: string;
+}

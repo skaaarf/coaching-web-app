@@ -70,3 +70,37 @@ export interface InteractiveModuleProgress {
   lastUpdated: Date;
   completed: boolean;
 }
+
+// Value snapshot types
+export interface ValueAxes {
+  money_vs_meaning: number;        // お金(0) ←→ やりがい(100)
+  stability_vs_challenge: number;  // 安定(0) ←→ 挑戦(100)
+  team_vs_solo: number;            // 人と(0) ←→ 一人で(100)
+  specialist_vs_generalist: number;// 専門(0) ←→ 幅広(100)
+  growth_vs_balance: number;       // 成長(0) ←→ バランス(100)
+  corporate_vs_startup: number;    // 大企業(0) ←→ 起業(100)
+  social_vs_self: number;          // 社会貢献(0) ←→ 自己実現(100)
+}
+
+export interface AxisReasoning {
+  reason: string;
+  confidence: number;
+}
+
+export interface ValueSnapshot {
+  id: string;
+  user_id: string;
+  module_id?: string;
+  axes: ValueAxes;
+  reasoning: Record<keyof ValueAxes, AxisReasoning>;
+  overall_confidence: number;
+  created_at: Date;
+  last_updated: Date;
+}
+
+export interface ValueChange {
+  axis: keyof ValueAxes;
+  previous: number;
+  current: number;
+  change: number;
+}

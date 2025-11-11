@@ -234,3 +234,78 @@ CREATE TRIGGER update_interactive_module_progress_updated_at
   BEFORE UPDATE ON interactive_module_progress
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- Value snapshots table for tracking user values over time
+CREATE TABLE IF NOT EXISTS value_snapshots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  module_id TEXT, -- Link to the module/session where values were extracted
+
+  -- 7 axes (0-100)
+  money_vs_meaning INTEGER CHECK (money_vs_meaning BETWEEN 0 AND 100),
+  stability_vs_challenge INTEGER CHECK (stability_vs_challenge BETWEEN 0 AND 100),
+  team_vs_solo INTEGER CHECK (team_vs_solo BETWEEN 0 AND 100),
+  specialist_vs_generalist INTEGER CHECK (specialist_vs_generalist BETWEEN 0 AND 100),
+  growth_vs_balance INTEGER CHECK (growth_vs_balance BETWEEN 0 AND 100),
+  corporate_vs_startup INTEGER CHECK (corporate_vs_startup BETWEEN 0 AND 100),
+  social_vs_self INTEGER CHECK (social_vs_self BETWEEN 0 AND 100),
+
+  -- Reasoning and confidence for each axis
+  reasoning JSONB DEFAULT '{}'::jsonb,
+
+  -- Overall confidence (lower if conversation is short)
+  overall_confidence INTEGER CHECK (overall_confidence BETWEEN 0 AND 100),
+
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add foreign key for value_snapshots
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'value_snapshots_user_id_fkey'
+  ) THEN
+    ALTER TABLE value_snapshots ADD CONSTRAINT value_snapshots_user_id_fkey
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+
+-- Indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_value_snapshots_user_id ON value_snapshots(user_id);
+CREATE INDEX IF NOT EXISTS idx_value_snapshots_module_id ON value_snapshots(module_id);
+CREATE INDEX IF NOT EXISTS idx_value_snapshots_created_at ON value_snapshots(created_at DESC);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE value_snapshots ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view their own value snapshots" ON value_snapshots;
+DROP POLICY IF EXISTS "Users can insert their own value snapshots" ON value_snapshots;
+DROP POLICY IF EXISTS "Users can update their own value snapshots" ON value_snapshots;
+DROP POLICY IF EXISTS "Users can delete their own value snapshots" ON value_snapshots;
+
+-- Create RLS Policies
+CREATE POLICY "Users can view their own value snapshots"
+  ON value_snapshots FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own value snapshots"
+  ON value_snapshots FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own value snapshots"
+  ON value_snapshots FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own value snapshots"
+  ON value_snapshots FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Create trigger to auto-update last_updated
+DROP TRIGGER IF EXISTS update_value_snapshots_updated_at ON value_snapshots;
+
+CREATE TRIGGER update_value_snapshots_updated_at
+  BEFORE UPDATE ON value_snapshots
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
