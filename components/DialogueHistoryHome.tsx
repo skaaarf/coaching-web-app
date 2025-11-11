@@ -1,31 +1,22 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { InteractiveModuleProgress, ModuleProgress } from '@/types';
+import { ModuleProgress } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
 
 interface Props {
-  allProgress: Record<string, InteractiveModuleProgress>;
-  chatProgress?: Record<string, ModuleProgress>;
+  chatProgress: Record<string, ModuleProgress>;
 }
 
-export default function DialogueHistoryHome({ allProgress, chatProgress = {} }: Props) {
+export default function DialogueHistoryHome({ chatProgress }: Props) {
   const router = useRouter();
 
-  // Filter interactive modules that have any progress (started or completed)
-  const interactiveDialogues = Object.entries(allProgress).filter(([moduleId, progress]) => {
-    // Show all interactive modules that have been started (regardless of phase)
-    return progress && progress.data;
-  });
-
-  // Filter chat modules that have messages
+  // Only show chat modules (exclude interactive game modules)
   const chatDialogues = Object.entries(chatProgress).filter(([moduleId, progress]) => {
     return progress.messages && progress.messages.length > 0;
   });
 
-  // Combine both types of dialogues
-  const allDialogues = [...interactiveDialogues, ...chatDialogues];
-  const modulesWithDialogue = allDialogues;
+  const modulesWithDialogue = chatDialogues;
 
   return (
     <div className="mb-8 animate-fade-in">
@@ -59,33 +50,26 @@ export default function DialogueHistoryHome({ allProgress, chatProgress = {} }: 
               const module = CAREER_MODULES.find(m => m.id === moduleId);
               if (!module) return null;
 
-              // Handle both ModuleProgress and InteractiveModuleProgress
-              const isInteractive = 'data' in progress;
-              const data = isInteractive ? (progress as InteractiveModuleProgress).data as any : null;
-              const messages = isInteractive ? data?.messages : (progress as ModuleProgress).messages;
+              // Chat module only
+              const chatProgress = progress as ModuleProgress;
+              const messages = chatProgress.messages;
 
               const messageCount = messages?.length || 0;
               const lastMessage = messages?.[messages.length - 1];
               const lastMessagePreview = lastMessage?.content.substring(0, 60) || '';
-              const lastUpdated = (progress as any).lastUpdated;
+              const lastUpdated = chatProgress.lastUpdated;
 
-              // For interactive modules without messages, show status
-              const hasMessages = messages && messages.length > 0;
-              const previewText = hasMessages
-                ? `${lastMessage?.role === 'assistant' ? 'みかたくん: ' : 'あなた: '}${lastMessagePreview}${lastMessage?.content.length > 60 ? '...' : ''}`
-                : isInteractive
-                ? (progress as any).completed ? 'ゲーム完了' : 'ゲーム進行中'
-                : '';
+              // Generate title from first user message (summary)
+              const firstUserMessage = messages?.find((msg: any) => msg.role === 'user');
+              const summaryTitle = firstUserMessage?.content.substring(0, 40) || module.title;
+              const displayTitle = summaryTitle.length > 40 ? `${summaryTitle}...` : summaryTitle;
 
-              // Determine the correct path based on module type
-              const modulePath = module.moduleType === 'chat'
-                ? `/module/${moduleId}`
-                : `/interactive/${moduleId}`;
+              const previewText = `${lastMessage?.role === 'assistant' ? 'みかたくん: ' : 'あなた: '}${lastMessagePreview}${lastMessage?.content.length > 60 ? '...' : ''}`;
 
               return (
                 <button
                   key={moduleId}
-                  onClick={() => router.push(modulePath)}
+                  onClick={() => router.push(`/module/${moduleId}`)}
                   className="w-full px-6 py-3 hover:bg-gray-50 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-3">
@@ -93,9 +77,9 @@ export default function DialogueHistoryHome({ allProgress, chatProgress = {} }: 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <h3 className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">
-                          {module.title}
+                          {displayTitle}
                         </h3>
-                        {(progress as any).completed && (
+                        {chatProgress.completed && (
                           <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">
                             完了
                           </span>
@@ -114,7 +98,7 @@ export default function DialogueHistoryHome({ allProgress, chatProgress = {} }: 
                           })}
                         </p>
                       )}
-                      {hasMessages && <p className="text-xs text-gray-400 mt-0.5">{messageCount}件</p>}
+                      <p className="text-xs text-gray-400 mt-0.5">{messageCount}件</p>
                     </div>
                   </div>
                 </button>

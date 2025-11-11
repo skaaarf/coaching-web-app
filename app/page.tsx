@@ -10,7 +10,6 @@ import ModuleCard from '@/components/ModuleCard';
 import InsightsPanel from '@/components/InsightsPanel';
 import UserMenu from '@/components/UserMenu';
 import DialogueHistoryHome from '@/components/DialogueHistoryHome';
-import DiagnosticAggregation from '@/components/DiagnosticAggregation';
 import ValuesDisplay from '@/components/ValuesDisplay';
 
 export default function Home() {
@@ -23,6 +22,9 @@ export default function Home() {
   const [currentValues, setCurrentValues] = useState<ValueSnapshot | null>(null);
   const [previousValues, setPreviousValues] = useState<ValueSnapshot | null>(null);
   const [loadingValues, setLoadingValues] = useState(false);
+  const [activeTab, setActiveTab] = useState<'values' | 'insights'>('values');
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [showModuleDialog, setShowModuleDialog] = useState(false);
 
   useEffect(() => {
     // Load progress and insights on mount
@@ -94,6 +96,55 @@ export default function Home() {
     }
   };
 
+  const handleModuleClick = (moduleId: string, moduleType: 'chat' | 'interactive') => {
+    const hasProgress = moduleType === 'chat'
+      ? allProgress[moduleId] && allProgress[moduleId].messages.length > 0
+      : allInteractiveProgress[moduleId];
+
+    if (hasProgress) {
+      setSelectedModule(moduleId);
+      setShowModuleDialog(true);
+    } else {
+      // No progress, go directly to module
+      const path = moduleType === 'chat' ? `/module/${moduleId}` : `/interactive/${moduleId}`;
+      router.push(path);
+    }
+  };
+
+  const handleContinue = () => {
+    if (!selectedModule) return;
+    const module = CAREER_MODULES.find(m => m.id === selectedModule);
+    if (!module) return;
+
+    const path = module.moduleType === 'chat' ? `/module/${selectedModule}` : `/interactive/${selectedModule}`;
+    router.push(path);
+    setShowModuleDialog(false);
+  };
+
+  const handleStartNew = async () => {
+    if (!selectedModule) return;
+    const module = CAREER_MODULES.find(m => m.id === selectedModule);
+    if (!module) return;
+
+    // Clear progress for this module
+    if (module.moduleType === 'chat') {
+      await storage.saveModuleProgress(selectedModule, { messages: [], completed: false });
+    } else {
+      await storage.saveInteractiveModuleProgress(selectedModule, { data: null, completed: false });
+    }
+
+    // Reload progress
+    const progress = await storage.getAllModuleProgress();
+    const interactiveProgress = await storage.getAllInteractiveModuleProgress();
+    setAllProgress(progress);
+    setAllInteractiveProgress(interactiveProgress);
+
+    // Navigate to module
+    const path = module.moduleType === 'chat' ? `/module/${selectedModule}` : `/interactive/${selectedModule}`;
+    router.push(path);
+    setShowModuleDialog(false);
+  };
+
   const hasAnyProgress = Object.keys(allProgress).length > 0 || Object.keys(allInteractiveProgress).length > 0;
 
   return (
@@ -113,34 +164,62 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Values Display */}
-        {!loadingValues && (
-          <div className="mb-8 animate-fade-in">
-            <ValuesDisplay current={currentValues} previous={previousValues} />
-          </div>
-        )}
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            {/* Tab buttons */}
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setActiveTab('values')}
+                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+                  activeTab === 'values'
+                    ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                💎 あなたの価値観
+              </button>
+              <button
+                onClick={() => setActiveTab('insights')}
+                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+                  activeTab === 'insights'
+                    ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                🧠 あなたのキャリア志向
+              </button>
+            </div>
 
-        {/* Diagnostic Aggregation */}
-        {hasAnyProgress ? (
-          <DiagnosticAggregation interactiveProgress={allInteractiveProgress} />
-        ) : (
-          <div className="mb-8 bg-purple-50 border border-purple-200 p-4 rounded-lg">
-            <p className="text-sm text-purple-800">
-              🎮 ゲームモジュールを完了すると、ここにあなたについて分かったことが表示されます
-            </p>
-          </div>
-        )}
+            {/* Tab content */}
+            <div className="p-6">
+              {activeTab === 'values' && !loadingValues && (
+                <div className="animate-fade-in">
+                  <ValuesDisplay current={currentValues} previous={previousValues} />
+                </div>
+              )}
 
-        {/* Insights Panel */}
-        {hasAnyProgress && (
-          <div className="mb-8 animate-fade-in">
-            <InsightsPanel insights={insights} isLoading={isLoadingInsights} />
+              {activeTab === 'insights' && (
+                <div className="animate-fade-in">
+                  {hasAnyProgress ? (
+                    <InsightsPanel insights={insights} isLoading={isLoadingInsights} />
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="text-6xl mb-4">🎯</div>
+                      <p className="text-gray-600 mb-2">まだ対話やゲームを始めていません</p>
+                      <p className="text-sm text-gray-500">
+                        対話やゲームモジュールを進めると、AIがあなたのキャリア志向を分析します
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
 
         {/* Dialogue History */}
         <DialogueHistoryHome
-          allProgress={allInteractiveProgress}
           chatProgress={allProgress}
         />
 
@@ -172,6 +251,7 @@ export default function Home() {
                 module={module}
                 progress={allProgress[module.id]}
                 interactiveProgress={allInteractiveProgress[module.id]}
+                onClick={() => handleModuleClick(module.id, module.moduleType)}
               />
             ))}
             {/* Then game modules */}
@@ -181,6 +261,7 @@ export default function Home() {
                 module={module}
                 progress={allProgress[module.id]}
                 interactiveProgress={allInteractiveProgress[module.id]}
+                onClick={() => handleModuleClick(module.id, module.moduleType)}
               />
             ))}
           </div>
@@ -191,6 +272,40 @@ export default function Home() {
           <p>対話の中で価値観が見えてきたら、「価値観バトル」にも挑戦してみよう！</p>
         </div>
       </main>
+
+      {/* Module Dialog */}
+      {showModuleDialog && selectedModule && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {CAREER_MODULES.find(m => m.id === selectedModule)?.title}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              このモジュールには保存された進行状況があります。どうしますか？
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={handleContinue}
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
+              >
+                続きから始める
+              </button>
+              <button
+                onClick={handleStartNew}
+                className="w-full bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-3 rounded-lg font-bold transition-all"
+              >
+                新しく始める
+              </button>
+              <button
+                onClick={() => setShowModuleDialog(false)}
+                className="w-full text-gray-500 hover:text-gray-700 px-6 py-2 text-sm font-medium transition-colors"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         @keyframes fade-in {

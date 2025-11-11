@@ -1,13 +1,13 @@
-import Link from 'next/link';
 import { Module, ModuleProgress, InteractiveModuleProgress } from '@/types';
 
 interface ModuleCardProps {
   module: Module;
   progress?: ModuleProgress;
   interactiveProgress?: InteractiveModuleProgress;
+  onClick?: () => void;
 }
 
-export default function ModuleCard({ module, progress, interactiveProgress }: ModuleCardProps) {
+export default function ModuleCard({ module, progress, interactiveProgress, onClick }: ModuleCardProps) {
   // Handle both chat and interactive modules
   const isInteractive = module.moduleType === 'interactive';
   const relevantProgress = isInteractive ? interactiveProgress : progress;
@@ -18,13 +18,11 @@ export default function ModuleCard({ module, progress, interactiveProgress }: Mo
     : messageCount > 0;
   const isCompleted = relevantProgress?.completed || false;
 
-  // Determine the correct path based on module type
-  const modulePath = isInteractive
-    ? `/interactive/${module.id}`
-    : `/module/${module.id}`;
-
   return (
-    <Link href={modulePath}>
+    <button
+      onClick={onClick}
+      className="w-full text-left"
+    >
       <div className="group relative overflow-hidden rounded-2xl border-2 border-gray-300 bg-white p-6 shadow-lg transition-all duration-200 hover:shadow-xl hover:border-blue-400 active:scale-98 touch-manipulation">
         {/* Progress indicator */}
         {isStarted && (
@@ -69,12 +67,40 @@ export default function ModuleCard({ module, progress, interactiveProgress }: Mo
               {messageCount}件の対話
             </span>
           )}
-          {isStarted && isInteractive && (
+          {isStarted && isInteractive && interactiveProgress?.lastUpdated && (
             <span className="text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
-              保存済み
+              {new Date(interactiveProgress.lastUpdated).toLocaleDateString('ja-JP', {
+                month: 'numeric',
+                day: 'numeric'
+              })}にプレイ
             </span>
           )}
         </div>
+
+        {/* Game history for interactive modules */}
+        {isInteractive && isStarted && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500 mb-2 font-semibold">プレイ履歴</p>
+            <div className="bg-blue-50 rounded-lg p-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-700">
+                  {interactiveProgress?.lastUpdated && (
+                    <>
+                      最終プレイ: {new Date(interactiveProgress.lastUpdated).toLocaleDateString('ja-JP', {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric'
+                      })}
+                    </>
+                  )}
+                </span>
+                {isCompleted && (
+                  <span className="text-green-700 font-semibold">✓ 完了済み</span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Hover effect */}
         <div className="absolute inset-0 border-3 border-transparent group-hover:border-blue-300 rounded-2xl pointer-events-none transition-colors" />
@@ -95,6 +121,6 @@ export default function ModuleCard({ module, progress, interactiveProgress }: Mo
           animation: fade-in 0.2s ease-out;
         }
       `}</style>
-    </Link>
+    </button>
   );
 }
