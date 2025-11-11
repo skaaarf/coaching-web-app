@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
-import { getModuleProgress, saveModuleProgress } from '@/lib/storage';
+import { useStorage } from '@/hooks/useStorage';
 import { Message, ModuleProgress } from '@/types';
 import ChatInterface from '@/components/ChatInterface';
 
@@ -11,6 +11,7 @@ export default function ModulePage() {
   const params = useParams();
   const router = useRouter();
   const moduleId = params.moduleId as string;
+  const storage = useStorage();
 
   const [module, setModule] = useState(() => getModuleById(moduleId));
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,17 +31,21 @@ export default function ModulePage() {
     }
 
     // Load existing progress
-    const progress = getModuleProgress(moduleId);
+    const loadProgress = async () => {
+      const progress = await storage.getModuleProgress(moduleId);
 
-    if (progress && progress.messages.length > 0) {
-      setMessages(progress.messages);
-    } else {
-      // Start new conversation with AI's greeting
-      fetchInitialMessage();
-    }
+      if (progress && progress.messages.length > 0) {
+        setMessages(progress.messages);
+      } else {
+        // Start new conversation with AI's greeting
+        fetchInitialMessage();
+      }
 
-    setHasInitialized(true);
-  }, [moduleId, module, router]);
+      setHasInitialized(true);
+    };
+
+    loadProgress();
+  }, [moduleId, module, router, storage.userId]);
 
   const fetchInitialMessage = async () => {
     setIsLoading(true);
@@ -76,7 +81,7 @@ export default function ModulePage() {
         lastUpdated: new Date(),
         completed: false,
       };
-      saveModuleProgress(moduleId, progress);
+      await storage.saveModuleProgress(moduleId, progress);
     } catch (error) {
       console.error('Error fetching initial message:', error);
       // Fallback greeting
@@ -137,7 +142,7 @@ export default function ModulePage() {
         lastUpdated: new Date(),
         completed: false, // Could add logic to mark as completed
       };
-      saveModuleProgress(moduleId, progress);
+      await storage.saveModuleProgress(moduleId, progress);
     } catch (error) {
       console.error('Error sending message:', error);
 
@@ -154,14 +159,14 @@ export default function ModulePage() {
     }
   };
 
-  const handleMarkComplete = () => {
+  const handleMarkComplete = async () => {
     const progress: ModuleProgress = {
       moduleId,
       messages,
       lastUpdated: new Date(),
       completed: true,
     };
-    saveModuleProgress(moduleId, progress);
+    await storage.saveModuleProgress(moduleId, progress);
     router.push('/');
   };
 
