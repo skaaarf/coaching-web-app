@@ -301,6 +301,10 @@ export default function ModulePage() {
               onSendMessage={handleSendMessage}
               isLoading={isLoading}
               placeholder="メッセージを入力... (Enterで送信、Shift+Enterで改行)"
+              moduleContext={{
+                moduleId: module.id,
+                moduleTitle: module.title
+              }}
             />
           )}
         </div>

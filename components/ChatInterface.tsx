@@ -8,13 +8,19 @@ interface ChatInterfaceProps {
   onSendMessage: (content: string) => Promise<void>;
   isLoading: boolean;
   placeholder?: string;
+  moduleContext?: {
+    moduleId?: string;
+    moduleTitle?: string;
+    gameResults?: string;
+  };
 }
 
 export default function ChatInterface({
   messages,
   onSendMessage,
   isLoading,
-  placeholder = 'メッセージを入力...'
+  placeholder = 'メッセージを入力...',
+  moduleContext
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
@@ -36,7 +42,10 @@ export default function ChatInterface({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify({
+          messages,
+          moduleContext
+        }),
       });
 
       if (response.ok) {
