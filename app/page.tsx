@@ -299,6 +299,16 @@ export default function Home() {
                 onClick={() => handleModuleClick(module.id, module.moduleType || 'chat')}
               />
             ))}
+            {/* Content modules */}
+            {CAREER_MODULES.filter(m => m.moduleType === 'content').map(module => (
+              <ModuleCard
+                key={module.id}
+                module={module}
+                progress={allProgress[module.id]}
+                interactiveProgress={allInteractiveProgress[module.id]}
+                onClick={() => handleModuleClick(module.id, module.moduleType || 'content')}
+              />
+            ))}
             {/* Then game modules */}
             {CAREER_MODULES.filter(m => m.moduleType === 'interactive').map(module => (
               <ModuleCard
