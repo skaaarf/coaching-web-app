@@ -12,10 +12,10 @@ export interface Module {
   description: string;
   icon: string;
   color: string;
-  systemPrompt: string;
+  systemPrompt?: string;
   estimatedTime: string;
   category: 'exploration' | 'decision' | 'planning' | 'reflection' | 'interactive';
-  moduleType?: 'chat' | 'interactive';
+  moduleType?: 'chat' | 'interactive' | 'content';
 }
 
 export interface ModuleProgress {

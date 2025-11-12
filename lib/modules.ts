@@ -28,6 +28,18 @@ export const CAREER_MODULES: Module[] = [
 最初のメッセージで、今どんなことが気になっているか尋ねてください。`
   },
 
+  // ロールモデル
+  {
+    id: 'role-models',
+    title: 'キャリアを学ぶ',
+    description: '様々な進路を選んだ先輩たちのリアルなストーリー。大学、専門学校、起業、ワーホリ…20人のロールモデルから、あなたの進路のヒントを見つけましょう。',
+    icon: '👥',
+    color: 'bg-emerald-500',
+    estimatedTime: '自由',
+    category: 'exploration',
+    moduleType: 'content',
+  },
+
   // ゲームモジュール（3つに厳選）
   {
     id: 'value-battle',

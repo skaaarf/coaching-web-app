@@ -95,10 +95,18 @@ export default function Home() {
     }
   };
 
-  const handleModuleClick = async (moduleId: string, moduleType: 'chat' | 'interactive') => {
+  const handleModuleClick = async (moduleId: string, moduleType: 'chat' | 'interactive' | 'content') => {
     console.log('=== handleModuleClick ===');
     console.log('moduleId:', moduleId);
     console.log('moduleType:', moduleType);
+
+    // For content modules, navigate directly
+    if (moduleType === 'content') {
+      if (moduleId === 'role-models') {
+        router.push('/role-models');
+      }
+      return;
+    }
 
     // Debug: Check localStorage directly
     const sessionsKey = 'mikata-sessions';
