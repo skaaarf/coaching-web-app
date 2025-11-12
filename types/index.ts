@@ -26,6 +26,7 @@ export interface ModuleProgress {
   lastUpdated: Date;
   completed: boolean;
   insights?: string[];
+  metadata?: any;
 }
 
 export interface UserInsights {

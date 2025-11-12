@@ -95,6 +95,16 @@ export const CAREER_MODULES: Module[] = [
 
 常に日本語で、落ち着いた判断しない態度で応答してください。`
   },
+  {
+    id: 'life-novel',
+    title: '人生ノベル',
+    description: '高校2年生から25歳まで、あなた自身の人生を体験するノベルゲーム。文理選択、進学、就職...様々な選択とハプニングを通じて、自分だけの物語を作りましょう。',
+    icon: '📖',
+    color: 'bg-pink-500',
+    estimatedTime: '15-20分',
+    category: 'interactive',
+    moduleType: 'interactive',
+  },
 ];
 
 export function getModuleById(id: string): Module | undefined {

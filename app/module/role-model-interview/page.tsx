@@ -17,6 +17,7 @@ function RoleModelInterviewContent() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   const roleModel = roleModelId ? getRoleModelById(roleModelId) : null;
 
@@ -68,6 +69,8 @@ function RoleModelInterviewContent() {
 
   const handleSendMessage = async (content: string) => {
     if (!sessionId || !roleModelId || !roleModel) return;
+
+    setIsSendingMessage(true);
 
     const newMessage: Message = {
       role: 'user',
@@ -166,6 +169,8 @@ A6: ${roleModel.interview.q6}
       }
     } catch (error) {
       console.error('Failed to send message:', error);
+    } finally {
+      setIsSendingMessage(false);
     }
   };
 
@@ -227,6 +232,7 @@ A6: ${roleModel.interview.q6}
         <ChatInterface
           messages={messages}
           onSendMessage={handleSendMessage}
+          isLoading={isSendingMessage}
           placeholder="質問を入力..."
         />
       </div>
