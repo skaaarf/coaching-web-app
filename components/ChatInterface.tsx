@@ -133,7 +133,7 @@ export default function ChatInterface({
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ fontSize: '80%' }}>
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
         {/* Older messages (if any) */}
@@ -167,10 +167,10 @@ export default function ChatInterface({
       <div className="border-t-2 border-gray-300 bg-white px-3 py-4 shadow-lg">
         {/* Suggested Questions */}
         {suggestedQuestions.length > 0 && !isLoading && (
-          <div className="mb-4" style={{ fontSize: '80%' }}>
+          <div className="mb-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="text-gray-700 font-bold">💡 こんな質問はどう？</div>
-              <div className="text-gray-500 bg-gray-100 px-2 py-1 rounded" style={{ fontSize: '0.875em' }}>
+              <div className="text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs">
                 タップして編集可能
               </div>
             </div>
