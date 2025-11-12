@@ -40,7 +40,7 @@ export default function InteractiveModulePage() {
   const [state, setState] = useState<InteractiveState>({ phase: 'activity' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showResultSidebar, setShowResultSidebar] = useState(true);
+  const [showResultSidebar, setShowResultSidebar] = useState(false);
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
   const [allProgress, setAllProgress] = useState<Record<string, InteractiveModuleProgress>>({});
 
