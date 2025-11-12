@@ -117,7 +117,7 @@ export default function ChatInterface({
             : 'bg-gray-200 text-gray-900 border-2 border-gray-300'
         }`}
       >
-        <div className="whitespace-pre-wrap break-words text-base leading-relaxed font-medium">{message.content}</div>
+        <div className="whitespace-pre-wrap break-words text-sm leading-relaxed font-medium">{message.content}</div>
         <div
           className={`text-xs mt-2 font-medium ${
             message.role === 'user' ? 'text-blue-100' : 'text-gray-600'
@@ -197,13 +197,13 @@ export default function ChatInterface({
             placeholder={placeholder}
             disabled={isLoading}
             rows={1}
-            className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 text-base font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-gray-900 shadow-sm"
+            className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 text-sm font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-gray-900 shadow-sm"
             style={{ maxHeight: '120px' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 px-5 py-3 text-base font-bold text-white focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:shadow-xl whitespace-nowrap touch-manipulation"
+            className="rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 px-5 py-3 text-sm font-bold text-white focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:shadow-xl whitespace-nowrap touch-manipulation"
           >
             送信
           </button>
