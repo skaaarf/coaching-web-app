@@ -213,7 +213,14 @@ export default function ValuesDisplay({ current, previous, editable = false, onU
                   信頼度: {displayData.overall_confidence}%
                 </span>
                 <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
-                  {new Date(displayData.created_at).toLocaleDateString('ja-JP')}
+                  最終更新: {new Date(displayData.last_updated).toLocaleDateString('ja-JP', {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric'
+                  })} {new Date(displayData.last_updated).toLocaleTimeString('ja-JP', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                 </span>
               </div>
             )}

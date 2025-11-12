@@ -206,6 +206,17 @@ export default function Home() {
 
             {/* Tab content */}
             <div className="p-6">
+              {activeTab === 'values' && loadingValues && (
+                <div className="text-center py-12">
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-lg font-medium text-gray-700">価値観を読み込み中...</span>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    対話から抽出された価値観を分析しています
+                  </p>
+                </div>
+              )}
               {activeTab === 'values' && !loadingValues && (
                 <div className="animate-fade-in">
                   {currentValues ? (
