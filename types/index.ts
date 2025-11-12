@@ -26,6 +26,8 @@ export interface ModuleProgress {
   lastUpdated: Date;
   completed: boolean;
   insights?: string[];
+  userId?: string;
+  userEmail?: string;
 }
 
 export interface UserInsights {
@@ -73,6 +75,8 @@ export interface InteractiveModuleProgress {
   createdAt: Date;
   lastUpdated: Date;
   completed: boolean;
+  userId?: string;
+  userEmail?: string;
 }
 
 // Value snapshot types

@@ -9,7 +9,7 @@ import * as unifiedStorage from '@/lib/storage-unified';
 import { ModuleProgress, UserInsights, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 
 export function useStorage() {
-  const { userId } = useAuth();
+  const { userId, userEmail } = useAuth();
 
   return useMemo(() => ({
     // Module Progress
@@ -85,5 +85,6 @@ export function useStorage() {
     // Metadata
     isAuthenticated: !!userId,
     userId: userId || null,
-  }), [userId]); // Only re-create when userId changes
+    userEmail: userEmail || null,
+  }), [userId, userEmail]); // Only re-create when userId or userEmail changes
 }

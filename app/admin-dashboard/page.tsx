@@ -20,6 +20,7 @@ interface SessionData {
   lastUpdated: Date;
   completed: boolean;
   userId: string;
+  userEmail?: string;
 }
 
 export default function AdminDashboardPage() {
@@ -80,7 +81,8 @@ export default function AdminDashboardPage() {
                 lastMessage: lastMessage.substring(0, 100),
                 lastUpdated: new Date(session.lastUpdated),
                 completed: session.completed || false,
-                userId: userId || 'local-user'
+                userId: userId || 'local-user',
+                userEmail: session.userEmail || undefined,
               });
             });
           }
@@ -98,7 +100,7 @@ export default function AdminDashboardPage() {
   };
 
   const getUniqueUsers = () => {
-    const users = new Set(allSessions.map(s => s.userId));
+    const users = new Set(allSessions.map(s => s.userEmail || s.userId));
     return Array.from(users);
   };
 
@@ -109,8 +111,8 @@ export default function AdminDashboardPage() {
     // Filter by type
     if (filterType !== 'all' && session.type !== filterType) return false;
 
-    // Filter by user
-    if (filterUser !== 'all' && session.userId !== filterUser) return false;
+    // Filter by user (check both userEmail and userId)
+    if (filterUser !== 'all' && (session.userEmail || session.userId) !== filterUser) return false;
 
     // Filter by search query
     if (searchQuery) {
@@ -163,7 +165,7 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto px-6 py-4">
+      <main className="w-full px-6 py-4 max-w-[1920px] mx-auto">
         {/* Statistics Bar */}
         <div className="grid grid-cols-5 gap-3 mb-4">
           <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
@@ -209,8 +211,8 @@ export default function AdminDashboardPage() {
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">全てのユーザー</option>
-                {getUniqueUsers().map(userId => (
-                  <option key={userId} value={userId}>{userId}</option>
+                {getUniqueUsers().map(user => (
+                  <option key={user} value={user}>{user}</option>
                 ))}
               </select>
             </div>
@@ -307,7 +309,7 @@ export default function AdminDashboardPage() {
                         </span>
                       </td>
                       <td className="px-2 py-2 text-gray-900 font-medium text-xs truncate">
-                        {session.userId}
+                        {session.userEmail || session.userId}
                       </td>
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-1">
@@ -387,7 +389,7 @@ export default function AdminDashboardPage() {
                   <span className="text-2xl">{selectedSession.moduleIcon}</span>
                   <div>
                     <h3 className="font-bold text-gray-900">{selectedSession.moduleName}</h3>
-                    <p className="text-sm text-gray-600">{selectedSession.userId}</p>
+                    <p className="text-sm text-gray-600">{selectedSession.userEmail || selectedSession.userId}</p>
                   </div>
                 </div>
                 <button

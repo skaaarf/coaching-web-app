@@ -109,6 +109,8 @@ export default function ModulePage() {
         createdAt: new Date(),
         lastUpdated: new Date(),
         completed: false,
+        userId: storage.userId || undefined,
+        userEmail: storage.userEmail || undefined,
       };
       await storage.saveModuleProgress(moduleId, progress);
     } catch (error) {
@@ -172,6 +174,8 @@ export default function ModulePage() {
         createdAt: new Date(), // Will be ignored if session already exists
         lastUpdated: new Date(),
         completed: false, // Could add logic to mark as completed
+        userId: storage.userId || undefined,
+        userEmail: storage.userEmail || undefined,
       };
       await storage.saveModuleProgress(moduleId, progress);
 

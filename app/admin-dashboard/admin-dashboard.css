@@ -1,0 +1,10 @@
+/* Override the mobile width restriction for admin dashboard */
+html, body {
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Remove the shadow effect */
+body {
+  box-shadow: none !important;
+}

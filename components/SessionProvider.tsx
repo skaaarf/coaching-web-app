@@ -6,9 +6,10 @@ import { createContext, useContext } from "react"
 
 interface AuthContextType {
   userId: string | null;
+  userEmail: string | null;
 }
 
-const AuthContext = createContext<AuthContextType>({ userId: null });
+const AuthContext = createContext<AuthContextType>({ userId: null, userEmail: null });
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -17,9 +18,10 @@ export function useAuth() {
 function AuthProviderInner({ children }: { children: React.ReactNode }) {
   const session = useSession();
   const userId = session.data?.user?.id || null;
+  const userEmail = session.data?.user?.email || null;
 
   return (
-    <AuthContext.Provider value={{ userId }}>
+    <AuthContext.Provider value={{ userId, userEmail }}>
       {children}
     </AuthContext.Provider>
   );

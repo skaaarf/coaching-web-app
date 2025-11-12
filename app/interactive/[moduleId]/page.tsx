@@ -143,7 +143,9 @@ export default function InteractiveModulePage() {
       data: newState,
       createdAt: new Date(), // Will be ignored if session already exists
       lastUpdated: new Date(),
-      completed
+      completed,
+      userId: storage.userId || undefined,
+      userEmail: storage.userEmail || undefined,
     };
 
     console.log('Saving progress:', progress);
@@ -284,6 +286,8 @@ export default function InteractiveModulePage() {
         createdAt: new Date(),
         lastUpdated: new Date(),
         completed: false,
+        userId: storage.userId || undefined,
+        userEmail: storage.userEmail || undefined,
       };
       await storage.saveModuleProgress(dialogueModuleId, chatProgress);
     } catch (error) {
@@ -366,6 +370,8 @@ export default function InteractiveModulePage() {
           createdAt: new Date(),
           lastUpdated: new Date(),
           completed: false,
+          userId: storage.userId || undefined,
+          userEmail: storage.userEmail || undefined,
         };
         await storage.saveModuleProgress(dialogueModuleId, chatProgress);
       }
@@ -401,6 +407,8 @@ export default function InteractiveModulePage() {
           createdAt: new Date(),
           lastUpdated: new Date(),
           completed: false,
+          userId: storage.userId || undefined,
+          userEmail: storage.userEmail || undefined,
         };
         await storage.saveModuleProgress(dialogueModuleId, chatProgress);
       }
