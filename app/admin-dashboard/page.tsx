@@ -246,9 +246,8 @@ export default function AdminDashboardPage() {
 
         {/* Sessions Table */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs table-fixed">
-              <thead className="bg-gray-50 border-b border-gray-200">
+          <table className="w-full text-xs table-fixed">
+            <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-[8%]">
                     タイプ
@@ -364,7 +363,6 @@ export default function AdminDashboardPage() {
                 )}
               </tbody>
             </table>
-          </div>
 
           {/* Pagination info */}
           {filteredSessions.length > 0 && (
