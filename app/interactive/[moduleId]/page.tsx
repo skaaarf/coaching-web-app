@@ -157,32 +157,38 @@ export default function InteractiveModulePage() {
     saveProgress(newState);
   };
 
-  const handleStartDialogue = async (data?: any) => {
-    const activityData = state.phase === 'result' ? state.data : data;
+  const handleStartDialogue = async (dataOrQuestion?: any) => {
+    // Check if the argument is a question string
+    const isQuestion = typeof dataOrQuestion === 'string';
+    const initialQuestion = isQuestion ? dataOrQuestion : undefined;
+    const activityData = !isQuestion && state.phase === 'result' ? state.data : (isQuestion && state.phase === 'dialogue' ? state.data : (isQuestion && state.phase === 'result' ? state.data : dataOrQuestion));
 
-    // Check if there's already a dialogue session for this game session
-    const currentProgress = await storage.getInteractiveModuleSession(moduleId, currentSessionId);
-    if (currentProgress && currentProgress.data) {
-      const savedState = currentProgress.data as InteractiveState;
-      if (savedState.phase === 'dialogue' && savedState.messages && savedState.messages.length > 0) {
-        // Resume existing dialogue
-        console.log('Resuming existing dialogue');
-        setState({
-          phase: 'dialogue',
-          data: savedState.data,
-          messages: savedState.messages,
-        });
+    // If a question is provided, always start a new dialogue
+    if (!initialQuestion) {
+      // Check if there's already a dialogue session for this game session
+      const currentProgress = await storage.getInteractiveModuleSession(moduleId, currentSessionId);
+      if (currentProgress && currentProgress.data) {
+        const savedState = currentProgress.data as InteractiveState;
+        if (savedState.phase === 'dialogue' && savedState.messages && savedState.messages.length > 0) {
+          // Resume existing dialogue
+          console.log('Resuming existing dialogue');
+          setState({
+            phase: 'dialogue',
+            data: savedState.data,
+            messages: savedState.messages,
+          });
 
-        // Find the dialogue session ID from the saved progress
-        const dialogueModuleId = `${moduleId}-dialogue`;
-        const allSessions = await storage.getModuleSessions(dialogueModuleId);
-        if (allSessions.length > 0) {
-          // Find the most recent dialogue session for this game
-          const recentDialogue = allSessions[0];
-          setDialogueSessionId(recentDialogue.sessionId);
+          // Find the dialogue session ID from the saved progress
+          const dialogueModuleId = `${moduleId}-dialogue`;
+          const allSessions = await storage.getModuleSessions(dialogueModuleId);
+          if (allSessions.length > 0) {
+            // Find the most recent dialogue session for this game
+            const recentDialogue = allSessions[0];
+            setDialogueSessionId(recentDialogue.sessionId);
+          }
+
+          return;
         }
-
-        return;
       }
     }
 
@@ -190,9 +196,12 @@ export default function InteractiveModulePage() {
     setError(null);
 
     try {
-      // Generate context message based on module
+      // Generate context message based on module or use initial question
       let contextMessage = '';
-      if (moduleId === 'value-battle') {
+      if (initialQuestion) {
+        // User selected a specific question from the result page
+        contextMessage = initialQuestion;
+      } else if (moduleId === 'value-battle') {
         const results = activityData as Record<string, number>;
         const sortedResults = Object.entries(results)
           .sort(([, a], [, b]) => b - a)

@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 
 interface Props {
   results: ValueBattleResult;
-  onStartDialogue: () => void;
+  onStartDialogue: (initialQuestion?: string) => void;
 }
 
 function ShareIcon() {
@@ -394,50 +394,6 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
           </div>
         </div>
 
-        {/* Top 5 Choices */}
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl p-6 mb-6">
-          <div className="flex items-start mb-4">
-            <div className="text-3xl mr-3">🏆</div>
-            <div>
-              <h3 className="font-bold text-gray-900 mb-2 text-xl">
-                あなたが選んだTOP5
-              </h3>
-              <p className="text-sm text-gray-600">
-                20回の選択の中で、最も多く選んだ価値観
-              </p>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {sortedResults.map(([value, count], index) => {
-              const percentage = ((count / 20) * 100).toFixed(0);
-              const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-              return (
-                <div key={index} className="bg-white rounded-xl p-4 border border-purple-200">
-                  <div className="flex items-start mb-2">
-                    <span className="text-2xl mr-3">{medals[index]}</span>
-                    <div className="flex-grow">
-                      <p className="text-gray-800 font-semibold text-sm leading-relaxed">
-                        {value}
-                      </p>
-                      <div className="mt-2 flex items-center">
-                        <div className="flex-grow bg-gray-200 rounded-full h-2 mr-3">
-                          <div
-                            className="bg-purple-500 h-2 rounded-full transition-all duration-500"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-purple-600 whitespace-nowrap">
-                          {count}回選択 ({percentage}%)
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Exploration Questions */}
         {explorationQuestions.length > 0 && (
           <div className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-2xl p-6 mb-6">
@@ -448,17 +404,35 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
                   一緒に考えたいこと
                 </h3>
                 <p className="text-sm text-gray-600">
-                  あなたの選択から見えてきた矛盾や疑問。対話を通じて掘り下げてみましょう
+                  気になる論点をタップして、対話を始めましょう
                 </p>
               </div>
             </div>
             <div className="space-y-3">
               {explorationQuestions.map((question, index) => (
-                <div key={index} className="bg-white rounded-xl p-4 border border-amber-200">
-                  <p className="text-gray-700 leading-relaxed text-sm">
-                    {question}
-                  </p>
-                </div>
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onStartDialogue(question);
+                  }}
+                  className="w-full bg-white rounded-xl p-4 border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-50 transition-all duration-200 text-left group active:scale-98"
+                  type="button"
+                >
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center mr-3 group-hover:bg-amber-200 transition-colors">
+                      <span className="text-sm font-bold text-amber-700">{index + 1}</span>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed text-sm flex-grow group-hover:text-gray-900 transition-colors">
+                      {question}
+                    </p>
+                    <div className="flex-shrink-0 ml-2 text-amber-400 group-hover:text-amber-600 transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </button>
               ))}
             </div>
           </div>
@@ -490,8 +464,9 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
         {/* Actions */}
         <div className="space-y-3">
           <button
-            onClick={onStartDialogue}
+            onClick={() => onStartDialogue()}
             className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors duration-200"
+            type="button"
           >
             対話を始める
           </button>
