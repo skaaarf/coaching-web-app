@@ -74,6 +74,13 @@ export default function ChatInterface({
     }
   }, [messages.length, isLoading]);
 
+  useEffect(() => {
+    // Scroll to bottom when suggestions are updated
+    if (suggestedQuestions.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [suggestedQuestions]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -160,10 +167,10 @@ export default function ChatInterface({
       <div className="border-t-2 border-gray-300 bg-white px-3 py-4 shadow-lg">
         {/* Suggested Questions */}
         {suggestedQuestions.length > 0 && !isLoading && (
-          <div className="mb-4">
+          <div className="mb-4" style={{ fontSize: '80%' }}>
             <div className="flex items-center gap-2 mb-3">
-              <div className="text-sm text-gray-700 font-bold">💡 こんな質問はどう？</div>
-              <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              <div className="text-gray-700 font-bold">💡 こんな質問はどう？</div>
+              <div className="text-gray-500 bg-gray-100 px-2 py-1 rounded" style={{ fontSize: '0.875em' }}>
                 タップして編集可能
               </div>
             </div>
@@ -173,7 +180,7 @@ export default function ChatInterface({
                   key={index}
                   type="button"
                   onClick={() => handleSuggestedQuestionClick(question)}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 active:from-blue-200 active:to-indigo-200 border-2 border-blue-400 hover:border-blue-500 rounded-xl text-sm text-gray-800 hover:text-gray-900 font-medium transition-all shadow-sm hover:shadow-md active:shadow-lg touch-manipulation"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 active:from-blue-200 active:to-indigo-200 border-2 border-blue-400 hover:border-blue-500 rounded-xl text-gray-800 hover:text-gray-900 font-medium transition-all shadow-sm hover:shadow-md active:shadow-lg touch-manipulation"
                 >
                   ✏️ {question}
                 </button>
