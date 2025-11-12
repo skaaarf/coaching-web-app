@@ -105,6 +105,13 @@ export default function ChatInterface({
     setSuggestedQuestions([]);
   };
 
+  const handleInputFocus = () => {
+    // Clear suggestions when user focuses on input field
+    if (suggestedQuestions.length > 0) {
+      setSuggestedQuestions([]);
+    }
+  };
+
   const renderMessage = (message: Message, index: number) => (
     <div
       key={index}
@@ -194,6 +201,7 @@ export default function ChatInterface({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onFocus={handleInputFocus}
             placeholder={placeholder}
             disabled={isLoading}
             rows={1}
