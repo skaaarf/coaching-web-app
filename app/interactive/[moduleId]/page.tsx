@@ -88,7 +88,17 @@ export default function InteractiveModulePage() {
         // If progress exists and has data, load it
         if (progress && progress.data) {
           const savedState = progress.data as InteractiveState;
-          setState(savedState);
+
+          // When loading a past session, always start from result phase
+          // This allows users to review the result before starting dialogue
+          if (savedState.phase === 'dialogue') {
+            setState({
+              phase: 'result',
+              data: savedState.data,
+            });
+          } else {
+            setState(savedState);
+          }
         } else {
           // New session - start fresh
           console.log('New session, starting fresh');
@@ -149,6 +159,32 @@ export default function InteractiveModulePage() {
 
   const handleStartDialogue = async (data?: any) => {
     const activityData = state.phase === 'result' ? state.data : data;
+
+    // Check if there's already a dialogue session for this game session
+    const currentProgress = await storage.getInteractiveModuleSession(moduleId, currentSessionId);
+    if (currentProgress && currentProgress.data) {
+      const savedState = currentProgress.data as InteractiveState;
+      if (savedState.phase === 'dialogue' && savedState.messages && savedState.messages.length > 0) {
+        // Resume existing dialogue
+        console.log('Resuming existing dialogue');
+        setState({
+          phase: 'dialogue',
+          data: savedState.data,
+          messages: savedState.messages,
+        });
+
+        // Find the dialogue session ID from the saved progress
+        const dialogueModuleId = `${moduleId}-dialogue`;
+        const allSessions = await storage.getModuleSessions(dialogueModuleId);
+        if (allSessions.length > 0) {
+          // Find the most recent dialogue session for this game
+          const recentDialogue = allSessions[0];
+          setDialogueSessionId(recentDialogue.sessionId);
+        }
+
+        return;
+      }
+    }
 
     setIsLoading(true);
     setError(null);
@@ -228,6 +264,7 @@ export default function InteractiveModulePage() {
         messages: [assistantMessage],
       };
       setState(newState);
+      saveProgress(newState);
 
       // Save dialogue as a regular chat module session
       const dialogueModuleId = `${moduleId}-dialogue`;
