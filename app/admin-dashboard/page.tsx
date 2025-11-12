@@ -140,11 +140,11 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-auto">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-600 to-indigo-700 border-b border-purple-800 shadow-lg sticky top-0 z-10">
-        <div className="mx-auto px-6 py-3 min-w-max">
-          <div className="flex items-center justify-between min-w-[1400px]">
+        <div className="mx-auto px-6 py-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-white flex items-center gap-2">
                 🔐 管理者ダッシュボード
@@ -164,7 +164,6 @@ export default function AdminDashboardPage() {
       </header>
 
       <main className="mx-auto px-6 py-4">
-        <div className="min-w-[1400px]">
         {/* Statistics Bar */}
         <div className="grid grid-cols-5 gap-3 mb-4">
           <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
@@ -248,37 +247,37 @@ export default function AdminDashboardPage() {
         {/* Sessions Table */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs table-fixed">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">
+                  <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-[8%]">
                     タイプ
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
+                  <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-[10%]">
                     ユーザー
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-40">
+                  <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-[15%]">
                     モジュール
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-[30%]">
                     最初の発言
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-20">
+                  <th className="px-2 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-[6%]">
                     💬
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-20">
+                  <th className="px-2 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-[6%]">
                     👤
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-20">
+                  <th className="px-2 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-[6%]">
                     🤖
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32">
+                  <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-[11%]">
                     最終更新
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-16">
+                  <th className="px-2 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-[5%]">
                     状態
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-24">
+                  <th className="px-2 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-[8%]">
                     操作
                   </th>
                 </tr>
@@ -299,8 +298,8 @@ export default function AdminDashboardPage() {
                       className="hover:bg-blue-50 cursor-pointer transition-colors"
                       onClick={() => setSelectedSession(session)}
                     >
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-1 text-xs font-bold rounded ${
+                      <td className="px-2 py-2">
+                        <span className={`inline-flex px-1.5 py-0.5 text-xs font-bold rounded ${
                           session.type === 'chat'
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-purple-100 text-purple-800'
@@ -308,30 +307,30 @@ export default function AdminDashboardPage() {
                           {session.type === 'chat' ? 'チャット' : 'ゲーム'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-900 font-medium">
+                      <td className="px-2 py-2 text-gray-900 font-medium text-xs truncate">
                         {session.userId}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{session.moduleIcon}</span>
-                          <span className="text-gray-900 font-medium">{session.moduleName}</span>
+                      <td className="px-2 py-2">
+                        <div className="flex items-center gap-1">
+                          <span className="text-base">{session.moduleIcon}</span>
+                          <span className="text-gray-900 font-medium text-xs truncate">{session.moduleName}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        <div className="truncate max-w-md">
+                      <td className="px-2 py-2 text-gray-700 text-xs">
+                        <div className="truncate">
                           {session.firstUserMessage || '-'}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-900 font-semibold">
+                      <td className="px-2 py-2 text-center text-gray-900 font-semibold text-xs">
                         {session.messageCount}
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-700">
+                      <td className="px-2 py-2 text-center text-gray-700 text-xs">
                         {session.userMessageCount}
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-700">
+                      <td className="px-2 py-2 text-center text-gray-700 text-xs">
                         {session.aiMessageCount}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 text-xs">
+                      <td className="px-2 py-2 text-gray-600 text-xs">
                         {session.lastUpdated.toLocaleDateString('ja-JP', {
                           month: '2-digit',
                           day: '2-digit',
@@ -339,14 +338,14 @@ export default function AdminDashboardPage() {
                           minute: '2-digit'
                         })}
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         {session.completed && (
-                          <span className="inline-flex px-2 py-1 text-xs font-bold bg-green-100 text-green-800 rounded">
+                          <span className="inline-flex px-1.5 py-0.5 text-xs font-bold bg-green-100 text-green-800 rounded">
                             ✓
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -355,7 +354,7 @@ export default function AdminDashboardPage() {
                               : `/interactive/${session.moduleId}?sessionId=${session.sessionId}`;
                             router.push(path);
                           }}
-                          className="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded font-bold transition-colors"
+                          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded font-bold transition-colors"
                         >
                           開く
                         </button>
@@ -450,7 +449,6 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         )}
-        </div>
       </main>
     </div>
   );
