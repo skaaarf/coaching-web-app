@@ -3,6 +3,7 @@
 import { ValueBattleResult } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface Props {
   results: ValueBattleResult;
@@ -378,13 +379,16 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
           <div className="space-y-3">
             {comprehensiveInsights.map((insight, index) => (
               <div key={index} className="bg-white rounded-xl p-4 border border-blue-200">
-                <p className="text-gray-800 leading-relaxed text-sm">
-                  {insight.split('：')[0]}
-                  <br />
-                  <span className="text-gray-600">
-                    {insight.split('：')[1]}
-                  </span>
-                </p>
+                <div className="text-gray-800 leading-relaxed text-sm">
+                  <ReactMarkdown
+                    components={{
+                      p: ({node, ...props}) => <p className="mb-0" {...props} />,
+                      strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />
+                    }}
+                  >
+                    {insight}
+                  </ReactMarkdown>
+                </div>
               </div>
             ))}
           </div>

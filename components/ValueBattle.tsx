@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ValueBattleChoice, ValueBattleResult } from '@/types';
 
 const BATTLE_CHOICES: ValueBattleChoice[] = [
@@ -209,10 +209,32 @@ export default function ValueBattle({ onComplete }: Props) {
   const [currentRound, setCurrentRound] = useState(0);
   const [choices, setChoices] = useState<Record<string, string>>({});
   const [showMilestone, setShowMilestone] = useState(false);
+  const [shuffledChoices, setShuffledChoices] = useState<ValueBattleChoice[]>([]);
+  const [optionSwaps, setOptionSwaps] = useState<boolean[]>([]);
+
+  // Shuffle choices on mount using Fisher-Yates algorithm
+  useEffect(() => {
+    const shuffled = [...BATTLE_CHOICES];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setShuffledChoices(shuffled);
+
+    // Randomly swap options A/B for each question
+    const swaps = shuffled.map(() => Math.random() < 0.5);
+    setOptionSwaps(swaps);
+  }, []); // Run only on mount
 
   const handleChoice = (choice: 'A' | 'B') => {
-    const current = BATTLE_CHOICES[currentRound];
-    const selected = choice === 'A' ? current.optionA : current.optionB;
+    if (shuffledChoices.length === 0) return; // Wait for shuffling
+
+    const current = shuffledChoices[currentRound];
+    const shouldSwap = optionSwaps[currentRound];
+
+    // Apply swap if needed
+    const actualChoice = shouldSwap ? (choice === 'A' ? 'B' : 'A') : choice;
+    const selected = actualChoice === 'A' ? current.optionA : current.optionB;
 
     setChoices({
       ...choices,
@@ -231,7 +253,7 @@ export default function ValueBattle({ onComplete }: Props) {
       return;
     }
 
-    if (currentRound < BATTLE_CHOICES.length - 1) {
+    if (currentRound < shuffledChoices.length - 1) {
       setCurrentRound(nextRound);
     } else {
       // Calculate results
@@ -245,8 +267,20 @@ export default function ValueBattle({ onComplete }: Props) {
     }
   };
 
-  const current = BATTLE_CHOICES[currentRound];
-  const progress = ((currentRound + 1) / BATTLE_CHOICES.length) * 100;
+  // Wait for shuffling to complete
+  if (shuffledChoices.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-2xl">⏳</div>
+      </div>
+    );
+  }
+
+  const current = shuffledChoices[currentRound];
+  const shouldSwap = optionSwaps[currentRound];
+  const displayOptionA = shouldSwap ? current.optionB : current.optionA;
+  const displayOptionB = shouldSwap ? current.optionA : current.optionB;
+  const progress = ((currentRound + 1) / shuffledChoices.length) * 100;
   const currentSection = SECTIONS.find(s => currentRound >= s.start && currentRound <= s.end)!;
   const sectionProgress = currentRound - currentSection.start + 1;
 
@@ -332,13 +366,13 @@ export default function ValueBattle({ onComplete }: Props) {
             type="button"
           >
             <div className="text-base font-bold text-gray-900 group-hover:text-blue-800 leading-relaxed mb-3">
-              {current.optionA}
+              {displayOptionA}
             </div>
-            {current.meritsA && current.meritsA.length > 0 && (
+            {(shouldSwap ? current.meritsB : current.meritsA) && (shouldSwap ? current.meritsB : current.meritsA)!.length > 0 && (
               <div className="mt-3 pt-3 border-t border-blue-200">
                 <div className="text-xs font-semibold text-green-700 mb-1.5">✓ メリット</div>
                 <ul className="text-xs text-gray-700 space-y-1">
-                  {current.meritsA.map((merit, idx) => (
+                  {(shouldSwap ? current.meritsB : current.meritsA)!.map((merit, idx) => (
                     <li key={idx} className="flex items-start">
                       <span className="mr-1.5 text-green-600">•</span>
                       <span>{merit}</span>
@@ -347,11 +381,11 @@ export default function ValueBattle({ onComplete }: Props) {
                 </ul>
               </div>
             )}
-            {current.demeritsA && current.demeritsA.length > 0 && (
+            {(shouldSwap ? current.demeritsB : current.demeritsA) && (shouldSwap ? current.demeritsB : current.demeritsA)!.length > 0 && (
               <div className="mt-2">
                 <div className="text-xs font-semibold text-red-700 mb-1.5">✗ デメリット</div>
                 <ul className="text-xs text-gray-700 space-y-1">
-                  {current.demeritsA.map((demerit, idx) => (
+                  {(shouldSwap ? current.demeritsB : current.demeritsA)!.map((demerit, idx) => (
                     <li key={idx} className="flex items-start">
                       <span className="mr-1.5 text-red-600">•</span>
                       <span>{demerit}</span>
@@ -372,13 +406,13 @@ export default function ValueBattle({ onComplete }: Props) {
             type="button"
           >
             <div className="text-base font-bold text-gray-900 group-hover:text-purple-800 leading-relaxed mb-3">
-              {current.optionB}
+              {displayOptionB}
             </div>
-            {current.meritsB && current.meritsB.length > 0 && (
+            {(shouldSwap ? current.meritsA : current.meritsB) && (shouldSwap ? current.meritsA : current.meritsB)!.length > 0 && (
               <div className="mt-3 pt-3 border-t border-purple-200">
                 <div className="text-xs font-semibold text-green-700 mb-1.5">✓ メリット</div>
                 <ul className="text-xs text-gray-700 space-y-1">
-                  {current.meritsB.map((merit, idx) => (
+                  {(shouldSwap ? current.meritsA : current.meritsB)!.map((merit, idx) => (
                     <li key={idx} className="flex items-start">
                       <span className="mr-1.5 text-green-600">•</span>
                       <span>{merit}</span>
@@ -387,11 +421,11 @@ export default function ValueBattle({ onComplete }: Props) {
                 </ul>
               </div>
             )}
-            {current.demeritsB && current.demeritsB.length > 0 && (
+            {(shouldSwap ? current.demeritsA : current.demeritsB) && (shouldSwap ? current.demeritsA : current.demeritsB)!.length > 0 && (
               <div className="mt-2">
                 <div className="text-xs font-semibold text-red-700 mb-1.5">✗ デメリット</div>
                 <ul className="text-xs text-gray-700 space-y-1">
-                  {current.demeritsB.map((demerit, idx) => (
+                  {(shouldSwap ? current.demeritsA : current.demeritsB)!.map((demerit, idx) => (
                     <li key={idx} className="flex items-start">
                       <span className="mr-1.5 text-red-600">•</span>
                       <span>{demerit}</span>
