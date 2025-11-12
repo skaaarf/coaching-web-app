@@ -19,28 +19,28 @@ export interface RoleModel {
 export const ROLE_MODELS: RoleModel[] = [
   {
     id: 'oyama-riku',
-    name: 'オオヤマ リク',
+    name: '大山 陸',
     furigana: 'オオヤマ リク',
     tags: ['ノマドワーカー', '起業'],
     catchphrase: '世界中を旅しながら働くノマドエンジニア',
-    introduction: '新卒でIT企業に就職後、リモートワークの可能性に気づき、海外を拠点に働くライフスタイルへと転身。現在は個人でプロジェクトを請け負うノマドエンジニアとして、仕事も暮らしも"自分の自由"を大切にして生きている。',
+    introduction: '新卒でIT企業に就職後、リモートワークの可能性に気づき、海外を拠点に働くライフスタイルへと転身。現在は個人でプロジェクトを請け負うフリーランスエンジニアとして、仕事も暮らしも"自分の自由"を大切にして生きている。',
     timeline: [
       { age: 22, event: '新卒で大手IT企業に入社' },
-      { age: 24, event: '働き方に疑問を持ち、初めてのバンコク旅でノマドと出会う' },
-      { age: 25, event: '会社を辞め、フリーランスエンジニアとして独立・ノマド生活へ' }
+      { age: 24, event: '働き方に疑問を持ち、初めてのタイ旅行でノマドワーカーと出会う' },
+      { age: 25, event: '退職してフリーランスエンジニアとして独立、ノマド生活開始' }
     ],
     interview: {
       q1: 'フリーランスのエンジニアとして、場所に縛られず世界を旅しながら仕事をしています。',
-      q2: '満員電車と定時出社の毎日に息が詰まり、自分にとっての"自由"を最優先したいと思ったからです。',
+      q2: '毎日の通勤ラッシュと定時出社の生活に疑問を感じて、自分にとっての"自由"を最優先したいと思ったからです。',
       q3: '95点。孤独を感じることもあるけど、人生の主導権を握れている感覚があります。',
-      q4: '得たのは自由な時間と多国籍な友人、失ったのは安定した給与と社会的肩書きです。',
-      q5: '東南アジアを旅した時、ノマドとして働く日本人に出会い「会社に属さなくても食べていける」ことを初めて知ったのが転機です。',
+      q4: '得たのは自由な時間と多国籍な友人、失ったのは安定した給与と社会的な肩書きです。',
+      q5: '東南アジアを旅した時、ノマドとして働く日本人に出会い「会社に属さなくても生きていける」ことを初めて知ったのが転機です。',
       q6: '「こうあるべき」を一度忘れて、"どこで誰とどんな1日を過ごしたいか"を考えてみると、本当に大事にしたいものが見えてくると思います。'
     }
   },
   {
     id: 'takahashi-sayuri',
-    name: 'タカハシ サユリ',
+    name: '高橋 小百合',
     furigana: 'タカハシ サユリ',
     tags: ['専門学校', 'ダブルスクール'],
     catchphrase: '美容師からIT業界へ転身した異色のキャリアチェンジャー',
@@ -62,7 +62,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'sato-kanta',
-    name: 'サトウ カンタ',
+    name: '佐藤 寛太',
     furigana: 'サトウ カンタ',
     tags: ['海外大学', 'ギャップイヤー'],
     catchphrase: '地元国立大からギャップイヤーで世界一周したバックパッカー学生',
@@ -84,7 +84,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'miura-natsuki',
-    name: 'ミウラ ナツキ',
+    name: '三浦 夏希',
     furigana: 'ミウラ ナツキ',
     tags: ['通信制学校', 'ダブルスクール'],
     catchphrase: '通信制×声優学校、夢を両立するリアル二刀流',
@@ -106,7 +106,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'ota-kentaro',
-    name: 'オオタ ケンタロウ',
+    name: '太田 健太郎',
     furigana: 'オオタ ケンタロウ',
     tags: ['ワーホリ', '起業'],
     catchphrase: 'ワーホリから人生が加速した旅するフォトグラファー',
@@ -128,7 +128,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'miura-kosuke',
-    name: 'ミウラ コウスケ',
+    name: '三浦 航介',
     furigana: 'ミウラ コウスケ',
     tags: ['進学しない/やめる選択', '専門学校'],
     catchphrase: '留年×中退を経てたどり着いた情熱のエンジニア',
@@ -150,7 +150,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'sato-kana',
-    name: 'サトウ カナ',
+    name: '佐藤 香奈',
     furigana: 'サトウ カナ',
     tags: ['通信制学校', '起業'],
     catchphrase: '不登校から動画クリエイターへ転身したストーリーテラー',
@@ -172,7 +172,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'nakajima-miho',
-    name: 'ナカジマ ミホ',
+    name: '中島 美穂',
     furigana: 'ナカジマ ミホ',
     tags: ['通信制学校', '海外大学'],
     catchphrase: '通信制高校から海外大へ飛び出した冒険家',
@@ -194,7 +194,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'fujisawa-kana',
-    name: 'フジサワ カナ',
+    name: '藤沢 花',
     furigana: 'フジサワ カナ',
     tags: ['通信制大学', '進学しない/やめる選択'],
     catchphrase: '介護と学びを両立する通信制大学生',
@@ -216,7 +216,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'takase-shusei',
-    name: 'タカセ　シュウセイ',
+    name: '高瀬 秀星',
     furigana: 'タカセ　シュウセイ',
     tags: ['起業', '地域活動', '進学しない/やめる選択'],
     catchphrase: '地元の商店街を救った、若き地域プロデューサー',
@@ -238,7 +238,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'miyazaki-haruka',
-    name: 'ミヤザキ ハルカ',
+    name: '宮崎 遥',
     furigana: 'ミヤザキ ハルカ',
     tags: ['起業', '進学しない/やめる選択'],
     catchphrase: '家業と福祉をつないだ、介護する起業家',
@@ -260,7 +260,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'kawamura-takuto',
-    name: 'カワムラ タクト',
+    name: '川村 拓斗',
     furigana: 'カワムラ タクト',
     tags: ['起業', 'ノマドワーカー', 'ギャップイヤー'],
     catchphrase: '地方の町おこしから世界へ羽ばたいた、地域×国際派ノマド',
@@ -282,7 +282,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'shimizu-haruka',
-    name: 'シミズ ハルカ',
+    name: '清水 遥',
     furigana: 'シミズ ハルカ',
     tags: ['進学しない/やめる選択', '起業', 'ダブルスクール'],
     catchphrase: '工場勤務から動画クリエイターへ転身した元・ものづくり女子',
@@ -304,7 +304,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'takeda-haruki',
-    name: 'タケダ ハルキ',
+    name: '武田 春樹',
     furigana: 'タケダ ハルキ',
     tags: ['進学しない/やめる選択'],
     catchphrase: '家業を継ぐ道を選んだ、農業高校出身の次男坊',
@@ -326,7 +326,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'miyashita-aoi',
-    name: 'ミヤシタ アオイ',
+    name: '宮下 葵',
     furigana: 'ミヤシタ アオイ',
     tags: ['海外大学'],
     catchphrase: 'TOEIC400点台から始めた、カナダ大卒のど根性ガール',
@@ -348,7 +348,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'takahashi-ayumi',
-    name: 'タカハシ アユミ',
+    name: '高橋 歩美',
     furigana: 'タカハシ アユミ',
     tags: ['ワーホリ'],
     catchphrase: '聴診器片手に世界を旅した、情熱派ナース',
@@ -370,7 +370,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'sato-yuto',
-    name: 'サトウ ユウト',
+    name: '佐藤 優斗',
     furigana: 'サトウ ユウト',
     tags: ['ダブルスクール'],
     catchphrase: '昼は大学、夜は映像制作。二足のわらじを履いた夢追いクリエイター',
@@ -392,7 +392,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'aoyama-karen',
-    name: 'アオヤマ カレン',
+    name: '青山 かれん',
     furigana: 'アオヤマ カレン',
     tags: ['専門学校', '進学しない/やめる選択'],
     catchphrase: '高校卒業後、即プロの現場へ。夢を叶えた19歳のパティシエール',
@@ -414,7 +414,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'kawamoto-maya',
-    name: 'カワモト マヤ',
+    name: '川本 真矢',
     furigana: 'カワモト マヤ',
     tags: ['専門学校'],
     catchphrase: '語学を武器に世界を飛び回る、通訳のプロフェッショナル',
@@ -436,7 +436,7 @@ export const ROLE_MODELS: RoleModel[] = [
   },
   {
     id: 'ota-seiji',
-    name: 'オオタ セイジ',
+    name: '太田 誠治',
     furigana: 'オオタ セイジ',
     tags: ['ダブルスクール'],
     catchphrase: '研究に没頭する、実験室のロマンチスト',

@@ -103,7 +103,7 @@ export default function RoleModelsPage() {
             <p className="text-gray-600">該当するロールモデルが見つかりませんでした</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredModels.map(model => (
               <Link
                 key={model.id}

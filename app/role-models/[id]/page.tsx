@@ -144,11 +144,33 @@ export default function RoleModelDetailPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
 
+        {/* Interview Button */}
+        <div className="mt-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-6 text-center shadow-lg">
+          <h3 className="text-white text-xl font-bold mb-3">💬 {model.name}さんにインタビューしよう！</h3>
+          <p className="text-white/90 text-sm mb-4">
+            気になることを直接聞いてみましょう。例えば...
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center mb-6">
+            <span className="px-3 py-1 bg-white/20 rounded-full text-white text-xs">「なんでその選択をしたの？」</span>
+            <span className="px-3 py-1 bg-white/20 rounded-full text-white text-xs">「その時どう考えていたの？」</span>
+            <span className="px-3 py-1 bg-white/20 rounded-full text-white text-xs">「後悔したことはある？」</span>
+          </div>
+          <button
+            onClick={() => {
+              const sessionId = `interview-${model.id}-${Date.now()}`;
+              router.push(`/module/role-model-interview?roleModelId=${model.id}&sessionId=${sessionId}`);
+            }}
+            className="px-8 py-3 bg-white hover:bg-gray-100 text-emerald-600 rounded-lg font-bold transition-colors shadow-lg"
+          >
+            インタビューを始める →
+          </button>
+        </div>
+
         {/* Back Button */}
         <div className="mt-6 text-center">
           <button
             onClick={() => router.back()}
-            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold transition-colors"
+            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-bold transition-colors"
           >
             ← 一覧に戻る
           </button>

@@ -2,6 +2,7 @@
 
 import { ModuleProgress } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
+import { getRoleModelById } from '@/lib/role-models';
 
 interface Props {
   chatProgress: Record<string, ModuleProgress>;
@@ -40,11 +41,30 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
         ) : (
           <div className="divide-y divide-gray-100">
             {modulesWithDialogue.map(([moduleId, progress]) => {
+              // Handle role model interviews
+              const isRoleModelInterview = moduleId === 'role-model-interview';
+
               // Handle both regular chat modules and game dialogue sessions (e.g., "value-battle-dialogue")
               const isGameDialogue = moduleId.includes('-dialogue');
               const baseModuleId = isGameDialogue ? moduleId.replace('-dialogue', '') : moduleId;
               const module = CAREER_MODULES.find(m => m.id === baseModuleId);
-              if (!module) return null;
+
+              // For role model interviews, create a pseudo module
+              let displayModule = module;
+              let displayIcon = module?.icon || '💬';
+              let displayTitle = module?.title || '';
+
+              if (isRoleModelInterview) {
+                // Extract role model ID from session ID (format: interview-{roleModelId}-{timestamp})
+                const sessionIdParts = progress.sessionId?.split('-') || [];
+                const roleModelId = sessionIdParts.length > 2 ? sessionIdParts.slice(1, -1).join('-') : null;
+                const roleModel = roleModelId ? getRoleModelById(roleModelId) : null;
+
+                displayIcon = '👥';
+                displayTitle = roleModel ? `${roleModel.name}さんへのインタビュー` : 'ロールモデルインタビュー';
+              }
+
+              if (!module && !isRoleModelInterview) return null;
 
               // Chat module only
               const chatProgress = progress as ModuleProgress;
@@ -57,16 +77,32 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
 
               // Generate title from first user message (summary)
               const firstUserMessage = messages?.find((msg: any) => msg.role === 'user');
-              const summaryTitle = firstUserMessage?.content.substring(0, 40) || module.title;
-              const displayTitle = summaryTitle.length > 40 ? `${summaryTitle}...` : summaryTitle;
+              const summaryTitle = isRoleModelInterview
+                ? displayTitle
+                : (firstUserMessage?.content.substring(0, 40) || displayTitle);
+              const finalDisplayTitle = summaryTitle.length > 40 ? `${summaryTitle}...` : summaryTitle;
 
-              const previewText = `${lastMessage?.role === 'assistant' ? 'みかたくん: ' : 'あなた: '}${lastMessagePreview}${lastMessage?.content.length > 60 ? '...' : ''}`;
+              const speakerName = isRoleModelInterview
+                ? (displayTitle.replace('さんへのインタビュー', '') || 'ロールモデル')
+                : 'みかたくん';
+
+              const previewText = `${lastMessage?.role === 'assistant' ? `${speakerName}: ` : 'あなた: '}${lastMessagePreview}${lastMessage?.content.length > 60 ? '...' : ''}`;
 
               return (
                 <button
-                  key={moduleId}
+                  key={`${moduleId}-${progress.sessionId}`}
                   onClick={() => {
-                    if (onSessionClick && progress.sessionId) {
+                    if (progress.sessionId) {
+                      // For role model interviews
+                      if (isRoleModelInterview) {
+                        const sessionIdParts = progress.sessionId.split('-');
+                        const roleModelId = sessionIdParts.length > 2 ? sessionIdParts.slice(1, -1).join('-') : null;
+                        if (roleModelId) {
+                          window.location.href = `/module/role-model-interview?roleModelId=${roleModelId}&sessionId=${progress.sessionId}`;
+                        }
+                        return;
+                      }
+
                       // For game dialogues, navigate to the interactive module with sessionId
                       const targetModuleId = isGameDialogue ? baseModuleId : moduleId;
                       const path = isGameDialogue
@@ -78,11 +114,11 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
                   className="w-full px-6 py-3 hover:bg-gray-50 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl flex-shrink-0">{module.icon}</div>
+                    <div className="text-2xl flex-shrink-0">{displayIcon}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <h3 className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">
-                          {displayTitle}
+                          {finalDisplayTitle}
                         </h3>
                         {chatProgress.completed && (
                           <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">
