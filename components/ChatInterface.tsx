@@ -8,13 +8,19 @@ interface ChatInterfaceProps {
   onSendMessage: (content: string) => Promise<void>;
   isLoading: boolean;
   placeholder?: string;
+  moduleContext?: {
+    moduleId?: string;
+    moduleTitle?: string;
+    gameResults?: string;
+  };
 }
 
 export default function ChatInterface({
   messages,
   onSendMessage,
   isLoading,
-  placeholder = 'メッセージを入力...'
+  placeholder = 'メッセージを入力...',
+  moduleContext
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
@@ -36,7 +42,10 @@ export default function ChatInterface({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify({
+          messages,
+          moduleContext
+        }),
       });
 
       if (response.ok) {
@@ -65,6 +74,13 @@ export default function ChatInterface({
     }
   }, [messages.length, isLoading]);
 
+  useEffect(() => {
+    // Scroll to bottom when suggestions are updated
+    if (suggestedQuestions.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [suggestedQuestions]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -89,6 +105,13 @@ export default function ChatInterface({
     setSuggestedQuestions([]);
   };
 
+  const handleInputFocus = () => {
+    // Clear suggestions when user focuses on input field
+    if (suggestedQuestions.length > 0) {
+      setSuggestedQuestions([]);
+    }
+  };
+
   const renderMessage = (message: Message, index: number) => (
     <div
       key={index}
@@ -101,7 +124,7 @@ export default function ChatInterface({
             : 'bg-gray-200 text-gray-900 border-2 border-gray-300'
         }`}
       >
-        <div className="whitespace-pre-wrap break-words text-base leading-relaxed font-medium">{message.content}</div>
+        <div className="whitespace-pre-wrap break-words text-sm leading-relaxed font-medium">{message.content}</div>
         <div
           className={`text-xs mt-2 font-medium ${
             message.role === 'user' ? 'text-blue-100' : 'text-gray-600'
@@ -117,7 +140,7 @@ export default function ChatInterface({
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ fontSize: '80%' }}>
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
         {/* Older messages (if any) */}
@@ -153,8 +176,8 @@ export default function ChatInterface({
         {suggestedQuestions.length > 0 && !isLoading && (
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="text-sm text-gray-700 font-bold">💡 こんな質問はどう？</div>
-              <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              <div className="text-gray-700 font-bold">💡 こんな質問はどう？</div>
+              <div className="text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs">
                 タップして編集可能
               </div>
             </div>
@@ -164,7 +187,7 @@ export default function ChatInterface({
                   key={index}
                   type="button"
                   onClick={() => handleSuggestedQuestionClick(question)}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 active:from-blue-200 active:to-indigo-200 border-2 border-blue-400 hover:border-blue-500 rounded-xl text-sm text-gray-800 hover:text-gray-900 font-medium transition-all shadow-sm hover:shadow-md active:shadow-lg touch-manipulation"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 active:from-blue-200 active:to-indigo-200 border-2 border-blue-400 hover:border-blue-500 rounded-xl text-gray-800 hover:text-gray-900 font-medium transition-all shadow-sm hover:shadow-md active:shadow-lg touch-manipulation"
                 >
                   ✏️ {question}
                 </button>
@@ -178,16 +201,17 @@ export default function ChatInterface({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onFocus={handleInputFocus}
             placeholder={placeholder}
             disabled={isLoading}
             rows={1}
-            className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 text-base font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-gray-900 shadow-sm"
-            style={{ maxHeight: '120px' }}
+            className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-gray-900 shadow-sm"
+            style={{ maxHeight: '120px', fontSize: '16px' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 px-5 py-3 text-base font-bold text-white focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:shadow-xl whitespace-nowrap touch-manipulation"
+            className="rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 px-5 py-3 text-sm font-bold text-white focus:outline-none focus:ring-3 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:shadow-xl whitespace-nowrap touch-manipulation"
           >
             送信
           </button>

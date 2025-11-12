@@ -164,10 +164,10 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">みかたくん</h1>
+              <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">みかたくん</h1>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <UserMenu />
@@ -176,15 +176,15 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-4">
         {/* Tab Navigation */}
-        <div className="mb-8">
+        <div className="mb-4">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             {/* Tab buttons */}
             <div className="flex border-b border-gray-200">
               <button
                 onClick={() => setActiveTab('values')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+                className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${
                   activeTab === 'values'
                     ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
                     : 'text-gray-600 hover:bg-gray-50'
@@ -194,7 +194,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setActiveTab('insights')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+                className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${
                   activeTab === 'insights'
                     ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
                     : 'text-gray-600 hover:bg-gray-50'
@@ -205,12 +205,12 @@ export default function Home() {
             </div>
 
             {/* Tab content */}
-            <div className="p-6">
+            <div className="p-4">
               {activeTab === 'values' && loadingValues && (
-                <div className="text-center py-12">
-                  <div className="flex items-center justify-center gap-3 mb-4">
-                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-lg font-medium text-gray-700">価値観を読み込み中...</span>
+                <div className="text-center py-8">
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-base font-medium text-gray-700">価値観を読み込み中...</span>
                   </div>
                   <p className="text-sm text-gray-500">
                     対話から抽出された価値観を分析しています
@@ -222,10 +222,10 @@ export default function Home() {
                   {currentValues ? (
                     <ValuesDisplay current={currentValues} previous={previousValues} showHeader={false} showFooter={false} />
                   ) : (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">💎</div>
-                      <p className="text-gray-600 mb-2">まだ価値観が抽出されていません</p>
-                      <p className="text-sm text-gray-500">
+                    <div className="text-center py-8">
+                      <div className="text-5xl mb-3">💎</div>
+                      <p className="text-gray-600 mb-2 text-sm">まだ価値観が抽出されていません</p>
+                      <p className="text-xs text-gray-500">
                         対話やゲームモジュールを進めると、AIがあなたの価値観を分析します
                       </p>
                     </div>
@@ -238,10 +238,10 @@ export default function Home() {
                   {hasAnyProgress ? (
                     <InsightsPanel insights={insights} isLoading={isLoadingInsights} />
                   ) : (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">🎯</div>
-                      <p className="text-gray-600 mb-2">まだ対話やゲームを始めていません</p>
-                      <p className="text-sm text-gray-500">
+                    <div className="text-center py-8">
+                      <div className="text-5xl mb-3">🎯</div>
+                      <p className="text-gray-600 mb-2 text-sm">まだ対話やゲームを始めていません</p>
+                      <p className="text-xs text-gray-500">
                         対話やゲームモジュールを進めると、AIがあなたのキャリア志向を分析します
                       </p>
                     </div>
@@ -262,12 +262,12 @@ export default function Home() {
 
         {/* Welcome message for new users */}
         {!hasAnyProgress && (
-          <div className="mb-8 bg-white rounded-2xl p-8 border border-gray-200 text-center animate-fade-in">
-            <div className="text-6xl mb-4">👋</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+          <div className="mb-4 bg-white rounded-2xl p-6 border border-gray-200 text-center animate-fade-in">
+            <div className="text-5xl mb-3">👋</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
               ようこそ！
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-sm text-gray-600 max-w-2xl mx-auto">
               「みかたくん」は、進路やキャリアについて一緒に考えるAIカウンセラーです。<br />
               対話を通じて、あなた自身の考えを整理していきましょう。
             </p>
@@ -276,11 +276,11 @@ export default function Home() {
 
         {/* All Modules */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
             <span>モジュール</span>
-            <span className="text-sm font-normal text-gray-500">対話とゲームで自分を知ろう</span>
+            <span className="text-xs font-normal text-gray-500">対話とゲームで自分を知ろう</span>
           </h2>
-          <div className="space-y-8">
+          <div className="space-y-4">
             {/* Chat module first */}
             {CAREER_MODULES.filter(m => m.moduleType === 'chat').map(module => (
               <ModuleCard
@@ -305,7 +305,7 @@ export default function Home() {
         </div>
 
         {/* Info note */}
-        <div className="mt-12 text-center text-sm text-gray-500">
+        <div className="mt-6 text-center text-xs text-gray-500">
           <p>対話の中で価値観が見えてきたら、「価値観バトル」にも挑戦してみよう！</p>
         </div>
       </main>
