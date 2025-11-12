@@ -197,8 +197,8 @@ export default function ChatInterface({
             placeholder={placeholder}
             disabled={isLoading}
             rows={1}
-            className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 text-sm font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-gray-900 shadow-sm"
-            style={{ maxHeight: '120px' }}
+            className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500 text-gray-900 shadow-sm"
+            style={{ maxHeight: '120px', fontSize: '16px' }}
           />
           <button
             type="submit"
