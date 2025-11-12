@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ChatInterface from '@/components/ChatInterface';
 import { useStorage } from '@/hooks/useStorage';
-import { Message } from '@/types';
+import { Message, ModuleProgress } from '@/types';
 import { getRoleModelById } from '@/lib/role-models';
 import Link from 'next/link';
 
@@ -45,7 +45,19 @@ function RoleModelInterviewContent() {
           content: `こんにちは！${roleModel?.name}です。私のキャリアについて何か聞きたいことはありますか？どんなことでも気軽に聞いてくださいね。`,
           timestamp: new Date()
         };
-        setMessages([welcomeMessage]);
+        const initialMessages = [welcomeMessage];
+        setMessages(initialMessages);
+
+        // Save initial session
+        const initialProgress: ModuleProgress = {
+          moduleId: 'role-model-interview',
+          sessionId,
+          messages: initialMessages,
+          createdAt: new Date(),
+          lastUpdated: new Date(),
+          completed: false
+        };
+        await storage.saveModuleProgress('role-model-interview', initialProgress);
       }
     } catch (error) {
       console.error('Failed to load session:', error);
@@ -67,7 +79,15 @@ function RoleModelInterviewContent() {
     setMessages(updatedMessages);
 
     // Save to storage
-    await storage.saveModuleProgress('role-model-interview', sessionId, updatedMessages);
+    const progressData: ModuleProgress = {
+      moduleId: 'role-model-interview',
+      sessionId,
+      messages: updatedMessages,
+      createdAt: new Date(),
+      lastUpdated: new Date(),
+      completed: false
+    };
+    await storage.saveModuleProgress('role-model-interview', progressData);
 
     // Generate AI response
     try {
@@ -133,7 +153,16 @@ A6: ${roleModel.interview.q6}
 
         const finalMessages = [...updatedMessages, aiMessage];
         setMessages(finalMessages);
-        await storage.saveModuleProgress('role-model-interview', sessionId, finalMessages);
+
+        const finalProgressData: ModuleProgress = {
+          moduleId: 'role-model-interview',
+          sessionId,
+          messages: finalMessages,
+          createdAt: new Date(),
+          lastUpdated: new Date(),
+          completed: false
+        };
+        await storage.saveModuleProgress('role-model-interview', finalProgressData);
       }
     } catch (error) {
       console.error('Failed to send message:', error);
