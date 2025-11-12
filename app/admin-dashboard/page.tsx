@@ -140,11 +140,11 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 min-w-[1400px] overflow-x-auto">
+    <div className="min-h-screen bg-gray-50 overflow-x-auto">
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-600 to-indigo-700 border-b border-purple-800 shadow-lg sticky top-0 z-10">
-        <div className="mx-auto px-6 py-3 min-w-[1400px]">
-          <div className="flex items-center justify-between">
+        <div className="mx-auto px-6 py-3 min-w-max">
+          <div className="flex items-center justify-between min-w-[1400px]">
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-white flex items-center gap-2">
                 🔐 管理者ダッシュボード
@@ -163,7 +163,8 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto px-6 py-4 min-w-[1400px]">
+      <main className="mx-auto px-6 py-4">
+        <div className="min-w-[1400px]">
         {/* Statistics Bar */}
         <div className="grid grid-cols-5 gap-3 mb-4">
           <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
@@ -449,6 +450,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         )}
+        </div>
       </main>
     </div>
   );
