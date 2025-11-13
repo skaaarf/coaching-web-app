@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ModuleProgress, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/SessionProvider';
 
 interface SessionData {
   type: 'chat' | 'interactive';
@@ -25,6 +27,7 @@ interface SessionData {
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const { userEmail } = useAuth();
   const [allSessions, setAllSessions] = useState<SessionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,65 +36,118 @@ export default function AdminDashboardPage() {
   const [filterUser, setFilterUser] = useState<string>('all');
   const [selectedSession, setSelectedSession] = useState<SessionData | null>(null);
 
-  useEffect(() => {
-    loadAllData();
-  }, []);
+  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
-  const loadAllData = () => {
+  useEffect(() => {
+    // 管理者チェック
+    if (userEmail !== ADMIN_EMAIL) {
+      router.push('/');
+      return;
+    }
+    loadAllData();
+  }, [userEmail, ADMIN_EMAIL, router]);
+
+  const loadAllData = async () => {
     try {
       setLoading(true);
 
-      const sessionsKey = 'mikata-sessions';
-      const rawSessions = localStorage.getItem(sessionsKey);
+      // Supabaseからデータを取得
+      const sessionList: SessionData[] = [];
 
-      if (rawSessions) {
-        const sessions = JSON.parse(rawSessions);
-        const sessionList: SessionData[] = [];
+      // 1. チャット履歴を取得
+      const { data: chatData, error: chatError } = await supabase
+        .from('module_progress')
+        .select(`
+          *,
+          users (
+            email
+          )
+        `)
+        .order('last_updated', { ascending: false });
 
-        Object.entries(sessions).forEach(([key, sessionArray]: [string, any]) => {
-          if (Array.isArray(sessionArray) && sessionArray.length > 0) {
-            const [moduleId, userId] = key.split(':');
-            const module = CAREER_MODULES.find(m => m.id === moduleId);
+      if (chatError) {
+        console.error('Failed to load chat data:', chatError);
+      } else if (chatData) {
+        chatData.forEach((progress: any) => {
+          const module = CAREER_MODULES.find(m => m.id === progress.module_id);
+          if (!module) return;
 
-            if (!module) return;
+          const messages = progress.messages || [];
+          if (messages.length === 0) return;
 
-            sessionArray.forEach((session: any) => {
-              const isInteractive = session.data && typeof session.data === 'object';
-              const messages = isInteractive
-                ? ((session.data as any).messages || [])
-                : (session.messages || []);
+          const userMessages = messages.filter((m: any) => m.role === 'user');
+          const aiMessages = messages.filter((m: any) => m.role === 'assistant');
+          const firstUserMessage = userMessages[0]?.content || '';
+          const lastMessage = messages[messages.length - 1]?.content || '';
 
-              if (messages.length === 0) return;
-
-              const userMessages = messages.filter((m: any) => m.role === 'user');
-              const aiMessages = messages.filter((m: any) => m.role === 'assistant');
-              const firstUserMessage = userMessages[0]?.content || '';
-              const lastMessage = messages[messages.length - 1]?.content || '';
-
-              sessionList.push({
-                type: isInteractive ? 'interactive' : 'chat',
-                moduleId,
-                moduleName: module.title,
-                moduleIcon: module.icon,
-                sessionId: session.sessionId,
-                messageCount: messages.length,
-                userMessageCount: userMessages.length,
-                aiMessageCount: aiMessages.length,
-                firstUserMessage: firstUserMessage.substring(0, 100),
-                lastMessage: lastMessage.substring(0, 100),
-                lastUpdated: new Date(session.lastUpdated),
-                completed: session.completed || false,
-                userId: userId || 'local-user',
-                userEmail: session.userEmail || undefined,
-              });
-            });
-          }
+          sessionList.push({
+            type: 'chat',
+            moduleId: progress.module_id,
+            moduleName: module.title,
+            moduleIcon: module.icon,
+            sessionId: progress.id,
+            messageCount: messages.length,
+            userMessageCount: userMessages.length,
+            aiMessageCount: aiMessages.length,
+            firstUserMessage: firstUserMessage.substring(0, 100),
+            lastMessage: lastMessage.substring(0, 100),
+            lastUpdated: new Date(progress.last_updated),
+            completed: progress.completed || false,
+            userId: progress.user_id,
+            userEmail: progress.users?.email || undefined,
+          });
         });
-
-        // Sort by last updated (most recent first)
-        sessionList.sort((a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime());
-        setAllSessions(sessionList);
       }
+
+      // 2. インタラクティブモジュールを取得
+      const { data: interactiveData, error: interactiveError } = await supabase
+        .from('interactive_module_progress')
+        .select(`
+          *,
+          users (
+            email
+          )
+        `)
+        .order('last_updated', { ascending: false });
+
+      if (interactiveError) {
+        console.error('Failed to load interactive data:', interactiveError);
+      } else if (interactiveData) {
+        interactiveData.forEach((progress: any) => {
+          const module = CAREER_MODULES.find(m => m.id === progress.module_id);
+          if (!module) return;
+
+          const data = progress.data || {};
+          const messages = data.messages || [];
+          if (messages.length === 0) return;
+
+          const userMessages = messages.filter((m: any) => m.role === 'user');
+          const aiMessages = messages.filter((m: any) => m.role === 'assistant');
+          const firstUserMessage = userMessages[0]?.content || '';
+          const lastMessage = messages[messages.length - 1]?.content || '';
+
+          sessionList.push({
+            type: 'interactive',
+            moduleId: progress.module_id,
+            moduleName: module.title,
+            moduleIcon: module.icon,
+            sessionId: progress.id,
+            messageCount: messages.length,
+            userMessageCount: userMessages.length,
+            aiMessageCount: aiMessages.length,
+            firstUserMessage: firstUserMessage.substring(0, 100),
+            lastMessage: lastMessage.substring(0, 100),
+            lastUpdated: new Date(progress.last_updated),
+            completed: progress.completed || false,
+            userId: progress.user_id,
+            userEmail: progress.users?.email || undefined,
+          });
+        });
+      }
+
+      // Sort by last updated (most recent first)
+      sessionList.sort((a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime());
+      setAllSessions(sessionList);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -332,11 +388,12 @@ export default function AdminDashboardPage() {
                         {session.aiMessageCount}
                       </td>
                       <td className="px-2 py-2 text-gray-600 text-xs">
-                        {session.lastUpdated.toLocaleDateString('ja-JP', {
+                        {new Date(session.lastUpdated).toLocaleString('ja-JP', {
                           month: '2-digit',
                           day: '2-digit',
                           hour: '2-digit',
-                          minute: '2-digit'
+                          minute: '2-digit',
+                          timeZone: 'Asia/Tokyo'
                         })}
                       </td>
                       <td className="px-2 py-2 text-center">

@@ -38,33 +38,28 @@
 
 ⚠️ **警告**: `service_role`キーはサーバー側でのみ使用し、クライアント側で公開しないでください。
 
-## 2. Google OAuthの設定
+## 2. Supabaseでメール認証を有効化
 
-### 2.1 Google Cloud Consoleでプロジェクトを作成
+### 2.1 認証プロバイダーの設定
 
-1. [Google Cloud Console](https://console.cloud.google.com/)にアクセス
-2. 新しいプロジェクトを作成（または既存のプロジェクトを選択）
+1. Supabaseダッシュボードで「Authentication」→「Providers」を開く
+2. **Email** プロバイダーをクリック
+3. 以下を設定：
+   - Enable Email provider: **ON**
+   - Enable Email Confirmations: **OFF** (開発中はOFFを推奨)
+4. Saveをクリック
 
-### 2.2 OAuth同意画面の設定
+### 2.2 リダイレクトURLの設定
 
-1. 「APIs & Services」→「OAuth consent screen」を開く
-2. User Type: **External**を選択
-3. アプリ名、サポートメールを入力
-4. スコープ: デフォルトのままでOK
-5. テストユーザー: 自分のGoogleアカウントを追加
-
-### 2.3 OAuth認証情報の作成
-
-1. 「APIs & Services」→「Credentials」を開く
-2. 「Create Credentials」→「OAuth client ID」を選択
-3. Application type: **Web application**を選択
-4. 名前: 任意（例: "Coaching Web App"）
-5. **Authorized redirect URIs**に以下を追加：
+1. Supabaseダッシュボードで「Authentication」→「URL Configuration」を開く
+2. **Site URL** を設定：
+   - ローカル開発: `http://localhost:3000`
+   - 本番環境: `https://your-domain.com`
+3. **Redirect URLs** に以下を追加：
    ```
-   http://localhost:3000/api/auth/callback/google
-   https://your-domain.com/api/auth/callback/google
+   http://localhost:3000/auth/callback
+   https://your-domain.com/auth/callback
    ```
-6. 作成後、**Client ID**と**Client Secret**をメモ
 
 ## 3. 環境変数の設定
 
@@ -76,32 +71,15 @@
 # OpenAI API Key
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id_here
-GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-
-# NextAuth
-AUTH_SECRET=your_auth_secret_here
-AUTH_URL=http://localhost:3000
-
-# Supabase (Server-side)
+# Supabase（データベースとマジックリンク認証）
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
-
-# Supabase (Client-side)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+
+# Admin email
+NEXT_PUBLIC_ADMIN_EMAIL=your_email@example.com
 ```
-
-### 3.2 AUTH_SECRETの生成
-
-以下のコマンドでランダムなシークレットを生成：
-
-```bash
-openssl rand -base64 32
-```
-
-生成された文字列を`AUTH_SECRET`に設定してください。
 
 ## 4. アプリケーションの起動
 
@@ -120,9 +98,10 @@ npm run dev
 ### 4.3 動作確認
 
 1. http://localhost:3000 にアクセス
-2. 「Googleでログイン」ボタンをクリック
-3. Googleアカウントで認証
-4. ログイン成功後、以前のlocalStorageデータがSupabaseに自動的に移行されます
+2. 「ログイン」ボタンをクリック
+3. メールアドレスを入力
+4. メールに届いたマジックリンクをクリック
+5. ログイン成功後、以前のlocalStorageデータがSupabaseに自動的に移行されます
 
 ## 5. データの確認
 
@@ -141,11 +120,18 @@ localStorage.getItem('mikata-migration-completed') // "true"になっていれ�
 
 ## トラブルシューティング
 
+### マジックリンクが届かない
+
+- Supabaseの「Authentication」→「Providers」でEmailが有効になっているか確認
+- スパムフォルダを確認
+- Supabase Dashboardの「Logs」→「Auth」でエラーがないか確認
+- 開発環境では、Supabaseのデフォルトメール送信に制限があるため、時間を置いて再試行
+
 ### ログインできない
 
-- Google OAuth設定で、リダイレクトURIが正しく設定されているか確認
-- `GOOGLE_CLIENT_ID`と`GOOGLE_CLIENT_SECRET`が正しいか確認
-- `AUTH_SECRET`が設定されているか確認
+- Supabaseのリダイレクト URL設定が正しいか確認
+- `/auth/callback`ページが存在するか確認
+- ブラウザのコンソールでエラーがないか確認
 
 ### データが保存されない
 
@@ -166,12 +152,21 @@ localStorage.getItem('mikata-migration-completed') // "true"になっていれ�
 1. Vercelにプロジェクトをインポート
 2. 環境変数を設定：
    - すべての`.env.local`の内容を追加
-   - `AUTH_URL`を本番環境のURLに変更（例: `https://your-app.vercel.app`）
-3. Google Cloud Consoleで、本番環境のリダイレクトURIを追加：
+3. Supabaseで、本番環境のリダイレクトURLを追加：
+   - Authentication → URL Configuration → Redirect URLs
    ```
-   https://your-app.vercel.app/api/auth/callback/google
+   https://your-app.vercel.app/auth/callback
    ```
 4. デプロイ実行
+
+### 本番環境でのメール送信設定
+
+開発環境ではSupabaseのデフォルトメールサービスに制限があるため、本番環境ではカスタムSMTPの設定を推奨：
+
+1. Supabase Dashboard → Project Settings → Auth
+2. SMTP Settings で以下を設定：
+   - Enable Custom SMTP: ON
+   - メール送信サービス（SendGrid、AWS SES、Resendなど）の認証情報を入力
 
 ## セキュリティに関する注意事項
 

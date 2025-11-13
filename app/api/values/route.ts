@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
 import { DBValueSnapshot } from "@/lib/supabase";
 import { ValueSnapshot, ValueAxes, AxisReasoning } from "@/types";
 
@@ -25,23 +29,37 @@ function dbToSnapshot(db: DBValueSnapshot): ValueSnapshot {
   };
 }
 
+async function getUserFromRequest(request: NextRequest): Promise<string | null> {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.substring(7);
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+
+  if (error || !user) {
+    return null;
+  }
+
+  return user.id;
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Get authenticated user
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getUserFromRequest(request);
+    if (!userId) {
       return NextResponse.json(
         { error: "認証が必要です" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
     const { searchParams } = new URL(request.url);
     const includeHistory = searchParams.get('includeHistory') === 'true';
 
     // Get all snapshots for the user, ordered by creation date
-    const { data: snapshots, error: dbError } = await supabase
+    const { data: snapshots, error: dbError } = await supabaseAdmin
       .from('value_snapshots')
       .select('*')
       .eq('user_id', userId)
@@ -85,15 +103,14 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     // Get authenticated user
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getUserFromRequest(request);
+    if (!userId) {
       return NextResponse.json(
         { error: "認証が必要です" },
         { status: 401 }
       );
     }
 
-    const userId = session.user.id;
     const body = await request.json();
 
     // Validate the request body
@@ -105,7 +122,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get the most recent snapshot
-    const { data: currentSnapshot, error: fetchError } = await supabase
+    const { data: currentSnapshot, error: fetchError } = await supabaseAdmin
       .from('value_snapshots')
       .select('*')
       .eq('user_id', userId)
@@ -121,7 +138,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update the snapshot
-    const { data: updatedSnapshot, error: updateError } = await supabase
+    const { data: updatedSnapshot, error: updateError } = await supabaseAdmin
       .from('value_snapshots')
       .update({
         money_vs_meaning: body.axes.money_vs_meaning ?? currentSnapshot.money_vs_meaning,

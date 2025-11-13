@@ -1,78 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const validatePassword = (password: string): string | null => {
-    if (password.length < 8) {
-      return 'パスワードは8文字以上である必要があります';
-    }
-    if (!/[A-Z]/.test(password)) {
-      return 'パスワードには大文字を含める必要があります';
-    }
-    if (!/[a-z]/.test(password)) {
-      return 'パスワードには小文字を含める必要があります';
-    }
-    if (!/[0-9]/.test(password)) {
-      return 'パスワードには数字を含める必要があります';
-    }
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      return 'パスワードには記号を含める必要があります';
-    }
-    return null;
-  };
-
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setMessage(null);
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        // Validate password for sign up
-        const passwordError = validatePassword(password);
-        if (passwordError) {
-          setError(passwordError);
-          setLoading(false);
-          return;
-        }
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-        // Sign up
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+      if (error) throw error;
 
-        if (error) throw error;
-
-        setMessage('確認メールを送信しました。メールを確認してください。');
-        setEmail('');
-        setPassword('');
-      } else {
-        // Sign in
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-
-        router.push('/');
-      }
+      setMessage('ログインリンクをメールで送信しました！メールを確認してください。');
+      setEmail('');
     } catch (err: any) {
-      setError(err.message || '認証に失敗しました');
+      setError(err.message || 'ログインリンクの送信に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -86,11 +43,14 @@ export default function LoginPage() {
             みかたくん
           </h1>
           <p className="text-gray-800 font-medium">
-            {isSignUp ? 'アカウント作成' : 'ログイン'}
+            ログイン
+          </p>
+          <p className="text-gray-600 text-sm mt-2">
+            パスワード不要！メールアドレスだけでログインできます
           </p>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
+        <form onSubmit={handleMagicLink} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-1">
               メールアドレス
@@ -104,27 +64,9 @@ export default function LoginPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
               placeholder="example@email.com"
             />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-1">
-              パスワード
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-              placeholder={isSignUp ? "8文字以上（大小英数字・記号）" : "パスワード"}
-            />
-            {isSignUp && (
-              <p className="mt-2 text-xs text-gray-700">
-                ※ 8文字以上、大文字・小文字・数字・記号を含める必要があります
-              </p>
-            )}
+            <p className="mt-2 text-xs text-gray-600">
+              ログインリンクをメールで送信します
+            </p>
           </div>
 
           {error && (
@@ -144,24 +86,11 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '処理中...' : isSignUp ? 'アカウント作成' : 'ログイン'}
+            {loading ? 'メールを送信中...' : 'ログインリンクを送信'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => {
-              setIsSignUp(!isSignUp);
-              setError(null);
-              setMessage(null);
-            }}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-          >
-            {isSignUp ? 'すでにアカウントをお持ちの方' : 'アカウントを作成する'}
-          </button>
-        </div>
-
-        <div className="mt-4">
+        <div className="mt-6">
           <Link
             href="/"
             className="w-full block text-center bg-gray-100 border border-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
@@ -174,6 +103,15 @@ export default function LoginPage() {
           <p className="text-xs">
             利用することで、利用規約とプライバシーポリシーに同意したことになります。
           </p>
+        </div>
+
+        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">マジックリンク認証とは？</h3>
+          <ul className="text-xs text-gray-700 space-y-1">
+            <li>✓ パスワード不要で安全</li>
+            <li>✓ メールに届くリンクをクリックするだけ</li>
+            <li>✓ パスワードを忘れる心配なし</li>
+          </ul>
         </div>
       </div>
     </div>
