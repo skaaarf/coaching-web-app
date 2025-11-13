@@ -706,7 +706,7 @@ ${career.cons?.slice(0, 3).join('、')}
                 />
               )}
               {moduleId === 'branch-map' && (
-                <BranchMap onComplete={handleActivityComplete} />
+                <BranchMap onComplete={(path) => handleStartDialogue(path)} />
               )}
               {moduleId === 'persona-dictionary' && (
                 <PersonaDictionary onSelectPersona={(persona) => handleActivityComplete(persona)} />
