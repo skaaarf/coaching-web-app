@@ -13,6 +13,8 @@ import ParentSelfScale from '@/components/ParentSelfScale';
 import ParentSelfScaleResult from '@/components/ParentSelfScaleResult';
 import TimeMachine from '@/components/TimeMachine';
 import BranchMap from '@/components/BranchMap';
+import PersonaDictionary from '@/components/PersonaDictionary';
+import CareerDictionary from '@/components/CareerDictionary';
 import ChatInterface from '@/components/ChatInterface';
 import ModuleResultSidebar from '@/components/ModuleResultSidebar';
 import DialogueHistorySidebar from '@/components/DialogueHistorySidebar';
@@ -278,6 +280,49 @@ ${path.map((b, i) => `${i}. ${b.label}`).join('\n')}
 6. この道を選んだ自分に伝えたいことは？
 
 まずは、これらの振り返りテーマについて、一緒に考えていきましょう。`;
+      } else if (moduleId === 'persona-dictionary') {
+        const persona = activityData as any;
+        contextMessage = `心の図鑑で「${persona.name}（${persona.grade}）」を選びました。
+
+【${persona.name}のプロフィール】
+${persona.tagline}
+
+${persona.description}
+
+【${persona.name}の価値観】
+${persona.values?.join('、')}
+
+【${persona.name}の悩み】
+${persona.concerns?.join('、')}
+
+【${persona.name}の言葉】
+「${persona.quote}」
+
+このキャラクターについて、一緒に話しましょう。`;
+      } else if (moduleId === 'career-dictionary') {
+        const career = activityData as any;
+        contextMessage = `進路図鑑で「${career.title}」を選びました。
+
+【${career.title}について】
+${career.tagline}
+
+${career.description}
+
+【必要なスキル】
+${career.skills?.join('、')}
+
+【年収の目安】
+- 初任給: ${career.salary?.entry}
+- 中堅: ${career.salary?.mid}
+- ベテラン: ${career.salary?.senior}
+
+【メリット】
+${career.pros?.slice(0, 3).join('、')}
+
+【デメリット】
+${career.cons?.slice(0, 3).join('、')}
+
+この職業について、一緒に考えていきましょう。`;
       }
 
       // Call API for initial message
@@ -662,6 +707,12 @@ ${path.map((b, i) => `${i}. ${b.label}`).join('\n')}
               )}
               {moduleId === 'branch-map' && (
                 <BranchMap onComplete={handleActivityComplete} />
+              )}
+              {moduleId === 'persona-dictionary' && (
+                <PersonaDictionary onSelectPersona={(persona) => handleActivityComplete(persona)} />
+              )}
+              {moduleId === 'career-dictionary' && (
+                <CareerDictionary onSelectCareer={(career) => handleActivityComplete(career)} />
               )}
             </>
           )}
