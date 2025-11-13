@@ -19,12 +19,24 @@ AUTH_SECRET=your_auth_secret_here
 
 # Application URL (use http://localhost:3000 for development)
 AUTH_URL=http://localhost:3000
+
+# Supabase credentials (for user authentication and data storage)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
 ```
 
 #### Getting API Keys:
 
 1. **OpenAI API Key**: Get it from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. **Google OAuth Credentials**:
+
+2. **Supabase Credentials**:
+   - Go to [Supabase](https://supabase.com) and create a new project
+   - Once created, go to Settings → API
+   - Copy the Project URL (for SUPABASE_URL)
+   - Copy the service_role key (for SUPABASE_SERVICE_ROLE_KEY)
+   - Go to SQL Editor and run the schema from `supabase/schema.sql`
+
+3. **Google OAuth Credentials**:
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
    - Create a new project or select an existing one
    - Enable Google+ API
@@ -34,7 +46,10 @@ AUTH_URL=http://localhost:3000
      - For development: `http://localhost:3000/api/auth/callback/google`
      - For production: `https://your-domain.com/api/auth/callback/google`
    - Copy the Client ID and Client Secret
-3. **AUTH_SECRET**: Generate a random string using `openssl rand -base64 32`
+
+4. **AUTH_SECRET**: Generate a random string using `openssl rand -base64 32`
+
+> 📖 **For detailed deployment instructions**, see [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
 
 ### Run the Development Server
 
