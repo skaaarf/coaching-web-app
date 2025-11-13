@@ -231,10 +231,53 @@ export default function InteractiveModulePage() {
         };
         contextMessage = `タイムマシンで書いた手紙：\n\n[1年前の自分へ]\n${pastLetter}\n\n[10年後の自分から]\n${futureLetter}`;
       } else if (moduleId === 'branch-map') {
-        const path = activityData as Array<{ label: string }>;
-        contextMessage = `IF分岐マップで選んだ道：\n${path
-          .map((b) => b.label)
-          .join(' → ')}`;
+        const path = activityData as Array<{
+          label: string;
+          description: string;
+          tags?: string[];
+          eventType?: string;
+        }>;
+
+        // Analyze pattern
+        const tagCounts: Record<string, number> = {};
+        path.slice(1).forEach(branch => {
+          branch.tags?.forEach(tag => {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+          });
+        });
+
+        const topTags = Object.entries(tagCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([tag]) => {
+            const tagLabels: Record<string, string> = {
+              stability: '安定',
+              challenge: '挑戦',
+              money: 'お金',
+              passion: '情熱',
+              family: '家族',
+              career: 'キャリア',
+            };
+            return tagLabels[tag] || tag;
+          });
+
+        contextMessage = `IF分岐マップで${path.length - 1}個の選択をしてきました。
+
+【選んだ道】
+${path.map((b, i) => `${i}. ${b.label}`).join('\n')}
+
+【選択の傾向】
+あなたは特に「${topTags.join('、')}」を重視する傾向がありました。
+
+【振り返りのテーマ】
+1. 一番難しかった選択はどれでしたか？
+2. 何を大切にして選んできましたか？
+3. 意外だったことは何ですか？
+4. どの選択が今の自分に一番影響しましたか？
+5. やり直せるなら変えたい選択はありますか？
+6. この道を選んだ自分に伝えたいことは？
+
+まずは、これらの振り返りテーマについて、一緒に考えていきましょう。`;
       }
 
       // Call API for initial message
