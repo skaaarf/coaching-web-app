@@ -390,9 +390,11 @@ ${interviewSnippet}
       const newDialogueSessionId = `session-${Date.now()}`;
       setDialogueSessionId(newDialogueSessionId);
 
+      const dialogueData: InteractiveActivityData = activityData
+        ?? (state.phase !== 'activity' && state.data ? state.data : ({} as InteractiveActivityData));
       const newState = {
         phase: 'dialogue' as const,
-        data: activityData,
+        data: dialogueData,
         messages: [assistantMessage],
       };
       setState(newState);
@@ -421,9 +423,11 @@ ${interviewSnippet}
         content: 'こんにちは。一緒に考えていきましょう。',
         timestamp: new Date(),
       };
+      const dialogueData: InteractiveActivityData = activityData
+        ?? (state.phase !== 'activity' && state.data ? state.data : ({} as InteractiveActivityData));
       const newState = {
         phase: 'dialogue' as const,
-        data: activityData,
+        data: dialogueData,
         messages: [fallbackMessage],
       };
       setState(newState);
