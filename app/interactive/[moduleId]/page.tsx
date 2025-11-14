@@ -777,21 +777,21 @@ ${interviewSnippet}
 
           {state.phase === 'result' && (
             <>
-              {moduleId === 'value-battle' && (
+              {moduleId === 'value-battle' && state.data && (
                 <ValueBattleResultView
-                  results={state.data}
+                  results={state.data as ValueBattleResult}
                   onStartDialogue={() => handleStartDialogue()}
                 />
               )}
-              {moduleId === 'life-simulator' && (
+              {moduleId === 'life-simulator' && state.data && (
                 <LifeSimulatorResult
-                  selections={state.data}
+                  selections={state.data as LifeSimulatorSelections}
                   onStartDialogue={() => handleStartDialogue()}
                 />
               )}
-              {moduleId === 'parent-self-scale' && (
+              {moduleId === 'parent-self-scale' && state.data && (
                 <ParentSelfScaleResult
-                  responses={state.data}
+                  responses={state.data as ParentSelfScaleResponses}
                   onStartDialogue={() => handleStartDialogue()}
                 />
               )}

@@ -261,8 +261,8 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
         await navigator.clipboard.writeText(shareText);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-      } catch {
-        console.error('Failed to copy:', error);
+      } catch (err) {
+        console.error('Failed to copy:', err);
       }
     }
     setShowShareMenu(false);

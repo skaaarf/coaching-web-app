@@ -26,25 +26,25 @@ type ResultModuleId = typeof MODULE_RESULT_IDS[number];
 const isResultModuleId = (moduleId: string): moduleId is ResultModuleId =>
   MODULE_RESULT_IDS.includes(moduleId as ResultModuleId);
 
-const resolveDataForModule = <M extends ResultModuleId>(
-  moduleId: M,
+const resolveDataForModule = (
+  moduleId: ResultModuleId,
   rawData: InteractiveActivityData | undefined
-): InteractiveModuleDataMap[M] | null => {
+): InteractiveActivityData | null => {
   if (!rawData) return null;
 
   switch (moduleId) {
     case 'value-battle':
-      return rawData as InteractiveModuleDataMap['value-battle'];
+      return rawData;
     case 'life-simulator':
-      return rawData as InteractiveModuleDataMap['life-simulator'];
+      return rawData;
     case 'parent-self-scale':
-      return rawData as InteractiveModuleDataMap['parent-self-scale'];
+      return rawData;
     case 'time-machine':
-      return rawData as InteractiveModuleDataMap['time-machine'];
+      return rawData;
     case 'branch-map':
-      return rawData as InteractiveModuleDataMap['branch-map'];
+      return rawData;
     case 'career-dictionary':
-      return rawData as InteractiveModuleDataMap['career-dictionary'];
+      return rawData;
     default:
       return null;
   }
