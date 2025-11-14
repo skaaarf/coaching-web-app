@@ -1,4 +1,4 @@
-import { ModuleProgress, UserInsights, Message, InteractiveModuleProgress, ValueSnapshot } from '@/types';
+import { ModuleProgress, UserInsights, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 
 const STORAGE_PREFIX = 'mikata-';
 const PROGRESS_KEY = `${STORAGE_PREFIX}progress`;
@@ -19,7 +19,7 @@ export function migrateToSessions(): void {
     }
 
     console.log('Starting migration to sessions format...');
-    const sessionsMap: Record<string, any[]> = {};
+    const sessionsMap: Record<string, Array<ModuleProgress | InteractiveModuleProgress>> = {};
 
     // Migrate chat modules
     const chatProgress = localStorage.getItem(PROGRESS_KEY);

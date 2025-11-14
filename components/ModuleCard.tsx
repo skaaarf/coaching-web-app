@@ -10,14 +10,10 @@ interface ModuleCardProps {
 export default function ModuleCard({ module, progress, interactiveProgress, onClick }: ModuleCardProps) {
   // Handle both chat and interactive modules
   const isInteractive = module.moduleType === 'interactive';
-  const relevantProgress = isInteractive ? interactiveProgress : progress;
-
   const messageCount = progress?.messages.length || 0;
   const isStarted = isInteractive
     ? !!interactiveProgress
     : messageCount > 0;
-  const isCompleted = relevantProgress?.completed || false;
-
   return (
     <button
       onClick={onClick}
@@ -27,14 +23,9 @@ export default function ModuleCard({ module, progress, interactiveProgress, onCl
 
         {/* Icon and status */}
         <div className="flex items-start justify-between mb-5">
-          <div className={`text-7xl transition-all duration-200 ${isCompleted ? 'opacity-100' : 'opacity-90'}`}>
+          <div className="text-7xl transition-all duration-200 opacity-90">
             {module.icon}
           </div>
-          {isCompleted && (
-            <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-green-100 text-green-800 border-2 border-green-300 animate-fade-in shadow-sm">
-              完了
-            </span>
-          )}
         </div>
 
         {/* Title and description */}
@@ -85,9 +76,6 @@ export default function ModuleCard({ module, progress, interactiveProgress, onCl
                     </>
                   )}
                 </span>
-                {isCompleted && (
-                  <span className="text-green-700 font-semibold">✓ 完了済み</span>
-                )}
               </div>
             </div>
           </div>

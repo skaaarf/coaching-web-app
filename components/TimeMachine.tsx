@@ -47,15 +47,12 @@ export default function TimeMachine({ onComplete }: Props) {
   const [step, setStep] = useState<'intro' | 'past' | 'generating' | 'future'>('intro');
   const [pastLetter, setPastLetter] = useState('');
   const [futureLetter, setFutureLetter] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
   const [showTemplates, setShowTemplates] = useState(true);
 
   const handlePastSubmit = async () => {
     if (!pastLetter.trim()) return;
 
     setStep('generating');
-    setIsGenerating(true);
-
     try {
       // Call API to generate future letter
       const response = await fetch('/api/chat', {
@@ -93,7 +90,7 @@ export default function TimeMachine({ onComplete }: Props) {
       );
       setStep('future');
     } finally {
-      setIsGenerating(false);
+      // no-op
     }
   };
 

@@ -28,8 +28,9 @@ export default function LoginPage() {
 
       setMessage('ログインリンクをメールで送信しました！メールを確認してください。');
       setEmail('');
-    } catch (err: any) {
-      setError(err.message || 'ログインリンクの送信に失敗しました');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : null;
+      setError(errorMessage || 'ログインリンクの送信に失敗しました');
     } finally {
       setLoading(false);
     }

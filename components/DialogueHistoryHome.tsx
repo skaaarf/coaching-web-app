@@ -11,7 +11,7 @@ interface Props {
 export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Props) {
 
   // Only show chat modules (exclude interactive game modules)
-  const chatDialogues = Object.entries(chatProgress).filter(([moduleId, progress]) => {
+  const chatDialogues = Object.entries(chatProgress).filter(([, progress]) => {
     return progress.messages && progress.messages.length > 0;
   });
 
@@ -43,8 +43,8 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
               // Handle both regular chat modules and game dialogue sessions (e.g., "value-battle-dialogue")
               const isGameDialogue = moduleId.includes('-dialogue');
               const baseModuleId = isGameDialogue ? moduleId.replace('-dialogue', '') : moduleId;
-              const module = CAREER_MODULES.find(m => m.id === baseModuleId);
-              if (!module) return null;
+              const moduleDefinition = CAREER_MODULES.find(m => m.id === baseModuleId);
+              if (!moduleDefinition) return null;
 
               // Chat module only
               const chatProgress = progress as ModuleProgress;
@@ -56,8 +56,8 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
               const lastUpdated = chatProgress.lastUpdated;
 
               // Generate title from first user message (summary)
-              const firstUserMessage = messages?.find((msg: any) => msg.role === 'user');
-              const summaryTitle = firstUserMessage?.content.substring(0, 40) || module.title;
+              const firstUserMessage = messages?.find((msg) => msg.role === 'user');
+              const summaryTitle = firstUserMessage?.content.substring(0, 40) || moduleDefinition.title;
               const displayTitle = summaryTitle.length > 40 ? `${summaryTitle}...` : summaryTitle;
 
               const previewText = `${lastMessage?.role === 'assistant' ? 'みかたくん: ' : 'あなた: '}${lastMessagePreview}${lastMessage?.content.length > 60 ? '...' : ''}`;
@@ -78,17 +78,12 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
                   className="w-full px-6 py-3 hover:bg-gray-50 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl flex-shrink-0">{module.icon}</div>
+                    <div className="text-2xl flex-shrink-0">{moduleDefinition.icon}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <h3 className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">
                           {displayTitle}
                         </h3>
-                        {chatProgress.completed && (
-                          <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">
-                            完了
-                          </span>
-                        )}
                       </div>
                       <p className="text-xs text-gray-500 truncate">
                         {previewText}

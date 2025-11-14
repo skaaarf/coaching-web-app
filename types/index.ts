@@ -68,10 +68,95 @@ export interface ScaleQuestion {
   question: string;
 }
 
+export interface BranchMapNode {
+  label: string;
+  description: string;
+  tags?: string[];
+  eventType?: string;
+}
+
+export type BranchMapPath = BranchMapNode[];
+
+export type LifeSimulatorSelections = Record<string, string[]>;
+
+export type ParentSelfScaleResponses = Record<string, number>;
+
+export interface TimeMachineLetters {
+  pastLetter: string;
+  futureLetter: string;
+}
+
+export interface PersonaProfile {
+  name: string;
+  grade: string;
+  tagline: string;
+  description: string;
+  values?: string[];
+  concerns?: string[];
+  quote?: string;
+}
+
+export interface CareerTimelineEntry {
+  label: string;
+  description: string;
+  reason: string;
+}
+
+export interface CareerInterview {
+  question: string;
+  answer: string;
+}
+
+export interface CareerProfile {
+  id: string;
+  name: string;
+  kana: string;
+  avatar: string;
+  tags: string[];
+  headline: string;
+  summary: string;
+  keywords: string[];
+  introduction: string;
+  quote: string;
+  updatedAt: string;
+  score: number;
+  timeline: CareerTimelineEntry[];
+  interview: CareerInterview[];
+  lessons: string[];
+}
+
+export type InteractiveModuleId =
+  | 'value-battle'
+  | 'life-simulator'
+  | 'parent-self-scale'
+  | 'time-machine'
+  | 'branch-map'
+  | 'persona-dictionary'
+  | 'career-dictionary';
+
+export type InteractiveModuleDataMap = {
+  'value-battle': ValueBattleResult;
+  'life-simulator': LifeSimulatorSelections;
+  'parent-self-scale': ParentSelfScaleResponses;
+  'time-machine': TimeMachineLetters;
+  'branch-map': BranchMapPath;
+  'persona-dictionary': PersonaProfile;
+  'career-dictionary': CareerProfile;
+};
+
+export type InteractiveActivityData =
+  | InteractiveModuleDataMap[keyof InteractiveModuleDataMap]
+  | Record<string, unknown>;
+
+export type InteractiveState =
+  | { phase: 'activity'; activityData?: InteractiveActivityData }
+  | { phase: 'result'; data: InteractiveActivityData }
+  | { phase: 'dialogue'; data: InteractiveActivityData; messages: Message[] };
+
 export interface InteractiveModuleProgress {
   moduleId: string;
   sessionId: string;
-  data: any;
+  data: InteractiveState | null;
   createdAt: Date;
   lastUpdated: Date;
   completed: boolean;

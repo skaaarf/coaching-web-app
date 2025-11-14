@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, moduleContext } = await request.json();
+    const { messages } = await request.json();
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(

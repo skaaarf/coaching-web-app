@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
 import { Message, ValueAxes, AxisReasoning } from "@/types";
 
 const EXTRACT_VALUES_PROMPT = `あなたはキャリアカウンセラーです。

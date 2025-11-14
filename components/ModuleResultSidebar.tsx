@@ -1,25 +1,83 @@
 'use client';
 
+import type {
+  BranchMapPath,
+  CareerProfile,
+  InteractiveActivityData,
+  InteractiveModuleDataMap,
+  InteractiveModuleId,
+  LifeSimulatorSelections,
+  ParentSelfScaleResponses,
+  TimeMachineLetters,
+  ValueBattleResult
+} from '@/types';
+
+const MODULE_RESULT_IDS: readonly InteractiveModuleId[] = [
+  'value-battle',
+  'life-simulator',
+  'parent-self-scale',
+  'time-machine',
+  'branch-map',
+  'career-dictionary'
+] as const;
+
+type ResultModuleId = typeof MODULE_RESULT_IDS[number];
+
+const isResultModuleId = (moduleId: string): moduleId is ResultModuleId =>
+  MODULE_RESULT_IDS.includes(moduleId as ResultModuleId);
+
+const resolveDataForModule = <M extends ResultModuleId>(
+  moduleId: M,
+  rawData: InteractiveActivityData | undefined
+): InteractiveModuleDataMap[M] | null => {
+  if (!rawData) return null;
+
+  switch (moduleId) {
+    case 'value-battle':
+      return rawData as InteractiveModuleDataMap['value-battle'];
+    case 'life-simulator':
+      return rawData as InteractiveModuleDataMap['life-simulator'];
+    case 'parent-self-scale':
+      return rawData as InteractiveModuleDataMap['parent-self-scale'];
+    case 'time-machine':
+      return rawData as InteractiveModuleDataMap['time-machine'];
+    case 'branch-map':
+      return rawData as InteractiveModuleDataMap['branch-map'];
+    case 'career-dictionary':
+      return rawData as InteractiveModuleDataMap['career-dictionary'];
+    default:
+      return null;
+  }
+};
+
 interface Props {
   moduleId: string;
-  data: any;
+  data: InteractiveActivityData | undefined;
   onClose: () => void;
 }
 
 export default function ModuleResultSidebar({ moduleId, data, onClose }: Props) {
+  if (!isResultModuleId(moduleId)) {
+    return null;
+  }
+
+  const resolvedData = resolveDataForModule(moduleId, data);
+
   // Render different content based on module type
   const renderContent = () => {
     switch (moduleId) {
       case 'value-battle':
-        return <ValueBattleResultSummary results={data} />;
+        return <ValueBattleResultSummary results={(resolvedData as ValueBattleResult) || {}} />;
       case 'life-simulator':
-        return <LifeSimulatorResultSummary selections={data} />;
+        return <LifeSimulatorResultSummary selections={(resolvedData as LifeSimulatorSelections) || {}} />;
       case 'parent-self-scale':
-        return <ParentSelfScaleResultSummary responses={data} />;
+        return <ParentSelfScaleResultSummary responses={(resolvedData as ParentSelfScaleResponses) || {}} />;
       case 'time-machine':
-        return <TimeMachineResultSummary letters={data} />;
+        return <TimeMachineResultSummary letters={(resolvedData as TimeMachineLetters) || { pastLetter: '', futureLetter: '' }} />;
       case 'branch-map':
-        return <BranchMapResultSummary path={data} />;
+        return <BranchMapResultSummary path={(resolvedData as BranchMapPath) || []} />;
+      case 'career-dictionary':
+        return <CareerStoryResultSummary profile={(resolvedData as CareerProfile) || null} />;
       default:
         return null;
     }
@@ -49,7 +107,7 @@ export default function ModuleResultSidebar({ moduleId, data, onClose }: Props) 
   );
 }
 
-function ValueBattleResultSummary({ results }: { results: Record<string, number> }) {
+function ValueBattleResultSummary({ results }: { results: ValueBattleResult }) {
   // Analyze patterns
   const moneyRelated = ['年収800万・興味ない業界の大手企業', '年収1200万・週6勤務、休暇なし', '東京本社勤務・給与1.5倍', '年収1500万・社会貢献度低い', '営業成績で年収2000万可能・ノルマきつい'];
   const nonMoneyRelated = ['年収400万・憧れていた業界のベンチャー', '年収600万・週4勤務、長期休暇OK', '地元支社勤務・給与普通', '年収500万・社会問題の解決', '固定給700万・ノルマなし'];
@@ -102,7 +160,7 @@ function ValueBattleResultSummary({ results }: { results: Record<string, number>
   );
 }
 
-function LifeSimulatorResultSummary({ selections }: { selections: Record<string, string[]> }) {
+function LifeSimulatorResultSummary({ selections }: { selections: LifeSimulatorSelections }) {
   const aspectCounts: Record<string, number> = {};
   Object.values(selections).forEach(aspects => {
     aspects.forEach(aspect => {
@@ -175,7 +233,7 @@ function LifeSimulatorResultSummary({ selections }: { selections: Record<string,
   );
 }
 
-function ParentSelfScaleResultSummary({ responses }: { responses: Record<number, number> }) {
+function ParentSelfScaleResultSummary({ responses }: { responses: ParentSelfScaleResponses }) {
   const values = Object.values(responses);
   const average = values.reduce((sum, val) => sum + val, 0) / values.length;
 
@@ -204,7 +262,7 @@ function ParentSelfScaleResultSummary({ responses }: { responses: Record<number,
   );
 }
 
-function TimeMachineResultSummary({ letters }: { letters: { pastLetter: string; futureLetter: string } }) {
+function TimeMachineResultSummary({ letters }: { letters: TimeMachineLetters }) {
   return (
     <div className="space-y-4">
       <div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-xl p-4 border border-indigo-200">
@@ -231,7 +289,7 @@ function TimeMachineResultSummary({ letters }: { letters: { pastLetter: string; 
   );
 }
 
-function BranchMapResultSummary({ path }: { path: Array<{ label: string }> }) {
+function BranchMapResultSummary({ path }: { path: BranchMapPath }) {
   return (
     <div className="space-y-4">
       <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-4 border border-green-200">
@@ -246,6 +304,32 @@ function BranchMapResultSummary({ path }: { path: Array<{ label: string }> }) {
               <div className="ml-2 flex-grow text-gray-700">
                 {branch.label}
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CareerStoryResultSummary({ profile }: { profile: CareerProfile | null }) {
+  if (!profile) return null;
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-4 border border-indigo-200">
+        <div className="text-3xl mb-2">🧭</div>
+        <h4 className="font-bold text-gray-900 mb-1">{profile.name}</h4>
+        <p className="text-sm text-blue-700 font-semibold">{profile.headline}</p>
+        <p className="text-xs text-gray-600 mt-2">{profile.summary}</p>
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-gray-600 mb-2">人生年表</p>
+        <div className="space-y-2">
+          {profile.timeline.slice(0, 3).map(entry => (
+            <div key={entry.label} className="text-xs text-gray-700">
+              <span className="font-semibold text-blue-600 mr-2">{entry.label}</span>
+              {entry.description}
             </div>
           ))}
         </div>

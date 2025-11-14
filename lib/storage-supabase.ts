@@ -1,5 +1,15 @@
 import { supabase } from './supabase';
+import type { DBInteractiveModuleProgress, DBModuleProgress, StoredMessage } from './supabase';
+import type { InteractiveState, Message } from '@/types';
 import { ModuleProgress, UserInsights, InteractiveModuleProgress } from '@/types';
+
+const normalizeMessages = (rawMessages?: StoredMessage[] | null): Message[] => {
+  if (!rawMessages) return [];
+  return rawMessages.map((message) => ({
+    ...message,
+    timestamp: new Date(message.timestamp),
+  }));
+};
 
 // Module Progress functions
 export async function getModuleProgress(userId: string, moduleId: string): Promise<ModuleProgress | null> {
@@ -16,13 +26,14 @@ export async function getModuleProgress(userId: string, moduleId: string): Promi
       throw error;
     }
 
+    if (!data) {
+      return null;
+    }
+
     return {
       moduleId: data.module_id,
       sessionId: data.session_id || `session-${Date.now()}`,
-      messages: data.messages.map((m: any) => ({
-        ...m,
-        timestamp: new Date(m.timestamp)
-      })),
+      messages: normalizeMessages(data.messages),
       createdAt: data.created_at ? new Date(data.created_at) : new Date(),
       lastUpdated: new Date(data.last_updated),
       completed: data.completed,
@@ -67,14 +78,13 @@ export async function getAllModuleProgress(userId: string): Promise<Record<strin
 
     const progressMap: Record<string, ModuleProgress> = {};
 
-    data.forEach((item: any) => {
+    const typedData = (data || []) as DBModuleProgress[];
+
+    typedData.forEach((item) => {
       progressMap[item.module_id] = {
         moduleId: item.module_id,
         sessionId: item.session_id || `session-${Date.now()}`,
-        messages: item.messages.map((m: any) => ({
-          ...m,
-          timestamp: new Date(m.timestamp)
-        })),
+        messages: normalizeMessages(item.messages),
         createdAt: item.created_at ? new Date(item.created_at) : new Date(),
         lastUpdated: new Date(item.last_updated),
         completed: item.completed,
@@ -104,10 +114,14 @@ export async function getInteractiveModuleProgress(userId: string, moduleId: str
       throw error;
     }
 
+    if (!data) {
+      return null;
+    }
+
     return {
       moduleId: data.module_id,
       sessionId: data.session_id || `session-${Date.now()}`,
-      data: data.data,
+      data: (data.data as InteractiveState) || null,
       createdAt: data.created_at ? new Date(data.created_at) : new Date(),
       lastUpdated: new Date(data.last_updated),
       completed: data.completed
@@ -149,12 +163,13 @@ export async function getAllInteractiveModuleProgress(userId: string): Promise<R
     if (error) throw error;
 
     const progressMap: Record<string, InteractiveModuleProgress> = {};
+    const typedData = (data || []) as DBInteractiveModuleProgress[];
 
-    data.forEach((item: any) => {
+    typedData.forEach((item) => {
       progressMap[item.module_id] = {
         moduleId: item.module_id,
         sessionId: item.session_id || `session-${Date.now()}`,
-        data: item.data,
+        data: (item.data as InteractiveState) || null,
         createdAt: item.created_at ? new Date(item.created_at) : new Date(),
         lastUpdated: new Date(item.last_updated),
         completed: item.completed

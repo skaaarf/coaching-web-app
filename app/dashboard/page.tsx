@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import type { User } from '@supabase/supabase-js';
 import { useStorage } from '@/hooks/useStorage';
-import { InteractiveModuleProgress } from '@/types';
+import { InteractiveModuleProgress, Message } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
 import { supabase } from '@/lib/supabase';
 
@@ -13,7 +14,7 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 export default function DashboardPage() {
   const router = useRouter();
   const storage = useStorage();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [allProgress, setAllProgress] = useState<Record<string, InteractiveModuleProgress>>({});
   const [loading, setLoading] = useState(true);
@@ -77,9 +78,9 @@ export default function DashboardPage() {
 
   // Filter modules that have dialogue history
   const modulesWithDialogue = Object.entries(allProgress)
-    .filter(([moduleId, progress]) => {
-      const data = progress.data as any;
-      return data.phase === 'dialogue' && data.messages && data.messages.length > 0;
+    .filter(([, progress]) => {
+      const data = progress.data;
+      return data?.phase === 'dialogue' && data.messages && data.messages.length > 0;
     })
     .sort((a, b) => {
       // Sort by last updated (most recent first)
@@ -88,8 +89,11 @@ export default function DashboardPage() {
 
   // Calculate statistics
   const totalMessages = modulesWithDialogue.reduce((sum, [, progress]) => {
-    const data = progress.data as any;
-    return sum + (data.messages?.length || 0);
+    const data = progress.data;
+    if (data?.phase !== 'dialogue' || !data.messages) {
+      return sum;
+    }
+    return sum + data.messages.length;
   }, 0);
 
   const completedModules = modulesWithDialogue.filter(([, progress]) => progress.completed).length;
@@ -209,17 +213,20 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-4">
               {modulesWithDialogue.map(([moduleId, progress]) => {
-                const module = CAREER_MODULES.find(m => m.id === moduleId);
-                if (!module) return null;
+                const moduleDefinition = CAREER_MODULES.find(m => m.id === moduleId);
+                if (!moduleDefinition) return null;
 
-                const data = progress.data as any;
-                const messageCount = data.messages?.length || 0;
-                const lastMessage = data.messages?.[data.messages.length - 1];
+                const data = progress.data;
+                if (!data || data.phase !== 'dialogue' || !data.messages) return null;
+
+                const messages = data.messages as Message[];
+                const messageCount = messages.length;
+                const lastMessage = messages[messages.length - 1];
                 const lastMessagePreview = lastMessage?.content.substring(0, 200) || '';
 
                 // Calculate user vs assistant message counts
-                const userMessages = data.messages?.filter((m: any) => m.role === 'user').length || 0;
-                const assistantMessages = data.messages?.filter((m: any) => m.role === 'assistant').length || 0;
+                const userMessages = messages.filter((message) => message.role === 'user').length;
+                const assistantMessages = messages.filter((message) => message.role === 'assistant').length;
 
                 return (
                   <div
@@ -228,10 +235,10 @@ export default function DashboardPage() {
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-start gap-4 flex-1">
-                        <div className="text-5xl">{module.icon}</div>
+                        <div className="text-5xl">{moduleDefinition.icon}</div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-gray-900 mb-2 text-lg">
-                            {module.title}
+                            {moduleDefinition.title}
                           </h3>
                           <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                             <span className="flex items-center gap-1">
@@ -261,11 +268,6 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </div>
-                      {progress.completed && (
-                        <span className="flex-shrink-0 inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-green-100 text-green-800 border border-green-300">
-                          ✓ 完了
-                        </span>
-                      )}
                     </div>
 
                     {/* Last message preview */}

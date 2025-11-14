@@ -24,7 +24,6 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Separate messages into older and latest two
@@ -32,47 +31,50 @@ export default function ChatInterface({
   const latestMessages = messages.length > 2 ? messages.slice(-2) : messages;
 
   // Fetch suggested questions based on conversation
-  const fetchSuggestedQuestions = async () => {
-    if (messages.length === 0 || isLoading) return;
-
-    setLoadingSuggestions(true);
-    try {
-      const response = await fetch('/api/suggest-questions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages,
-          moduleContext
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestedQuestions(data.questions || []);
-      } else {
-        setSuggestedQuestions([]);
-      }
-    } catch (error) {
-      console.error('Error fetching suggested questions:', error);
-      setSuggestedQuestions([]);
-    } finally {
-      setLoadingSuggestions(false);
-    }
-  };
-
   useEffect(() => {
     // Scroll to bottom whenever messages or loading state changes
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
   useEffect(() => {
-    // Generate new questions when conversation updates (but not while AI is responding)
-    if (messages.length > 0 && !isLoading) {
-      fetchSuggestedQuestions();
-    }
-  }, [messages.length, isLoading]);
+    if (messages.length === 0 || isLoading) return;
+
+    let isSubscribed = true;
+    const fetchSuggestions = async () => {
+      try {
+        const response = await fetch('/api/suggest-questions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages,
+            moduleContext
+          }),
+        });
+
+        if (!isSubscribed) return;
+
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestedQuestions(data.questions || []);
+        } else {
+          setSuggestedQuestions([]);
+        }
+      } catch (error) {
+        if (isSubscribed) {
+          console.error('Error fetching suggested questions:', error);
+          setSuggestedQuestions([]);
+        }
+      }
+    };
+
+    fetchSuggestions();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [isLoading, messages, moduleContext]);
 
   useEffect(() => {
     // Scroll to bottom when suggestions are updated

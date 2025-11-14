@@ -95,10 +95,20 @@ export default function Home() {
     }
   };
 
+  const instantModules = new Set(['persona-dictionary', 'career-dictionary']);
+
   const handleModuleClick = async (moduleId: string, moduleType: 'chat' | 'interactive') => {
     console.log('=== handleModuleClick ===');
     console.log('moduleId:', moduleId);
     console.log('moduleType:', moduleType);
+
+    if (instantModules.has(moduleId)) {
+      const path = moduleType === 'chat'
+        ? `/module/${moduleId}`
+        : `/interactive/${moduleId}`;
+      router.push(path);
+      return;
+    }
 
     // Debug: Check localStorage directly
     const sessionsKey = 'mikata-sessions';
@@ -127,16 +137,20 @@ export default function Home() {
 
   const handleContinue = (sessionId?: string) => {
     if (!selectedModule) return;
-    const module = CAREER_MODULES.find(m => m.id === selectedModule);
-    if (!module) return;
+    const moduleDefinition = CAREER_MODULES.find(m => m.id === selectedModule);
+    if (!moduleDefinition) return;
 
     if (sessionId) {
       // Load specific session
-      const path = module.moduleType === 'chat' ? `/module/${selectedModule}?sessionId=${sessionId}` : `/interactive/${selectedModule}?sessionId=${sessionId}`;
+      const path = moduleDefinition.moduleType === 'chat'
+        ? `/module/${selectedModule}?sessionId=${sessionId}`
+        : `/interactive/${selectedModule}?sessionId=${sessionId}`;
       router.push(path);
     } else {
       // Load latest session
-      const path = module.moduleType === 'chat' ? `/module/${selectedModule}` : `/interactive/${selectedModule}`;
+      const path = moduleDefinition.moduleType === 'chat'
+        ? `/module/${selectedModule}`
+        : `/interactive/${selectedModule}`;
       router.push(path);
     }
     setShowModuleDialog(false);
@@ -144,14 +158,14 @@ export default function Home() {
 
   const handleStartNew = async () => {
     if (!selectedModule) return;
-    const module = CAREER_MODULES.find(m => m.id === selectedModule);
-    if (!module) return;
+    const moduleDefinition = CAREER_MODULES.find(m => m.id === selectedModule);
+    if (!moduleDefinition) return;
 
     // Generate new sessionId
     const newSessionId = `session-${Date.now()}`;
 
     // Navigate to module with new sessionId
-    const path = module.moduleType === 'chat'
+    const path = moduleDefinition.moduleType === 'chat'
       ? `/module/${selectedModule}?sessionId=${newSessionId}`
       : `/interactive/${selectedModule}?sessionId=${newSessionId}`;
     router.push(path);
@@ -282,23 +296,23 @@ export default function Home() {
           </h2>
           <div className="space-y-4">
             {/* Chat module first */}
-            {CAREER_MODULES.filter(m => m.moduleType === 'chat').map(module => (
+            {CAREER_MODULES.filter(m => m.moduleType === 'chat').map(moduleDefinition => (
               <ModuleCard
-                key={module.id}
-                module={module}
-                progress={allProgress[module.id]}
-                interactiveProgress={allInteractiveProgress[module.id]}
-                onClick={() => handleModuleClick(module.id, module.moduleType || 'chat')}
+                key={moduleDefinition.id}
+                module={moduleDefinition}
+                progress={allProgress[moduleDefinition.id]}
+                interactiveProgress={allInteractiveProgress[moduleDefinition.id]}
+                onClick={() => handleModuleClick(moduleDefinition.id, moduleDefinition.moduleType || 'chat')}
               />
             ))}
             {/* Then game modules */}
-            {CAREER_MODULES.filter(m => m.moduleType === 'interactive').map(module => (
+            {CAREER_MODULES.filter(m => m.moduleType === 'interactive').map(moduleDefinition => (
               <ModuleCard
-                key={module.id}
-                module={module}
-                progress={allProgress[module.id]}
-                interactiveProgress={allInteractiveProgress[module.id]}
-                onClick={() => handleModuleClick(module.id, module.moduleType || 'interactive')}
+                key={moduleDefinition.id}
+                module={moduleDefinition}
+                progress={allProgress[moduleDefinition.id]}
+                interactiveProgress={allInteractiveProgress[moduleDefinition.id]}
+                onClick={() => handleModuleClick(moduleDefinition.id, moduleDefinition.moduleType || 'interactive')}
               />
             ))}
           </div>
@@ -312,8 +326,8 @@ export default function Home() {
 
       {/* Module Dialog */}
       {showModuleDialog && selectedModule && (() => {
-        const module = CAREER_MODULES.find(m => m.id === selectedModule);
-        const isInteractive = module?.moduleType === 'interactive';
+        const moduleDefinition = CAREER_MODULES.find(m => m.id === selectedModule);
+        const isInteractive = moduleDefinition?.moduleType === 'interactive';
         const sessions = isInteractive ? interactiveModuleSessions : moduleSessions;
         const hasSessions = sessions.length > 0;
 
@@ -329,7 +343,7 @@ export default function Home() {
               {/* Header */}
               <div className="p-6 border-b border-gray-200 flex-shrink-0">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {module?.title}
+                  {moduleDefinition?.title}
                 </h3>
                 <p className="text-gray-600 text-sm">
                   {hasSessions ? '新しく始めるか、過去のプレイから選んでください' : 'このモジュールを始めますか？'}
@@ -371,16 +385,9 @@ export default function Home() {
                                 <p className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-700">
                                   {displayTitle}
                                 </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <p className="text-xs text-gray-500">
-                                    {session.messages?.length || 0}件のメッセージ
-                                  </p>
-                                  {session.completed && (
-                                    <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">
-                                      完了
-                                    </span>
-                                  )}
-                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {session.messages?.length || 0}件のメッセージ
+                                </p>
                               </div>
                               <div className="text-right flex-shrink-0">
                                 <p className="text-xs text-gray-400">
@@ -408,13 +415,7 @@ export default function Home() {
                                 <p className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-700">
                                   {sessionTitle}
                                 </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  {session.completed && (
-                                    <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">
-                                      完了
-                                    </span>
-                                  )}
-                                </div>
+
                               </div>
                               <div className="text-right flex-shrink-0">
                                 <p className="text-xs text-gray-400">

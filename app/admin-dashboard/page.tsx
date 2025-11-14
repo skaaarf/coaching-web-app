@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ModuleProgress, InteractiveModuleProgress, ValueSnapshot } from '@/types';
+import type { InteractiveState, Message } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
-import { supabase } from '@/lib/supabase';
+import { supabase, type DBInteractiveModuleProgress, type DBModuleProgress, type StoredMessage } from '@/lib/supabase';
 import { useAuth } from '@/components/SessionProvider';
 
 interface SessionData {
@@ -25,6 +25,16 @@ interface SessionData {
   userEmail?: string;
 }
 
+type SessionFilterType = 'all' | 'chat' | 'interactive';
+
+type ChatProgressRow = DBModuleProgress & {
+  users?: { email?: string | null } | null;
+};
+
+type InteractiveProgressRow = DBInteractiveModuleProgress & {
+  users?: { email?: string | null } | null;
+};
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { userEmail } = useAuth();
@@ -32,7 +42,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterModule, setFilterModule] = useState<string>('all');
-  const [filterType, setFilterType] = useState<'all' | 'chat' | 'interactive'>('all');
+  const [filterType, setFilterType] = useState<SessionFilterType>('all');
   const [filterUser, setFilterUser] = useState<string>('all');
   const [selectedSession, setSelectedSession] = useState<SessionData | null>(null);
 
@@ -68,23 +78,23 @@ export default function AdminDashboardPage() {
       if (chatError) {
         console.error('Failed to load chat data:', chatError);
       } else if (chatData) {
-        chatData.forEach((progress: any) => {
-          const module = CAREER_MODULES.find(m => m.id === progress.module_id);
-          if (!module) return;
+        (chatData as ChatProgressRow[]).forEach((progress) => {
+          const moduleDefinition = CAREER_MODULES.find(m => m.id === progress.module_id);
+          if (!moduleDefinition) return;
 
-          const messages = progress.messages || [];
+          const messages = (progress.messages as StoredMessage[] | null | undefined) || [];
           if (messages.length === 0) return;
 
-          const userMessages = messages.filter((m: any) => m.role === 'user');
-          const aiMessages = messages.filter((m: any) => m.role === 'assistant');
+          const userMessages = messages.filter((message) => message.role === 'user');
+          const aiMessages = messages.filter((message) => message.role === 'assistant');
           const firstUserMessage = userMessages[0]?.content || '';
           const lastMessage = messages[messages.length - 1]?.content || '';
 
           sessionList.push({
             type: 'chat',
             moduleId: progress.module_id,
-            moduleName: module.title,
-            moduleIcon: module.icon,
+            moduleName: moduleDefinition.title,
+            moduleIcon: moduleDefinition.icon,
             sessionId: progress.id,
             messageCount: messages.length,
             userMessageCount: userMessages.length,
@@ -113,24 +123,24 @@ export default function AdminDashboardPage() {
       if (interactiveError) {
         console.error('Failed to load interactive data:', interactiveError);
       } else if (interactiveData) {
-        interactiveData.forEach((progress: any) => {
-          const module = CAREER_MODULES.find(m => m.id === progress.module_id);
-          if (!module) return;
+        (interactiveData as InteractiveProgressRow[]).forEach((progress) => {
+          const moduleDefinition = CAREER_MODULES.find(m => m.id === progress.module_id);
+          if (!moduleDefinition) return;
 
-          const data = progress.data || {};
-          const messages = data.messages || [];
+          const data = (progress.data as InteractiveState | null) || null;
+          const messages: Message[] = data?.phase === 'dialogue' && data.messages ? data.messages : [];
           if (messages.length === 0) return;
 
-          const userMessages = messages.filter((m: any) => m.role === 'user');
-          const aiMessages = messages.filter((m: any) => m.role === 'assistant');
+          const userMessages = messages.filter((message) => message.role === 'user');
+          const aiMessages = messages.filter((message) => message.role === 'assistant');
           const firstUserMessage = userMessages[0]?.content || '';
           const lastMessage = messages[messages.length - 1]?.content || '';
 
           sessionList.push({
             type: 'interactive',
             moduleId: progress.module_id,
-            moduleName: module.title,
-            moduleIcon: module.icon,
+            moduleName: moduleDefinition.title,
+            moduleIcon: moduleDefinition.icon,
             sessionId: progress.id,
             messageCount: messages.length,
             userMessageCount: userMessages.length,
@@ -291,7 +301,7 @@ export default function AdminDashboardPage() {
               <label className="block text-xs font-medium text-gray-700 mb-1">🎯 タイプ</label>
               <select
                 value={filterType}
-                onChange={(e) => setFilterType(e.target.value as any)}
+                onChange={(e) => setFilterType(e.target.value as SessionFilterType)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">全て</option>

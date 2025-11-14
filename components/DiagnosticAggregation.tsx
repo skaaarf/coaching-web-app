@@ -1,6 +1,12 @@
 'use client';
 
-import { InteractiveModuleProgress } from '@/types';
+import {
+  InteractiveModuleProgress,
+  InteractiveState,
+  ValueBattleResult,
+  LifeSimulatorSelections,
+  ParentSelfScaleResponses
+} from '@/types';
 
 interface Props {
   interactiveProgress: Record<string, InteractiveModuleProgress>;
@@ -18,9 +24,9 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
 
   // Value Battle - show if result or dialogue phase
   if (interactiveProgress['value-battle']) {
-    const data = interactiveProgress['value-battle'].data as any;
-    if (data.phase === 'dialogue' || data.phase === 'result') {
-      const results = data.data as Record<string, number>;
+    const data = interactiveProgress['value-battle'].data as InteractiveState | null;
+    if (data && (data.phase === 'dialogue' || data.phase === 'result')) {
+      const results = (data.data as ValueBattleResult) || {};
 
       // Analyze patterns
       const moneyRelated = ['年収800万・興味ない業界の大手企業', '年収1200万・週6勤務、休暇なし', '東京本社勤務・給与1.5倍', '年収1500万・社会貢献度低い', '営業成績で年収2000万可能・ノルマきつい'];
@@ -65,7 +71,6 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
           findings.push('⚖️ ワークライフバランス重視: 長時間労働や過度なプレッシャーを避け、プライベートの時間や心の余裕を大切にしたいという価値観が見られます。仕事は人生の一部であり、全てではないという考え方を持っているようです。');
         }
 
-        const locationChoices = ['地元支社勤務・給与普通', '東京本社勤務・給与1.5倍'];
         const localChoice = results['地元支社勤務・給与普通'];
         const tokyoChoice = results['東京本社勤務・給与1.5倍'];
         if (localChoice && !tokyoChoice) {
@@ -87,9 +92,9 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
 
   // Life Simulator - show if result or dialogue phase
   if (interactiveProgress['life-simulator']) {
-    const data = interactiveProgress['life-simulator'].data as any;
-    if (data.phase === 'dialogue' || data.phase === 'result') {
-      const selections = data.data as Record<string, string[]>;
+    const data = interactiveProgress['life-simulator'].data as InteractiveState | null;
+    if (data && (data.phase === 'dialogue' || data.phase === 'result')) {
+      const selections = (data.data as LifeSimulatorSelections) || {};
 
       const pathCounts = {
         A: selections.A?.length || 0,
@@ -131,7 +136,7 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
       }
 
       // 選択の多様性分析
-      const selectedPaths = Object.entries(pathCounts).filter(([_, count]) => count > 0).length;
+      const selectedPaths = Object.entries(pathCounts).filter(([, count]) => count > 0).length;
       if (selectedPaths >= 3) {
         findings.push(`🌈 多様なキャリアへの興味: ${selectedPaths}つの異なるキャリアパスに関心を示しており、柔軟で多面的な価値観を持っています。一つの道に絞り込むのではなく、様々な可能性を探りながら自分に合った道を見つけたいという姿勢が見られます。`);
       } else if (selectedPaths === 1) {
@@ -150,9 +155,9 @@ export default function DiagnosticAggregation({ interactiveProgress }: Props) {
 
   // Parent Self Scale - show if result or dialogue phase
   if (interactiveProgress['parent-self-scale']) {
-    const data = interactiveProgress['parent-self-scale'].data as any;
-    if (data.phase === 'dialogue' || data.phase === 'result') {
-      const responses = data.data as Record<number, number>;
+    const data = interactiveProgress['parent-self-scale'].data as InteractiveState | null;
+    if (data && (data.phase === 'dialogue' || data.phase === 'result')) {
+      const responses = (data.data as ParentSelfScaleResponses) || {};
       const values = Object.values(responses);
       const average = values.reduce((sum, val) => sum + val, 0) / values.length;
 

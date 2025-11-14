@@ -36,14 +36,9 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5);
 
-  const topValue = sortedResults[0];
-
   // Generate comprehensive insights based on selection patterns
   const generateInsights = () => {
     const insights: string[] = [];
-
-    // Analyze top values
-    const top3 = sortedResults.slice(0, 3).map(([v]) => v);
 
     // Pattern 1: 金銭 vs 非金銭
     const moneyRelated = [
@@ -246,35 +241,6 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
   const comprehensiveInsights = generateInsights();
   const explorationQuestions = generateQuestions();
 
-  // Prepare data for pie chart
-  const total = sortedResults.reduce((sum, [, count]) => sum + count, 0);
-  const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
-
-  // Calculate pie chart segments
-  let currentAngle = -90; // Start from top
-  const pieSegments = sortedResults.map(([value, count], index) => {
-    const percentage = (count / total) * 100;
-    const angle = (percentage / 100) * 360;
-    const startAngle = currentAngle;
-    const endAngle = currentAngle + angle;
-    currentAngle = endAngle;
-
-    // Convert to radians
-    const startRad = (startAngle * Math.PI) / 180;
-    const endRad = (endAngle * Math.PI) / 180;
-
-    // Calculate arc path
-    const x1 = 50 + 45 * Math.cos(startRad);
-    const y1 = 50 + 45 * Math.sin(startRad);
-    const x2 = 50 + 45 * Math.cos(endRad);
-    const y2 = 50 + 45 * Math.sin(endRad);
-
-    const largeArc = angle > 180 ? 1 : 0;
-    const path = `M 50 50 L ${x1} ${y1} A 45 45 0 ${largeArc} 1 ${x2} ${y2} Z`;
-
-    return { value, count, percentage, path, color: colors[index] };
-  });
-
   const handleShare = async () => {
     const shareText = `価値観バトルの結果！\n\n${sortedResults
       .map(([value, count], i) => `${i + 1}位: ${value} (${count}回選択)`)
@@ -286,7 +252,7 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
           title: '価値観バトルの結果',
           text: shareText
         });
-      } catch (error) {
+      } catch {
         console.log('Share cancelled');
       }
     } else {
@@ -295,7 +261,7 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
         await navigator.clipboard.writeText(shareText);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-      } catch (error) {
+      } catch {
         console.error('Failed to copy:', error);
       }
     }
@@ -382,8 +348,8 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
                 <div className="text-gray-800 leading-relaxed text-sm">
                   <ReactMarkdown
                     components={{
-                      p: ({node, ...props}) => <p className="mb-0" {...props} />,
-                      strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />
+                      p: (props) => <p className="mb-0" {...props} />,
+                      strong: (props) => <strong className="font-bold text-gray-900" {...props} />
                     }}
                   >
                     {insight}

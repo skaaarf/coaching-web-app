@@ -1,10 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
-import { Message, ModuleProgress, InteractiveModuleProgress, ValueSnapshot } from '@/types';
+import {
+  Message,
+  ModuleProgress,
+  InteractiveModuleProgress,
+  ValueSnapshot,
+  InteractiveState,
+  InteractiveActivityData,
+  ValueBattleResult,
+  LifeSimulatorSelections,
+  ParentSelfScaleResponses,
+  TimeMachineLetters,
+  BranchMapPath,
+  PersonaProfile,
+  CareerProfile
+} from '@/types';
 import ValueBattle from '@/components/ValueBattle';
 import ValueBattleResultView from '@/components/ValueBattleResult';
 import LifeSimulator from '@/components/LifeSimulator';
@@ -14,16 +28,11 @@ import ParentSelfScaleResult from '@/components/ParentSelfScaleResult';
 import TimeMachine from '@/components/TimeMachine';
 import BranchMap from '@/components/BranchMap';
 import PersonaDictionary from '@/components/PersonaDictionary';
-import CareerDictionary from '@/components/CareerDictionary';
+import CareerDictionary, { CareerDictionaryHandle } from '@/components/CareerDictionary';
 import ChatInterface from '@/components/ChatInterface';
 import ModuleResultSidebar from '@/components/ModuleResultSidebar';
 import DialogueHistorySidebar from '@/components/DialogueHistorySidebar';
 import AnalyzingAnimation from '@/components/AnalyzingAnimation';
-
-type InteractiveState =
-  | { phase: 'activity'; activityData?: any }
-  | { phase: 'result'; data: any }
-  | { phase: 'dialogue'; data: any; messages: Message[] };
 
 export default function InteractiveModulePage() {
   const params = useParams();
@@ -36,7 +45,7 @@ export default function InteractiveModulePage() {
   const sessionId = searchParams?.get('sessionId') || undefined;
   const urlDialogueSessionId = searchParams?.get('dialogueSessionId') || undefined;
 
-  const [module, setModule] = useState(() => getModuleById(moduleId));
+  const moduleDefinition = useMemo(() => getModuleById(moduleId), [moduleId]);
   const [currentSessionId, setCurrentSessionId] = useState<string>(sessionId || '');
   const [dialogueSessionId, setDialogueSessionId] = useState<string>(''); // Separate session for dialogue phase
   const [state, setState] = useState<InteractiveState>({ phase: 'activity' });
@@ -50,9 +59,10 @@ export default function InteractiveModulePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [lastAnalyzedMessageCount, setLastAnalyzedMessageCount] = useState(0);
+  const careerDictionaryRef = useRef<CareerDictionaryHandle | null>(null);
 
   useEffect(() => {
-    if (!module || module.moduleType !== 'interactive') {
+    if (!moduleDefinition || moduleDefinition.moduleType !== 'interactive') {
       router.push('/');
       return;
     }
@@ -129,8 +139,7 @@ export default function InteractiveModulePage() {
     };
 
     loadProgress();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [module, router, moduleId, storage, sessionId, urlDialogueSessionId]);
+  }, [moduleDefinition, router, moduleId, storage, sessionId, urlDialogueSessionId]);
 
   const saveProgress = async (newState: InteractiveState, completed: boolean = false) => {
     console.log('=== saveProgress (Interactive) ===');
@@ -155,17 +164,22 @@ export default function InteractiveModulePage() {
     console.log('Progress saved');
   };
 
-  const handleActivityComplete = (data: any) => {
+  const handleActivityComplete = (data: InteractiveActivityData) => {
     const newState = { phase: 'result' as const, data };
     setState(newState);
     saveProgress(newState);
   };
 
-  const handleStartDialogue = async (dataOrQuestion?: any) => {
+  const handleStartDialogue = async (dataOrQuestion?: InteractiveActivityData | string) => {
     // Check if the argument is a question string
     const isQuestion = typeof dataOrQuestion === 'string';
     const initialQuestion = isQuestion ? dataOrQuestion : undefined;
-    const activityData = !isQuestion && state.phase === 'result' ? state.data : (isQuestion && state.phase === 'dialogue' ? state.data : (isQuestion && state.phase === 'result' ? state.data : dataOrQuestion));
+    let activityData: InteractiveActivityData | undefined =
+      state.phase === 'result' || state.phase === 'dialogue' ? state.data : undefined;
+
+    if (!isQuestion && dataOrQuestion && typeof dataOrQuestion !== 'string') {
+      activityData = dataOrQuestion;
+    }
 
     // If a question is provided, always start a new dialogue
     if (!initialQuestion) {
@@ -206,7 +220,7 @@ export default function InteractiveModulePage() {
         // User selected a specific question from the result page
         contextMessage = initialQuestion;
       } else if (moduleId === 'value-battle') {
-        const results = activityData as Record<string, number>;
+        const results = (activityData as ValueBattleResult) || {};
         const sortedResults = Object.entries(results)
           .sort(([, a], [, b]) => b - a)
           .slice(0, 5);
@@ -214,12 +228,12 @@ export default function InteractiveModulePage() {
           .map(([value, count], i) => `${i + 1}位: ${value} (${count}回選択)`)
           .join('\n')}`;
       } else if (moduleId === 'life-simulator') {
-        const selections = activityData as Record<string, string[]>;
+        const selections = (activityData as LifeSimulatorSelections) || {};
         contextMessage = `人生シミュレーターの選択：\n${Object.entries(selections)
           .map(([path, aspects]) => `${path}の人生: ${aspects.join(', ')}`)
           .join('\n')}`;
       } else if (moduleId === 'parent-self-scale') {
-        const responses = activityData as Record<number, number>;
+        const responses = (activityData as ParentSelfScaleResponses) || {};
         const average =
           Object.values(responses).reduce((sum, val) => sum + val, 0) /
           Object.values(responses).length;
@@ -227,18 +241,13 @@ export default function InteractiveModulePage() {
           average
         )}% (0%=親の期待, 100%=自分の気持ち)`;
       } else if (moduleId === 'time-machine') {
-        const { pastLetter, futureLetter } = activityData as {
-          pastLetter: string;
-          futureLetter: string;
+        const { pastLetter, futureLetter } = (activityData as TimeMachineLetters) || {
+          pastLetter: '',
+          futureLetter: '',
         };
         contextMessage = `タイムマシンで書いた手紙：\n\n[1年前の自分へ]\n${pastLetter}\n\n[10年後の自分から]\n${futureLetter}`;
       } else if (moduleId === 'branch-map') {
-        const path = activityData as Array<{
-          label: string;
-          description: string;
-          tags?: string[];
-          eventType?: string;
-        }>;
+        const path = (activityData as BranchMapPath) || [];
 
         // Analyze pattern
         const tagCounts: Record<string, number> = {};
@@ -281,7 +290,12 @@ ${path.map((b, i) => `${i}. ${b.label}`).join('\n')}
 
 まずは、これらの振り返りテーマについて、一緒に考えていきましょう。`;
       } else if (moduleId === 'persona-dictionary') {
-        const persona = activityData as any;
+        const persona = (activityData as PersonaProfile) || {
+          name: '',
+          grade: '',
+          tagline: '',
+          description: '',
+        };
         contextMessage = `心の図鑑で「${persona.name}（${persona.grade}）」を選びました。
 
 【${persona.name}のプロフィール】
@@ -300,29 +314,45 @@ ${persona.concerns?.join('、')}
 
 このキャラクターについて、一緒に話しましょう。`;
       } else if (moduleId === 'career-dictionary') {
-        const career = activityData as any;
-        contextMessage = `進路図鑑で「${career.title}」を選びました。
+        const career = (activityData as CareerProfile) || {
+          name: '',
+          headline: '',
+          summary: '',
+          timeline: [],
+          interview: [],
+          tags: [],
+          quote: '',
+          introduction: '',
+          score: 0,
+          kana: '',
+          avatar: '',
+          keywords: [],
+          updatedAt: '',
+          lessons: [],
+          id: ''
+        };
+        const timelineSnippet = (career.timeline || [])
+          .map(entry => `${entry.label}: ${entry.description}`)
+          .join('\n');
+        const interviewSnippet = (career.interview || [])
+          .slice(0, 2)
+          .map(item => `${item.question}\n${item.answer}`)
+          .join('\n\n');
+        contextMessage = `進路図鑑で「${career.name}（${career.headline}）」のストーリーを読みました。
 
-【${career.title}について】
-${career.tagline}
+【紹介文】
+${career.summary}
 
-${career.description}
+【感じたこと】
+${career.introduction}
 
-【必要なスキル】
-${career.skills?.join('、')}
+【人生年表】
+${timelineSnippet}
 
-【年収の目安】
-- 初任給: ${career.salary?.entry}
-- 中堅: ${career.salary?.mid}
-- ベテラン: ${career.salary?.senior}
+【印象に残ったQ&A】
+${interviewSnippet}
 
-【メリット】
-${career.pros?.slice(0, 3).join('、')}
-
-【デメリット】
-${career.cons?.slice(0, 3).join('、')}
-
-この職業について、一緒に考えていきましょう。`;
+このストーリーについて、一緒に振り返りましょう。`;
       }
 
       // Call API for initial message
@@ -338,7 +368,7 @@ ${career.cons?.slice(0, 3).join('、')}
               content: contextMessage,
             },
           ],
-          systemPrompt: module?.systemPrompt,
+          systemPrompt: moduleDefinition?.systemPrompt,
         }),
       });
 
@@ -425,7 +455,7 @@ ${career.cons?.slice(0, 3).join('、')}
         },
         body: JSON.stringify({
           messages: updatedMessages,
-          systemPrompt: module?.systemPrompt,
+          systemPrompt: moduleDefinition?.systemPrompt,
         }),
       });
 
@@ -560,14 +590,21 @@ ${career.cons?.slice(0, 3).join('、')}
     }
   };
 
-  const handleMarkComplete = () => {
-    saveProgress(state, true);
-    router.push('/');
-  };
-
-  if (!module) {
+  if (!moduleDefinition) {
     return null;
   }
+
+  const handleHeaderBack = () => {
+    if (moduleId === 'career-dictionary' && careerDictionaryRef.current?.canGoBack()) {
+      careerDictionaryRef.current.goBack();
+      return;
+    }
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -578,7 +615,7 @@ ${career.cons?.slice(0, 3).join('、')}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <button
-                onClick={() => router.push('/')}
+                onClick={handleHeaderBack}
                 className="text-gray-600 hover:text-gray-900 active:text-gray-900 transition-colors flex-shrink-0 p-2 -ml-2 touch-manipulation"
                 aria-label="ホームに戻る"
                 type="button"
@@ -599,15 +636,26 @@ ${career.cons?.slice(0, 3).join('、')}
               </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl flex-shrink-0">{module.icon}</span>
+                  <span className="text-xl flex-shrink-0">{moduleDefinition.icon}</span>
                   <h1 className="text-base font-semibold text-gray-900 truncate">
-                    {module.title}
+                    {moduleDefinition.title}
                   </h1>
                 </div>
-                <p className="text-xs text-gray-500 block truncate">{module.description}</p>
+                <p className="text-xs text-gray-500 block truncate">{moduleDefinition.description}</p>
               </div>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={() => router.push('/')}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                title="ホームへ戻る"
+                aria-label="ホームへ戻る"
+                type="button"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10l9-7 9 7v10a2 2 0 01-2 2h-4a2 2 0 01-2-2V13H9v7a2 2 0 01-2 2H3z" />
+                </svg>
+              </button>
               {state.phase === 'dialogue' && (
                 <>
                   <button
@@ -712,7 +760,10 @@ ${career.cons?.slice(0, 3).join('、')}
                 <PersonaDictionary onSelectPersona={(persona) => handleActivityComplete(persona)} />
               )}
               {moduleId === 'career-dictionary' && (
-                <CareerDictionary onSelectCareer={(career) => handleActivityComplete(career)} />
+                <CareerDictionary
+                  ref={careerDictionaryRef}
+                  onSelectCareer={(career) => handleActivityComplete(career)}
+                />
               )}
             </>
           )}
@@ -736,6 +787,58 @@ ${career.cons?.slice(0, 3).join('、')}
                   responses={state.data}
                   onStartDialogue={() => handleStartDialogue()}
                 />
+              )}
+              {moduleId === 'career-dictionary' && state.data && (
+                <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                  <p className="text-xs text-gray-500 mb-2">選んだストーリー</p>
+                  <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">{(state.data as CareerProfile).name}</h2>
+                      <p className="text-sm text-gray-600">{(state.data as CareerProfile).headline}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {(state.data as CareerProfile).tags.map(tag => (
+                          <span key={tag} className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">自己採点</p>
+                      <p className="text-3xl font-bold text-blue-600">{(state.data as CareerProfile).score}点</p>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-4">
+                    <p className="text-sm font-semibold text-gray-900 mb-1">紹介文</p>
+                    <p className="text-sm text-gray-700">{(state.data as CareerProfile).summary}</p>
+                  </div>
+                  <p className="text-xs text-gray-500 uppercase font-semibold mb-2">人生年表</p>
+                  <div className="space-y-3 mb-6">
+                    {(state.data as CareerProfile).timeline.map(entry => (
+                      <div key={entry.label} className="flex gap-3">
+                        <span className="text-xs font-bold text-blue-600 w-16 flex-shrink-0">{entry.label}</span>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-800">{entry.description}</p>
+                          <p className="text-xs text-gray-500 mt-1">選んだ理由：{entry.reason}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      onClick={() => handleStartDialogue()}
+                      className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-colors"
+                    >
+                      このストーリーについて話してみる
+                    </button>
+                    <button
+                      onClick={() => setState({ phase: 'activity' })}
+                      className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                    >
+                      他のストーリーを見る
+                    </button>
+                  </div>
+                </div>
               )}
             </>
           )}
@@ -790,8 +893,8 @@ ${career.cons?.slice(0, 3).join('、')}
                     isLoading={isLoading}
                     placeholder="メッセージを入力..."
                     moduleContext={{
-                      moduleId: module.id,
-                      moduleTitle: module.title,
+                      moduleId: moduleDefinition.id,
+                      moduleTitle: moduleDefinition.title,
                       gameResults: JSON.stringify(state.data, null, 2)
                     }}
                   />

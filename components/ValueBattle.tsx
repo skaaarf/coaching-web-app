@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { ValueBattleChoice, ValueBattleResult } from '@/types';
 
 const BATTLE_CHOICES: ValueBattleChoice[] = [
@@ -205,26 +205,28 @@ const SECTIONS = [
   { name: '価値観と報酬', start: 15, end: 19, icon: '💎', color: 'orange' }
 ];
 
+const getRandomFraction = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return array[0] / (0xffffffff + 1);
+  }
+  return 0.5;
+};
+
 export default function ValueBattle({ onComplete }: Props) {
   const [currentRound, setCurrentRound] = useState(0);
   const [choices, setChoices] = useState<Record<string, string>>({});
   const [showMilestone, setShowMilestone] = useState(false);
-  const [shuffledChoices, setShuffledChoices] = useState<ValueBattleChoice[]>([]);
-  const [optionSwaps, setOptionSwaps] = useState<boolean[]>([]);
-
-  // Shuffle choices on mount using Fisher-Yates algorithm
-  useEffect(() => {
+  const shuffledChoices = useMemo(() => {
     const shuffled = [...BATTLE_CHOICES];
     for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(getRandomFraction() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    setShuffledChoices(shuffled);
-
-    // Randomly swap options A/B for each question
-    const swaps = shuffled.map(() => Math.random() < 0.5);
-    setOptionSwaps(swaps);
-  }, []); // Run only on mount
+    return shuffled;
+  }, []);
+  const optionSwaps = useMemo(() => shuffledChoices.map(() => getRandomFraction() < 0.5), [shuffledChoices]);
 
   const handleChoice = (choice: 'A' | 'B') => {
     if (shuffledChoices.length === 0) return; // Wait for shuffling
@@ -306,7 +308,7 @@ export default function ValueBattle({ onComplete }: Props) {
       {/* Section Progress Indicators */}
       <div className="mb-4">
         <div className="flex justify-center gap-2 mb-3">
-          {SECTIONS.map((section, index) => {
+          {SECTIONS.map((section) => {
             const isCompleted = currentRound > section.end;
             const isCurrent = currentRound >= section.start && currentRound <= section.end;
             return (

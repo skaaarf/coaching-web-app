@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { InteractiveModuleProgress } from '@/types';
+import { InteractiveModuleProgress, InteractiveState } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
 
 interface Props {
@@ -14,9 +14,9 @@ export default function DialogueHistorySidebar({ allProgress, currentModuleId, o
   const router = useRouter();
 
   // Filter modules that have dialogue history
-  const modulesWithDialogue = Object.entries(allProgress).filter(([moduleId, progress]) => {
-    const data = progress.data as any;
-    return data.phase === 'dialogue' && data.messages && data.messages.length > 0;
+  const modulesWithDialogue = Object.entries(allProgress).filter(([, progress]) => {
+    const data = progress.data;
+    return data?.phase === 'dialogue' && data.messages && data.messages.length > 0;
   });
 
   return (
@@ -45,12 +45,14 @@ export default function DialogueHistorySidebar({ allProgress, currentModuleId, o
         ) : (
           <div className="space-y-2">
             {modulesWithDialogue.map(([moduleId, progress]) => {
-              const module = CAREER_MODULES.find(m => m.id === moduleId);
-              if (!module) return null;
+              const moduleDefinition = CAREER_MODULES.find(m => m.id === moduleId);
+              if (!moduleDefinition) return null;
 
-              const data = progress.data as any;
-              const messageCount = data.messages?.length || 0;
-              const lastMessage = data.messages?.[data.messages.length - 1];
+              const data = progress.data as InteractiveState | null;
+              const messageCount = data?.phase === 'dialogue' && data.messages ? data.messages.length : 0;
+              const lastMessage = data?.phase === 'dialogue' && data.messages
+                ? data.messages[data.messages.length - 1]
+                : undefined;
               const isCurrentModule = moduleId === currentModuleId;
 
               return (
@@ -69,10 +71,10 @@ export default function DialogueHistorySidebar({ allProgress, currentModuleId, o
                   }`}
                 >
                   <div className="flex items-start space-x-2">
-                    <div className="text-2xl flex-shrink-0">{module.icon}</div>
+                    <div className="text-2xl flex-shrink-0">{moduleDefinition.icon}</div>
                     <div className="flex-grow min-w-0">
                       <h4 className="font-semibold text-gray-900 text-sm mb-1 truncate">
-                        {module.title}
+                        {moduleDefinition.title}
                       </h4>
                       <p className="text-xs text-gray-500 mb-1">
                         {messageCount}件のメッセージ

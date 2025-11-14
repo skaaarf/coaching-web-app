@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
 import { Message, ModuleProgress, ValueSnapshot } from '@/types';
 import ChatInterface from '@/components/ChatInterface';
-import AnalyzingAnimation from '@/components/AnalyzingAnimation';
 
 export default function ModulePage() {
   const params = useParams();
@@ -18,7 +17,7 @@ export default function ModulePage() {
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const sessionId = searchParams?.get('sessionId') || undefined;
 
-  const [module, setModule] = useState(() => getModuleById(moduleId));
+  const moduleDefinition = useMemo(() => getModuleById(moduleId), [moduleId]);
   const [currentSessionId, setCurrentSessionId] = useState<string>(sessionId || '');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,17 +25,16 @@ export default function ModulePage() {
 
   // Value analysis state
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisComplete, setAnalysisComplete] = useState(false);
   const [lastAnalyzedMessageCount, setLastAnalyzedMessageCount] = useState(0);
 
   useEffect(() => {
-    if (!module) {
+    if (!moduleDefinition) {
       router.push('/');
       return;
     }
 
     // Redirect interactive modules to the correct route
-    if (module.moduleType === 'interactive') {
+    if (moduleDefinition.moduleType === 'interactive') {
       router.push(`/interactive/${moduleId}`);
       return;
     }
@@ -71,10 +69,9 @@ export default function ModulePage() {
     };
 
     loadProgress();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [moduleId, module, router, storage, sessionId]);
+  }, [fetchInitialMessage, moduleDefinition, moduleId, router, sessionId, storage]);
 
-  const fetchInitialMessage = async (sessionIdToUse: string) => {
+  const fetchInitialMessage = useCallback(async (sessionIdToUse: string) => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/chat', {
@@ -84,7 +81,7 @@ export default function ModulePage() {
         },
         body: JSON.stringify({
           messages: [],
-          systemPrompt: module?.systemPrompt,
+          systemPrompt: moduleDefinition?.systemPrompt,
         }),
       });
 
@@ -125,7 +122,7 @@ export default function ModulePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [moduleDefinition?.systemPrompt, moduleId, storage]);
 
   const handleSendMessage = async (content: string) => {
     // Add user message
@@ -148,7 +145,7 @@ export default function ModulePage() {
         },
         body: JSON.stringify({
           messages: updatedMessages,
-          systemPrompt: module?.systemPrompt,
+          systemPrompt: moduleDefinition?.systemPrompt,
         }),
       });
 
@@ -233,14 +230,8 @@ export default function ModulePage() {
         last_updated: new Date(),
       });
 
-      // Analysis successful - update the count and show notification
+      // Analysis successful - update the count so we can throttle refreshes
       setLastAnalyzedMessageCount(messagesToAnalyze.length);
-      setAnalysisComplete(true);
-
-      // Auto-hide notification after 5 seconds
-      setTimeout(() => {
-        setAnalysisComplete(false);
-      }, 5000);
     } catch (error) {
       console.error('Error analyzing values:', error);
       // Don't update count on error, so we can retry later
@@ -249,20 +240,7 @@ export default function ModulePage() {
     }
   };
 
-  const handleMarkComplete = async () => {
-    const progress: ModuleProgress = {
-      moduleId,
-      sessionId: currentSessionId,
-      messages,
-      createdAt: new Date(), // Will be ignored if session already exists
-      lastUpdated: new Date(),
-      completed: true,
-    };
-    await storage.saveModuleProgress(moduleId, progress);
-    router.push('/');
-  };
-
-  if (!module) {
+  if (!moduleDefinition) {
     return null;
   }
 
@@ -285,10 +263,10 @@ export default function ModulePage() {
               </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl flex-shrink-0">{module.icon}</span>
-                  <h1 className="text-base font-semibold text-gray-900 truncate">{module.title}</h1>
+                  <span className="text-xl flex-shrink-0">{moduleDefinition.icon}</span>
+                  <h1 className="text-base font-semibold text-gray-900 truncate">{moduleDefinition.title}</h1>
                 </div>
-                <p className="text-xs text-gray-500 truncate">{module.description}</p>
+                <p className="text-xs text-gray-500 truncate">{moduleDefinition.description}</p>
               </div>
             </div>
           </div>
@@ -306,8 +284,8 @@ export default function ModulePage() {
               isLoading={isLoading}
               placeholder="メッセージを入力..."
               moduleContext={{
-                moduleId: module.id,
-                moduleTitle: module.title
+                moduleId: moduleDefinition.id,
+                moduleTitle: moduleDefinition.title
               }}
             />
           )}

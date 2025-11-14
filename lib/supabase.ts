@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { AxisReasoning, InteractiveState, Message, ValueAxes } from '@/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -9,11 +10,13 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
   : createClient('https://placeholder.supabase.co', 'placeholder-key');
 
 // Database types
+export type StoredMessage = Omit<Message, 'timestamp'> & { timestamp: string };
+
 export interface DBModuleProgress {
   id: string;
   user_id: string;
   module_id: string;
-  messages: any[];
+  messages: StoredMessage[];
   completed: boolean;
   insights: string[];
   last_updated: string;
@@ -24,7 +27,8 @@ export interface DBInteractiveModuleProgress {
   id: string;
   user_id: string;
   module_id: string;
-  data: any;
+  session_id?: string | null;
+  data: InteractiveState | Record<string, unknown>;
   completed: boolean;
   last_updated: string;
   created_at: string;
@@ -52,7 +56,7 @@ export interface DBValueSnapshot {
   growth_vs_balance: number;
   corporate_vs_startup: number;
   social_vs_self: number;
-  reasoning: any;
+  reasoning: Record<keyof ValueAxes, AxisReasoning>;
   overall_confidence: number;
   created_at: string;
   last_updated: string;
