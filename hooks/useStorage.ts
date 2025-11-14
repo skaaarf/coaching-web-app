@@ -67,19 +67,19 @@ export function useStorage() {
 
     // Sessions
     getModuleSessions: async (moduleId: string): Promise<ModuleProgress[]> => {
-      return await unifiedStorage.getModuleSessions(moduleId);
+      return await unifiedStorage.getModuleSessions(moduleId, userId || undefined);
     },
 
     getModuleSession: async (moduleId: string, sessionId: string): Promise<ModuleProgress | null> => {
-      return await unifiedStorage.getModuleSession(moduleId, sessionId);
+      return await unifiedStorage.getModuleSession(moduleId, sessionId, userId || undefined);
     },
 
     getInteractiveModuleSessions: async (moduleId: string): Promise<InteractiveModuleProgress[]> => {
-      return await unifiedStorage.getInteractiveModuleSessions(moduleId);
+      return await unifiedStorage.getInteractiveModuleSessions(moduleId, userId || undefined);
     },
 
     getInteractiveModuleSession: async (moduleId: string, sessionId: string): Promise<InteractiveModuleProgress | null> => {
-      return await unifiedStorage.getInteractiveModuleSession(moduleId, sessionId);
+      return await unifiedStorage.getInteractiveModuleSession(moduleId, sessionId, userId || undefined);
     },
 
     // Metadata

@@ -3,6 +3,16 @@ import type { DBInteractiveModuleProgress, DBModuleProgress, StoredMessage } fro
 import type { InteractiveState, Message } from '@/types';
 import { ModuleProgress, UserInsights, InteractiveModuleProgress } from '@/types';
 
+const DEFAULT_SESSION_LIMIT = 10;
+const SESSION_SUFFIX = '#session:';
+const SESSION_FEATURE_ERROR_CODES = new Set(['42703', 'PGRST204']);
+const envSessionHistory =
+  typeof process !== 'undefined' &&
+  process.env.NEXT_PUBLIC_SUPABASE_SESSION_HISTORY === 'true';
+let supabaseSupportsSessionHistory = envSessionHistory;
+let hasLoggedSessionFallback = false;
+type SupabaseErrorLike = { code?: string; message?: string };
+
 const normalizeMessages = (rawMessages?: StoredMessage[] | null): Message[] => {
   if (!rawMessages) return [];
   return rawMessages.map((message) => ({
@@ -11,176 +21,544 @@ const normalizeMessages = (rawMessages?: StoredMessage[] | null): Message[] => {
   }));
 };
 
-// Module Progress functions
-export async function getModuleProgress(userId: string, moduleId: string): Promise<ModuleProgress | null> {
-  try {
-    const { data, error } = await supabase
-      .from('module_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('module_id', moduleId)
-      .single();
+const serializeMessages = (messages: Message[]): StoredMessage[] =>
+  messages.map((message) => ({
+    ...message,
+    timestamp:
+      message.timestamp instanceof Date
+        ? message.timestamp.toISOString()
+        : new Date(message.timestamp).toISOString(),
+  }));
 
-    if (error) {
-      if (error.code === 'PGRST116') return null; // No rows found
-      throw error;
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    return {
-      moduleId: data.module_id,
-      sessionId: data.session_id || `session-${Date.now()}`,
-      messages: normalizeMessages(data.messages),
-      createdAt: data.created_at ? new Date(data.created_at) : new Date(),
-      lastUpdated: new Date(data.last_updated),
-      completed: data.completed,
-      insights: data.insights || []
-    };
-  } catch (error) {
-    console.error('Error loading module progress from Supabase:', error);
-    return null;
+const decodeModuleIdentifiers = (
+  moduleIdValue: string,
+  sessionIdValue?: string | null,
+  fallbackSessionId?: string
+) => {
+  if (moduleIdValue.includes(SESSION_SUFFIX)) {
+    const [baseId, suffix] = moduleIdValue.split(SESSION_SUFFIX);
+    const decodedSessionId = suffix || sessionIdValue || fallbackSessionId || `session-${Date.now()}`;
+    return { moduleId: baseId, sessionId: decodedSessionId };
   }
-}
+  return {
+    moduleId: moduleIdValue,
+    sessionId: sessionIdValue || fallbackSessionId || `session-${Date.now()}`,
+  };
+};
 
-export async function saveModuleProgress(userId: string, moduleId: string, progress: ModuleProgress): Promise<void> {
+const encodeSessionModuleId = (moduleId: string, sessionId: string) =>
+  `${moduleId}${SESSION_SUFFIX}${sessionId}`;
+
+const mapModuleProgressRow = (item: DBModuleProgress): ModuleProgress => {
+  const { moduleId, sessionId } = decodeModuleIdentifiers(item.module_id, item.session_id, item.id);
+  return {
+    moduleId,
+    sessionId,
+    messages: normalizeMessages(item.messages),
+    createdAt: item.created_at ? new Date(item.created_at) : new Date(),
+    lastUpdated: item.last_updated ? new Date(item.last_updated) : new Date(),
+    completed: item.completed ?? false,
+    insights: item.insights || [],
+    userId: item.user_id,
+    userEmail: item.user_email || undefined,
+  };
+};
+
+const mapInteractiveProgressRow = (item: DBInteractiveModuleProgress): InteractiveModuleProgress => {
+  const { moduleId, sessionId } = decodeModuleIdentifiers(item.module_id, item.session_id, item.id);
+  return {
+    moduleId,
+    sessionId,
+    data: (item.data as InteractiveState) || null,
+    createdAt: item.created_at ? new Date(item.created_at) : new Date(),
+    lastUpdated: item.last_updated ? new Date(item.last_updated) : new Date(),
+    completed: item.completed ?? false,
+    userId: item.user_id,
+    userEmail: item.user_email || undefined,
+  };
+};
+
+const isSessionFeatureError = (error: unknown) => {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as SupabaseErrorLike;
+  if (err.code && SESSION_FEATURE_ERROR_CODES.has(err.code)) return true;
+  if (typeof err.message === 'string' && err.message.includes('session_id')) return true;
+  return false;
+};
+
+async function withSessionSupport<T>(operation: () => Promise<T>, legacyOperation: () => Promise<T>): Promise<T> {
+  if (!supabaseSupportsSessionHistory) {
+    return legacyOperation();
+  }
+
   try {
-    const { error } = await supabase
-      .from('module_progress')
-      .upsert({
-        user_id: userId,
-        module_id: moduleId,
-        messages: progress.messages,
-        completed: progress.completed,
-        insights: progress.insights || [],
-        last_updated: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,module_id'
-      });
-
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error saving module progress to Supabase:', error);
+    return await operation();
+  } catch (error: unknown) {
+    if (isSessionFeatureError(error)) {
+      supabaseSupportsSessionHistory = false;
+      if (!hasLoggedSessionFallback) {
+        console.warn('Supabase schema missing session_id columns. Falling back to single-session storage.');
+        hasLoggedSessionFallback = true;
+      }
+      return legacyOperation();
+    }
     throw error;
   }
 }
 
-export async function getAllModuleProgress(userId: string): Promise<Record<string, ModuleProgress>> {
-  try {
-    const { data, error } = await supabase
-      .from('module_progress')
-      .select('*')
-      .eq('user_id', userId);
+async function legacyGetModuleProgress(userId: string, moduleId: string): Promise<ModuleProgress | null> {
+  const { data, error } = await supabase
+    .from('module_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('module_id', moduleId)
+    .single();
 
-    if (error) throw error;
-
-    const progressMap: Record<string, ModuleProgress> = {};
-
-    const typedData = (data || []) as DBModuleProgress[];
-
-    typedData.forEach((item) => {
-      progressMap[item.module_id] = {
-        moduleId: item.module_id,
-        sessionId: item.session_id || `session-${Date.now()}`,
-        messages: normalizeMessages(item.messages),
-        createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-        lastUpdated: new Date(item.last_updated),
-        completed: item.completed,
-        insights: item.insights || []
-      };
-    });
-
-    return progressMap;
-  } catch (error) {
-    console.error('Error loading all module progress from Supabase:', error);
-    return {};
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
   }
+
+  if (!data) return null;
+  return mapModuleProgressRow(data as DBModuleProgress);
 }
 
-// Interactive Module Progress functions
-export async function getInteractiveModuleProgress(userId: string, moduleId: string): Promise<InteractiveModuleProgress | null> {
-  try {
-    const { data, error } = await supabase
-      .from('interactive_module_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('module_id', moduleId)
-      .single();
+async function legacySaveModuleProgress(userId: string, moduleId: string, progress: ModuleProgress): Promise<void> {
+  // Update latest snapshot
+  const createdAtIso = progress.createdAt ? new Date(progress.createdAt).toISOString() : new Date().toISOString();
+  const lastUpdatedIso = progress.lastUpdated ? new Date(progress.lastUpdated).toISOString() : new Date().toISOString();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw error;
-    }
+  const { error } = await supabase
+    .from('module_progress')
+    .upsert(
+      {
+        user_id: userId,
+        module_id: moduleId,
+        messages: serializeMessages(progress.messages),
+        completed: progress.completed,
+        insights: progress.insights || [],
+        created_at: createdAtIso,
+        last_updated: lastUpdatedIso,
+      },
+      {
+        onConflict: 'user_id,module_id',
+      }
+    );
 
-    if (!data) {
-      return null;
-    }
+  if (error) throw error;
 
-    return {
-      moduleId: data.module_id,
-      sessionId: data.session_id || `session-${Date.now()}`,
-      data: (data.data as InteractiveState) || null,
-      createdAt: data.created_at ? new Date(data.created_at) : new Date(),
-      lastUpdated: new Date(data.last_updated),
-      completed: data.completed
-    };
-  } catch (error) {
-    console.error('Error loading interactive module progress from Supabase:', error);
-    return null;
-  }
+  // Store session history as separate rows using encoded module_id
+  const sessionId = progress.sessionId || `session-${Date.now()}`;
+  const encodedModuleId = encodeSessionModuleId(moduleId, sessionId);
+  const { error: historyError } = await supabase
+    .from('module_progress')
+    .upsert(
+      {
+        user_id: userId,
+        module_id: encodedModuleId,
+        messages: serializeMessages(progress.messages),
+        completed: progress.completed,
+        insights: progress.insights || [],
+        created_at: createdAtIso,
+        last_updated: lastUpdatedIso,
+      },
+      {
+        onConflict: 'user_id,module_id',
+      }
+    );
+
+  if (historyError) throw historyError;
 }
 
-export async function saveInteractiveModuleProgress(userId: string, moduleId: string, progress: InteractiveModuleProgress): Promise<void> {
-  try {
-    const { error } = await supabase
-      .from('interactive_module_progress')
-      .upsert({
+async function legacyGetModuleSessions(userId: string, moduleId: string, limit = DEFAULT_SESSION_LIMIT): Promise<ModuleProgress[]> {
+  const { data, error } = await supabase
+    .from('module_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .or(`module_id.eq.${moduleId},module_id.like.${moduleId}${SESSION_SUFFIX}%`)
+    .order('last_updated', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  const typedData = (data || []) as DBModuleProgress[];
+  return typedData
+    .map(mapModuleProgressRow)
+    .filter((item) => item.moduleId === moduleId);
+}
+
+async function legacyGetModuleSession(userId: string, moduleId: string, sessionId: string): Promise<ModuleProgress | null> {
+  const encodedModuleId = encodeSessionModuleId(moduleId, sessionId);
+  const { data, error } = await supabase
+    .from('module_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('module_id', encodedModuleId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return legacyGetModuleProgress(userId, moduleId);
+  return mapModuleProgressRow(data as DBModuleProgress);
+}
+
+async function legacyGetInteractiveModuleProgress(userId: string, moduleId: string): Promise<InteractiveModuleProgress | null> {
+  const { data, error } = await supabase
+    .from('interactive_module_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('module_id', moduleId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  if (!data) return null;
+  return mapInteractiveProgressRow(data as DBInteractiveModuleProgress);
+}
+
+async function legacySaveInteractiveModuleProgress(userId: string, moduleId: string, progress: InteractiveModuleProgress): Promise<void> {
+  const createdAtIso = progress.createdAt ? new Date(progress.createdAt).toISOString() : new Date().toISOString();
+  const lastUpdatedIso = progress.lastUpdated ? new Date(progress.lastUpdated).toISOString() : new Date().toISOString();
+
+  const { error } = await supabase
+    .from('interactive_module_progress')
+    .upsert(
+      {
         user_id: userId,
         module_id: moduleId,
         data: progress.data,
         completed: progress.completed,
-        last_updated: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,module_id'
+        created_at: createdAtIso,
+        last_updated: lastUpdatedIso,
+      },
+      {
+        onConflict: 'user_id,module_id',
+      }
+    );
+
+  if (error) throw error;
+
+  const sessionId = progress.sessionId || `session-${Date.now()}`;
+  const encodedModuleId = encodeSessionModuleId(moduleId, sessionId);
+  const { error: historyError } = await supabase
+    .from('interactive_module_progress')
+    .upsert(
+      {
+        user_id: userId,
+        module_id: encodedModuleId,
+        data: progress.data,
+        completed: progress.completed,
+        created_at: createdAtIso,
+        last_updated: lastUpdatedIso,
+      },
+      {
+        onConflict: 'user_id,module_id',
+      }
+    );
+
+  if (historyError) throw historyError;
+}
+
+async function legacyGetInteractiveModuleSessions(userId: string, moduleId: string, limit = DEFAULT_SESSION_LIMIT): Promise<InteractiveModuleProgress[]> {
+  const { data, error } = await supabase
+    .from('interactive_module_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .or(`module_id.eq.${moduleId},module_id.like.${moduleId}${SESSION_SUFFIX}%`)
+    .order('last_updated', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  const typedData = (data || []) as DBInteractiveModuleProgress[];
+  return typedData
+    .map(mapInteractiveProgressRow)
+    .filter((item) => item.moduleId === moduleId);
+}
+
+async function legacyGetInteractiveModuleSession(userId: string, moduleId: string, sessionId: string): Promise<InteractiveModuleProgress | null> {
+  const encodedModuleId = encodeSessionModuleId(moduleId, sessionId);
+  const { data, error } = await supabase
+    .from('interactive_module_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('module_id', encodedModuleId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return legacyGetInteractiveModuleProgress(userId, moduleId);
+  return mapInteractiveProgressRow(data as DBInteractiveModuleProgress);
+}
+
+// Module Progress functions
+export async function getModuleProgress(userId: string, moduleId: string): Promise<ModuleProgress | null> {
+  return withSessionSupport(
+    async () => {
+      const { data, error } = await supabase
+        .from('module_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('module_id', moduleId)
+        .order('last_updated', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      return mapModuleProgressRow(data as DBModuleProgress);
+    },
+    () => legacyGetModuleProgress(userId, moduleId)
+  );
+}
+
+export async function saveModuleProgress(userId: string, moduleId: string, progress: ModuleProgress): Promise<void> {
+  const sessionId = progress.sessionId || `session-${Date.now()}`;
+  const createdAt = progress.createdAt ? new Date(progress.createdAt) : new Date();
+  const lastUpdated = progress.lastUpdated ? new Date(progress.lastUpdated) : new Date();
+
+  return withSessionSupport(
+    async () => {
+      const { error } = await supabase
+        .from('module_progress')
+        .upsert(
+          {
+            user_id: userId,
+            module_id: moduleId,
+            session_id: sessionId,
+            user_email: progress.userEmail || null,
+            messages: serializeMessages(progress.messages),
+            completed: progress.completed,
+            insights: progress.insights || [],
+            created_at: createdAt.toISOString(),
+            last_updated: lastUpdated.toISOString(),
+          },
+          {
+            onConflict: 'user_id,module_id,session_id',
+          }
+        );
+
+      if (error) throw error;
+    },
+    () => legacySaveModuleProgress(userId, moduleId, progress)
+  );
+}
+
+export async function getAllModuleProgress(userId: string): Promise<Record<string, ModuleProgress>> {
+  return withSessionSupport(
+    async () => {
+      const { data, error } = await supabase
+        .from('module_progress')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      const latestByModule: Record<string, ModuleProgress> = {};
+      const typedData = (data || []) as DBModuleProgress[];
+
+      typedData.forEach((item) => {
+        const progress = mapModuleProgressRow(item);
+        const existing = latestByModule[progress.moduleId];
+        if (!existing || progress.lastUpdated > existing.lastUpdated) {
+          latestByModule[progress.moduleId] = progress;
+        }
       });
 
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error saving interactive module progress to Supabase:', error);
-    throw error;
-  }
+      return latestByModule;
+    },
+    async () => {
+      const { data, error } = await supabase
+        .from('module_progress')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      const typedData = (data || []) as DBModuleProgress[];
+      return typedData.reduce<Record<string, ModuleProgress>>((acc, item) => {
+        if (item.module_id.includes(SESSION_SUFFIX)) {
+          return acc;
+        }
+        const progress = mapModuleProgressRow(item);
+        acc[progress.moduleId] = progress;
+        return acc;
+      }, {});
+    }
+  );
+}
+
+export async function getModuleSessions(userId: string, moduleId: string, limit = DEFAULT_SESSION_LIMIT): Promise<ModuleProgress[]> {
+  return withSessionSupport(
+    async () => {
+      const { data, error } = await supabase
+        .from('module_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('module_id', moduleId)
+        .order('last_updated', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      const typedData = (data || []) as DBModuleProgress[];
+      return typedData.map(mapModuleProgressRow);
+    },
+    () => legacyGetModuleSessions(userId, moduleId, limit)
+  );
+}
+
+export async function getModuleSession(userId: string, moduleId: string, sessionId: string): Promise<ModuleProgress | null> {
+  return withSessionSupport(
+    async () => {
+      const { data, error } = await supabase
+        .from('module_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('module_id', moduleId)
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      return mapModuleProgressRow(data as DBModuleProgress);
+    },
+    () => legacyGetModuleSession(userId, moduleId, sessionId)
+  );
+}
+
+// Interactive Module Progress functions
+export async function getInteractiveModuleProgress(userId: string, moduleId: string): Promise<InteractiveModuleProgress | null> {
+  return withSessionSupport(
+    async () => {
+      const { data, error } = await supabase
+        .from('interactive_module_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('module_id', moduleId)
+        .order('last_updated', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      return mapInteractiveProgressRow(data as DBInteractiveModuleProgress);
+    },
+    () => legacyGetInteractiveModuleProgress(userId, moduleId)
+  );
+}
+
+export async function saveInteractiveModuleProgress(userId: string, moduleId: string, progress: InteractiveModuleProgress): Promise<void> {
+  const sessionId = progress.sessionId || `session-${Date.now()}`;
+  const createdAt = progress.createdAt ? new Date(progress.createdAt) : new Date();
+  const lastUpdated = progress.lastUpdated ? new Date(progress.lastUpdated) : new Date();
+
+  return withSessionSupport(
+    async () => {
+      const { error } = await supabase
+        .from('interactive_module_progress')
+        .upsert(
+          {
+            user_id: userId,
+            module_id: moduleId,
+            session_id: sessionId,
+            user_email: progress.userEmail || null,
+            data: progress.data,
+            completed: progress.completed,
+            created_at: createdAt.toISOString(),
+            last_updated: lastUpdated.toISOString(),
+          },
+          {
+            onConflict: 'user_id,module_id,session_id',
+          }
+        );
+
+      if (error) throw error;
+    },
+    () => legacySaveInteractiveModuleProgress(userId, moduleId, progress)
+  );
 }
 
 export async function getAllInteractiveModuleProgress(userId: string): Promise<Record<string, InteractiveModuleProgress>> {
-  try {
-    const { data, error } = await supabase
-      .from('interactive_module_progress')
-      .select('*')
-      .eq('user_id', userId);
+  return withSessionSupport(
+    async () => {
+      const { data, error } = await supabase
+        .from('interactive_module_progress')
+        .select('*')
+        .eq('user_id', userId);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    const progressMap: Record<string, InteractiveModuleProgress> = {};
-    const typedData = (data || []) as DBInteractiveModuleProgress[];
+      const latestByModule: Record<string, InteractiveModuleProgress> = {};
+      const typedData = (data || []) as DBInteractiveModuleProgress[];
 
-    typedData.forEach((item) => {
-      progressMap[item.module_id] = {
-        moduleId: item.module_id,
-        sessionId: item.session_id || `session-${Date.now()}`,
-        data: (item.data as InteractiveState) || null,
-        createdAt: item.created_at ? new Date(item.created_at) : new Date(),
-        lastUpdated: new Date(item.last_updated),
-        completed: item.completed
-      };
-    });
+      typedData.forEach((item) => {
+        const progress = mapInteractiveProgressRow(item);
+        const existing = latestByModule[progress.moduleId];
+        if (!existing || progress.lastUpdated > existing.lastUpdated) {
+          latestByModule[progress.moduleId] = progress;
+        }
+      });
 
-    return progressMap;
-  } catch (error) {
-    console.error('Error loading all interactive module progress from Supabase:', error);
-    return {};
-  }
+      return latestByModule;
+    },
+    async () => {
+      const { data, error } = await supabase
+        .from('interactive_module_progress')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      const typedData = (data || []) as DBInteractiveModuleProgress[];
+      return typedData.reduce<Record<string, InteractiveModuleProgress>>((acc, item) => {
+        if (item.module_id.includes(SESSION_SUFFIX)) {
+          return acc;
+        }
+        const progress = mapInteractiveProgressRow(item);
+        acc[progress.moduleId] = progress;
+        return acc;
+      }, {});
+    }
+  );
+}
+
+export async function getInteractiveModuleSessions(userId: string, moduleId: string, limit = DEFAULT_SESSION_LIMIT): Promise<InteractiveModuleProgress[]> {
+  return withSessionSupport(
+    async () => {
+      const { data, error } = await supabase
+        .from('interactive_module_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('module_id', moduleId)
+        .order('last_updated', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      const typedData = (data || []) as DBInteractiveModuleProgress[];
+      return typedData.map(mapInteractiveProgressRow);
+    },
+    () => legacyGetInteractiveModuleSessions(userId, moduleId, limit)
+  );
+}
+
+export async function getInteractiveModuleSession(userId: string, moduleId: string, sessionId: string): Promise<InteractiveModuleProgress | null> {
+  return withSessionSupport(
+    async () => {
+      const { data, error } = await supabase
+        .from('interactive_module_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('module_id', moduleId)
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      return mapInteractiveProgressRow(data as DBInteractiveModuleProgress);
+    },
+    () => legacyGetInteractiveModuleSession(userId, moduleId, sessionId)
+  );
 }
 
 // User Insights functions

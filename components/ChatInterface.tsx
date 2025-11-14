@@ -99,12 +99,14 @@ export default function ChatInterface({
     }
   };
 
-  const handleSuggestedQuestionClick = (question: string) => {
-    // Populate the input field with the question instead of sending directly
-    // This allows users to edit the question before sending
-    setInput(question);
-    // Clear suggestions after selecting one
+  const handleSuggestedQuestionClick = async (question: string) => {
+    if (isLoading) return;
     setSuggestedQuestions([]);
+    try {
+      await onSendMessage(question);
+    } catch (error) {
+      console.error('Error sending suggested question:', error);
+    }
   };
 
   const handleInputFocus = () => {
@@ -180,7 +182,7 @@ export default function ChatInterface({
             <div className="flex items-center gap-2 mb-3">
               <div className="text-gray-700 font-bold">💡 こんな質問はどう？</div>
               <div className="text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs">
-                タップして編集可能
+                タップですぐ送信
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -191,7 +193,7 @@ export default function ChatInterface({
                   onClick={() => handleSuggestedQuestionClick(question)}
                   className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 active:from-blue-200 active:to-indigo-200 border-2 border-blue-400 hover:border-blue-500 rounded-xl text-gray-800 hover:text-gray-900 font-medium transition-all shadow-sm hover:shadow-md active:shadow-lg touch-manipulation"
                 >
-                  ✏️ {question}
+                  📤 {question}
                 </button>
               ))}
             </div>

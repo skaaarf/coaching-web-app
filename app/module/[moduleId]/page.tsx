@@ -27,50 +27,6 @@ export default function ModulePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastAnalyzedMessageCount, setLastAnalyzedMessageCount] = useState(0);
 
-  useEffect(() => {
-    if (!moduleDefinition) {
-      router.push('/');
-      return;
-    }
-
-    // Redirect interactive modules to the correct route
-    if (moduleDefinition.moduleType === 'interactive') {
-      router.push(`/interactive/${moduleId}`);
-      return;
-    }
-
-    // Load existing progress
-    const loadProgress = async () => {
-      let progress: ModuleProgress | null = null;
-
-      if (sessionId) {
-        // Load specific session
-        progress = await storage.getModuleSession(moduleId, sessionId);
-        setCurrentSessionId(sessionId);
-      } else {
-        // Load latest session
-        progress = await storage.getModuleProgress(moduleId);
-        if (progress?.sessionId) {
-          setCurrentSessionId(progress.sessionId);
-        }
-      }
-
-      if (progress && progress.messages.length > 0) {
-        setMessages(progress.messages);
-      } else {
-        // Start new conversation with AI's greeting
-        // Generate new sessionId if not provided
-        const newSessionId = sessionId || `session-${Date.now()}`;
-        setCurrentSessionId(newSessionId);
-        fetchInitialMessage(newSessionId);
-      }
-
-      setHasInitialized(true);
-    };
-
-    loadProgress();
-  }, [fetchInitialMessage, moduleDefinition, moduleId, router, sessionId, storage]);
-
   const fetchInitialMessage = useCallback(async (sessionIdToUse: string) => {
     setIsLoading(true);
     try {
@@ -123,6 +79,54 @@ export default function ModulePage() {
       setIsLoading(false);
     }
   }, [moduleDefinition?.systemPrompt, moduleId, storage]);
+
+  useEffect(() => {
+    if (!moduleDefinition) {
+      router.push('/');
+      return;
+    }
+
+    // Redirect interactive modules to the correct route
+    if (moduleDefinition.moduleType === 'interactive') {
+      router.push(`/interactive/${moduleId}`);
+      return;
+    }
+
+    // Load existing progress
+    const loadProgress = async () => {
+      let progress: ModuleProgress | null = null;
+
+      if (sessionId) {
+        // Load specific session
+        progress = await storage.getModuleSession(moduleId, sessionId);
+        setCurrentSessionId(sessionId);
+        if (progress && progress.sessionId !== sessionId) {
+          // Storage backend returned a different session (e.g., legacy mode)
+          progress = null;
+        }
+      } else {
+        // Load latest session
+        progress = await storage.getModuleProgress(moduleId);
+        if (progress?.sessionId) {
+          setCurrentSessionId(progress.sessionId);
+        }
+      }
+
+      if (progress && progress.messages.length > 0) {
+        setMessages(progress.messages);
+      } else {
+        // Start new conversation with AI's greeting
+        // Generate new sessionId if not provided
+        const newSessionId = sessionId || `session-${Date.now()}`;
+        setCurrentSessionId(newSessionId);
+        fetchInitialMessage(newSessionId);
+      }
+
+      setHasInitialized(true);
+    };
+
+    loadProgress();
+  }, [fetchInitialMessage, moduleDefinition, moduleId, router, sessionId, storage]);
 
   const handleSendMessage = async (content: string) => {
     // Add user message

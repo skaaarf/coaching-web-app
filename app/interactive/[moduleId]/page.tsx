@@ -96,6 +96,9 @@ export default function InteractiveModulePage() {
         progress = await storage.getInteractiveModuleSession(moduleId, sessionId);
         console.log('Loaded session:', progress);
         setCurrentSessionId(sessionId);
+        if (progress && progress.sessionId !== sessionId) {
+          progress = null;
+        }
 
         // If progress exists and has data, load it
         if (progress && progress.data) {

@@ -91,18 +91,30 @@ export async function getAllValueSnapshots(): Promise<ValueSnapshot[]> {
 }
 
 // Session functions (localStorage only for now)
-export async function getModuleSessions(moduleId: string): Promise<ModuleProgress[]> {
+export async function getModuleSessions(moduleId: string, userId?: string): Promise<ModuleProgress[]> {
+  if (userId) {
+    return await supabaseStorageLib.getModuleSessions(userId, moduleId);
+  }
   return localStorageLib.getModuleSessions(moduleId);
 }
 
-export async function getModuleSession(moduleId: string, sessionId: string): Promise<ModuleProgress | null> {
+export async function getModuleSession(moduleId: string, sessionId: string, userId?: string): Promise<ModuleProgress | null> {
+  if (userId) {
+    return await supabaseStorageLib.getModuleSession(userId, moduleId, sessionId);
+  }
   return localStorageLib.getModuleSession(moduleId, sessionId);
 }
 
-export async function getInteractiveModuleSessions(moduleId: string): Promise<InteractiveModuleProgress[]> {
+export async function getInteractiveModuleSessions(moduleId: string, userId?: string): Promise<InteractiveModuleProgress[]> {
+  if (userId) {
+    return await supabaseStorageLib.getInteractiveModuleSessions(userId, moduleId);
+  }
   return localStorageLib.getInteractiveModuleSessions(moduleId);
 }
 
-export async function getInteractiveModuleSession(moduleId: string, sessionId: string): Promise<InteractiveModuleProgress | null> {
+export async function getInteractiveModuleSession(moduleId: string, sessionId: string, userId?: string): Promise<InteractiveModuleProgress | null> {
+  if (userId) {
+    return await supabaseStorageLib.getInteractiveModuleSession(userId, moduleId, sessionId);
+  }
   return localStorageLib.getInteractiveModuleSession(moduleId, sessionId);
 }

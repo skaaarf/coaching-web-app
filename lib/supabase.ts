@@ -16,9 +16,11 @@ export interface DBModuleProgress {
   id: string;
   user_id: string;
   module_id: string;
-  messages: StoredMessage[];
+  session_id?: string | null;
+  user_email?: string | null;
+  messages: StoredMessage[] | null;
   completed: boolean;
-  insights: string[];
+  insights: string[] | null;
   last_updated: string;
   created_at: string;
 }
@@ -28,6 +30,7 @@ export interface DBInteractiveModuleProgress {
   user_id: string;
   module_id: string;
   session_id?: string | null;
+  user_email?: string | null;
   data: InteractiveState | Record<string, unknown>;
   completed: boolean;
   last_updated: string;

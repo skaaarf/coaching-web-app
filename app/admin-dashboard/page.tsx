@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { InteractiveState, Message } from '@/types';
@@ -95,7 +95,7 @@ export default function AdminDashboardPage() {
             moduleId: progress.module_id,
             moduleName: moduleDefinition.title,
             moduleIcon: moduleDefinition.icon,
-            sessionId: progress.id,
+            sessionId: progress.session_id || progress.id,
             messageCount: messages.length,
             userMessageCount: userMessages.length,
             aiMessageCount: aiMessages.length,
@@ -141,7 +141,7 @@ export default function AdminDashboardPage() {
             moduleId: progress.module_id,
             moduleName: moduleDefinition.title,
             moduleIcon: moduleDefinition.icon,
-            sessionId: progress.id,
+            sessionId: progress.session_id || progress.id,
             messageCount: messages.length,
             userMessageCount: userMessages.length,
             aiMessageCount: aiMessages.length,
@@ -195,6 +195,25 @@ export default function AdminDashboardPage() {
   const getTotalMessages = () => allSessions.reduce((sum, s) => sum + s.messageCount, 0);
   const getTotalUserMessages = () => allSessions.reduce((sum, s) => sum + s.userMessageCount, 0);
   const getTotalAIMessages = () => allSessions.reduce((sum, s) => sum + s.aiMessageCount, 0);
+  const userModuleUsage = useMemo(() => {
+    const usageMap = new Map<string, Set<string>>();
+    allSessions.forEach((session) => {
+      const userKey = session.userEmail || session.userId;
+      if (!userKey) return;
+      const label = `${session.moduleIcon} ${session.moduleName}`;
+      if (!usageMap.has(userKey)) {
+        usageMap.set(userKey, new Set());
+      }
+      usageMap.get(userKey)!.add(label);
+    });
+
+    return Array.from(usageMap.entries())
+      .map(([user, modules]) => ({
+        user,
+        modules: Array.from(modules),
+      }))
+      .sort((a, b) => b.modules.length - a.modules.length);
+  }, [allSessions]);
 
   if (loading) {
     return (
@@ -311,6 +330,44 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         </div>
+
+        {userModuleUsage.length > 0 && (
+          <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-semibold text-gray-800">👣 ユーザーごとの利用モジュール</h2>
+              <span className="text-xs text-gray-500">ユニークユーザー {userModuleUsage.length}名</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {userModuleUsage.map(({ user, modules }) => {
+                const displayModules = modules.slice(0, 5);
+                const remaining = modules.length - displayModules.length;
+                return (
+                  <div
+                    key={user}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-xs min-w-[220px] bg-gray-50"
+                  >
+                    <p className="font-semibold text-gray-800 mb-1 truncate">{user}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {displayModules.map((module) => (
+                        <span
+                          key={`${user}-${module}`}
+                          className="px-2 py-0.5 bg-white border border-gray-200 rounded-full text-[11px] text-gray-700"
+                        >
+                          {module}
+                        </span>
+                      ))}
+                      {remaining > 0 && (
+                        <span className="px-2 py-0.5 bg-white border border-gray-200 rounded-full text-[11px] text-gray-500">
+                          +{remaining}件
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Sessions Table */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
