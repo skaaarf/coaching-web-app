@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { CAREER_MODULES } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
@@ -191,6 +192,27 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-4">
+        <section className="bg-white border border-blue-100 rounded-2xl shadow-sm mb-5 p-4 flex items-center gap-4">
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28">
+            <Image
+              src="/mascot/coach-point.png"
+              alt="みかたくん"
+              fill
+              sizes="(max-width: 768px) 120px, 160px"
+              className="object-contain"
+              priority
+            />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs uppercase tracking-wide text-blue-500 font-semibold mb-1">みかたガイド</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-1 leading-tight">
+              みかたくんが今日の学びをナビゲートします
+            </h2>
+            <p className="text-sm text-gray-600">
+              モジュールを選ぶと、みかたくんが質問に合わせて一緒に進めてくれます。まずは気になるテーマから試してみましょう。
+            </p>
+          </div>
+        </section>
         {/* Tab Navigation */}
         <div className="mb-4">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -317,6 +339,25 @@ export default function Home() {
             ))}
           </div>
         </div>
+
+        <section className="mt-6 bg-gradient-to-r from-cyan-50 to-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+          <div className="flex-1">
+            <p className="text-xs text-blue-500 font-semibold uppercase tracking-wide">みかたくんからのひとこと</p>
+            <h3 className="text-base font-bold text-gray-900 mb-1">気になることを見つけたら、いつでも声をかけてね</h3>
+            <p className="text-sm text-gray-600">
+              モジュールの途中でも質問があれば「ヒントがほしい」と送ってみよう。みかたくんが次の一歩を一緒に考えます。
+            </p>
+          </div>
+          <div className="relative w-24 h-24">
+            <Image
+              src="/mascot/coach-standing.png"
+              alt="みかたくん"
+              fill
+              sizes="96px"
+              className="object-contain"
+            />
+          </div>
+        </section>
 
         {/* Info note */}
         <div className="mt-6 text-center text-xs text-gray-500">

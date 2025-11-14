@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { Message } from '@/types';
 
 interface ChatInterfaceProps {
@@ -116,32 +117,57 @@ export default function ChatInterface({
     }
   };
 
-  const renderMessage = (message: Message, index: number) => (
-    <div
-      key={index}
-      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-    >
-      <div
-        className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-md ${
-          message.role === 'user'
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-200 text-gray-900 border-2 border-gray-300'
-        }`}
-      >
-        <div className="whitespace-pre-wrap break-words text-sm leading-relaxed font-medium">{message.content}</div>
-        <div
-          className={`text-xs mt-2 font-medium ${
-            message.role === 'user' ? 'text-blue-100' : 'text-gray-600'
-          }`}
-        >
-          {new Date(message.timestamp).toLocaleTimeString('ja-JP', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
+  const renderMessage = (message: Message, index: number) => {
+    const timeLabel = new Date(message.timestamp).toLocaleTimeString('ja-JP', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    if (message.role === 'assistant') {
+      return (
+        <div key={index} className="flex items-start gap-3">
+          <div className="w-12 h-12 relative rounded-2xl overflow-hidden border border-blue-100 bg-blue-50 shadow-inner flex-shrink-0">
+            <Image
+              src="/mascot/coach-standing.png"
+              alt="Coach"
+              fill
+              sizes="48px"
+              className="object-cover"
+              priority={false}
+            />
+          </div>
+          <div className="flex-1 border border-gray-200 bg-white rounded-2xl px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+              <span className="text-gray-900 font-semibold text-sm">Coach</span>
+              <span>{timeLabel}</span>
+            </div>
+            <p className="whitespace-pre-wrap break-words text-sm text-gray-900 leading-relaxed">
+              {message.content}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={index} className="flex justify-end">
+        <div className="max-w-[70%] flex flex-col items-end gap-1">
+          <div className="text-xs text-gray-400 flex items-center gap-2">
+            <span>{timeLabel}</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-gray-200 text-gray-600 bg-white">
+              <span className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-600">
+                私
+              </span>
+              あなた
+            </span>
+          </div>
+          <div className="w-full border border-gray-200 bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-900 shadow-sm whitespace-pre-wrap">
+            {message.content}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex flex-col h-full" style={{ fontSize: '80%' }}>
