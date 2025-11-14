@@ -417,7 +417,7 @@ export default function Home() {
 
                         return (
                           <button
-                            key={session.sessionId}
+                            key={`${session.sessionId}-${index}`}
                             onClick={() => handleContinue(session.sessionId)}
                             className="w-full bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-left px-4 py-3 rounded-lg transition-all group"
                           >
@@ -447,7 +447,7 @@ export default function Home() {
 
                         return (
                           <button
-                            key={session.sessionId}
+                            key={`${session.sessionId}-${index}`}
                             onClick={() => handleContinue(session.sessionId)}
                             className="w-full bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-left px-4 py-3 rounded-lg transition-all group"
                           >

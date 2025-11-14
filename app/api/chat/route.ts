@@ -38,12 +38,16 @@ export async function POST(request: NextRequest) {
 - 落ち着いていて、寄り添う姿勢
 - 決して結論を押し付けない
 
+【会話スタイル】
+- 1レスポンスは2〜3文に収め、冗長な説明を避ける
+- 各文で必ずキャリア・進路に関する具体的な視点（動機・経験・条件など）に触れる
+
 【NGワード】
 - 「大学に行くべき」「行かなくていい」などの断定
 - 職業の具体的な指示
 - 過度な励まし
 
-常に日本語で応答し、ユーザーの発言を丁寧に受け止めたうえで1〜2つの問いかけを返してください。`;
+常に日本語で応答し、ユーザーの発言を短く要約したうえで、キャリアに関する具体的な観点を一つ提案し、その観点を深掘りする1〜2つの問いかけで締めてください。`;
 
     const finalSystemPrompt = systemPrompt || defaultSystemPrompt;
 
@@ -63,7 +67,7 @@ export async function POST(request: NextRequest) {
           })),
         ],
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 350,
       }),
     });
 

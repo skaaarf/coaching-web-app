@@ -125,22 +125,22 @@ export default function ChatInterface({
 
     if (message.role === 'assistant') {
       return (
-        <div key={index} className="flex items-start gap-3">
-          <div className="w-12 h-12 relative rounded-2xl overflow-hidden border border-blue-100 bg-blue-50 shadow-inner flex-shrink-0">
-            <Image
-              src="/mascot/coach-standing.png"
-              alt="Coach"
-              fill
-              sizes="48px"
-              className="object-cover"
-              priority={false}
-            />
-          </div>
-          <div className="flex-1 border border-gray-200 bg-white rounded-2xl px-4 py-3 shadow-sm">
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-              <span className="text-gray-900 font-semibold text-sm">Coach</span>
-              <span>{timeLabel}</span>
+        <div key={index} className="flex flex-col items-start gap-2">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="w-10 h-10 relative rounded-full overflow-hidden border border-blue-100 bg-blue-50 shadow-inner">
+              <Image
+                src="/mascot/coach-standing.png"
+                alt="みかたくん"
+                fill
+                sizes="40px"
+                className="object-cover"
+                priority={false}
+              />
             </div>
+            <span className="text-gray-900 font-semibold text-sm">みかたくん</span>
+            <span>{timeLabel}</span>
+          </div>
+          <div className="border border-gray-200 bg-white rounded-2xl px-4 py-3 shadow-sm max-w-full">
             <p className="whitespace-pre-wrap break-words text-sm text-gray-900 leading-relaxed">
               {message.content}
             </p>
@@ -219,7 +219,7 @@ export default function ChatInterface({
                   onClick={() => handleSuggestedQuestionClick(question)}
                   className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 active:from-blue-200 active:to-indigo-200 border-2 border-blue-400 hover:border-blue-500 rounded-xl text-gray-800 hover:text-gray-900 font-medium transition-all shadow-sm hover:shadow-md active:shadow-lg touch-manipulation"
                 >
-                  📤 {question}
+                  {question}
                 </button>
               ))}
             </div>
