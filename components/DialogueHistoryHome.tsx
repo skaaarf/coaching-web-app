@@ -19,26 +19,29 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
 
   return (
     <div className="mb-8 animate-fade-in">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur">
+        <div className="px-6 py-5 border-b border-gray-200/70 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">対話履歴</h2>
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-gray-400">Timeline</p>
+              <h2 className="text-lg font-semibold text-gray-900">対話履歴</h2>
+            </div>
             {modulesWithDialogue.length > 0 && (
-              <span className="text-xs text-gray-500 font-medium">
+              <span className="rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-500">
                 {modulesWithDialogue.length}件
               </span>
             )}
           </div>
         </div>
 
-        {/* Content */}
         {modulesWithDialogue.length === 0 ? (
-          <div className="p-6 text-center">
-            <p className="text-sm text-gray-500 mb-4">まだ対話履歴がありません</p>
+          <div className="p-8 text-center">
+            <div className="text-4xl mb-3">🗂️</div>
+            <p className="text-sm text-gray-600 mb-1">まだ対話履歴がありません</p>
+            <p className="text-xs text-gray-500">最初のモジュールで、考えをアウトプットしてみましょう。</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100/80">
             {modulesWithDialogue.map(([moduleId, progress]) => {
               // Handle both regular chat modules and game dialogue sessions (e.g., "value-battle-dialogue")
               const isGameDialogue = moduleId.includes('-dialogue');
@@ -62,28 +65,37 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
 
               const previewText = `${lastMessage?.role === 'assistant' ? 'みかたくん: ' : 'あなた: '}${lastMessagePreview}${lastMessage?.content.length > 60 ? '...' : ''}`;
 
+              const handleClick = () => {
+                if (isGameDialogue && progress.sessionId) {
+                  window.location.href = `/interactive/${baseModuleId}?dialogueSessionId=${progress.sessionId}`;
+                  return;
+                }
+
+                if (onSessionClick && progress.sessionId) {
+                  onSessionClick(moduleId, progress.sessionId);
+                }
+              };
+
               return (
                 <button
                   key={moduleId}
-                  onClick={() => {
-                    if (onSessionClick && progress.sessionId) {
-                      // For game dialogues, navigate to the interactive module with sessionId
-                      const targetModuleId = isGameDialogue ? baseModuleId : moduleId;
-                      const path = isGameDialogue
-                        ? `/interactive/${targetModuleId}?dialogueSessionId=${progress.sessionId}`
-                        : `/module/${targetModuleId}?sessionId=${progress.sessionId}`;
-                      window.location.href = path;
-                    }
-                  }}
-                  className="w-full px-6 py-3 hover:bg-gray-50 transition-colors text-left group"
+                  onClick={handleClick}
+                  className="w-full px-6 py-4 transition-colors text-left group hover:bg-gray-50"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl flex-shrink-0">{moduleDefinition.icon}</div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-2xl">
+                      {moduleDefinition.icon}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <h3 className="font-medium text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">
+                        <h3 className="font-semibold text-gray-900 text-sm truncate group-hover:text-gray-900">
                           {displayTitle}
                         </h3>
+                        {isGameDialogue && (
+                          <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-gray-500">
+                            Interactive
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-gray-500 truncate">
                         {previewText}

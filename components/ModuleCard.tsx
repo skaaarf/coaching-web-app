@@ -14,92 +14,84 @@ export default function ModuleCard({ module, progress, interactiveProgress, onCl
   const isStarted = isInteractive
     ? !!interactiveProgress
     : messageCount > 0;
-  return (
-    <button
-      onClick={onClick}
-      className="w-full text-left"
-    >
-      <div className="group relative overflow-hidden rounded-2xl border-2 border-gray-300 bg-white p-6 shadow-lg transition-all duration-200 hover:shadow-xl hover:border-blue-400 active:scale-98 touch-manipulation">
+  const moduleLabel = isInteractive ? 'Interactive' : 'Dialogue';
+  const progressPercent = isInteractive
+    ? (interactiveProgress ? 100 : 0)
+    : Math.min(100, (messageCount / 10) * 100);
 
-        {/* Icon and status */}
-        <div className="flex items-start justify-between mb-5">
-          <div className="text-7xl transition-all duration-200 opacity-90">
+  return (
+    <button onClick={onClick} className="w-full text-left group">
+      <article className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/90 p-4 shadow-[0_14px_38px_rgba(15,23,42,0.08)] backdrop-blur transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/[0.03] via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
+        <div className="relative z-10 flex gap-4">
+          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-gray-900/5 text-3xl">
             {module.icon}
           </div>
-        </div>
-
-        {/* Title and description */}
-        <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors leading-tight">
-          {module.title}
-        </h3>
-        <p className="text-base text-gray-700 mb-5 leading-relaxed font-medium">
-          {module.description}
-        </p>
-
-        {/* Meta info */}
-        <div className="flex items-center justify-between text-sm text-gray-600 font-medium">
-          <span className="flex items-center bg-gray-100 px-3 py-2 rounded-lg">
-            <svg className="w-5 h-5 mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {module.estimatedTime}
-          </span>
-          {isStarted && !isInteractive && (
-            <span className="text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
-              {messageCount}件の対話
-            </span>
-          )}
-          {isStarted && isInteractive && interactiveProgress?.lastUpdated && (
-            <span className="text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
-              {new Date(interactiveProgress.lastUpdated).toLocaleDateString('ja-JP', {
-                month: 'numeric',
-                day: 'numeric'
-              })}にプレイ
-            </span>
-          )}
-        </div>
-
-        {/* Game history for interactive modules */}
-        {isInteractive && isStarted && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500 mb-2 font-semibold">プレイ履歴</p>
-            <div className="bg-blue-50 rounded-lg p-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-700">
-                  {interactiveProgress?.lastUpdated && (
-                    <>
-                      最終プレイ: {new Date(interactiveProgress.lastUpdated).toLocaleDateString('ja-JP', {
-                        year: 'numeric',
-                        month: 'numeric',
-                        day: 'numeric'
-                      })}
-                    </>
-                  )}
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[0.6rem] uppercase tracking-[0.35em] text-gray-400">{module.estimatedTime}</p>
+                <h3 className="text-lg font-semibold text-gray-900 leading-snug">
+                  {module.title}
+                </h3>
+              </div>
+              <span className="rounded-full border border-gray-200 px-2.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-[0.3em] text-gray-500">
+                {moduleLabel}
+              </span>
+            </div>
+            <p
+              className="text-sm text-gray-600 leading-snug"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {module.description}
+            </p>
+            <div className="flex items-center gap-3 text-[0.75rem] text-gray-500">
+              <div className="flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 font-semibold text-gray-700">
+                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {module.estimatedTime}
+              </div>
+              {isInteractive && interactiveProgress?.lastUpdated && (
+                <span>
+                  {new Date(interactiveProgress.lastUpdated).toLocaleDateString('ja-JP', {
+                    month: 'numeric',
+                    day: 'numeric'
+                  })} 更新
                 </span>
+              )}
+              {!isInteractive && isStarted && (
+                <span>{messageCount}件の対話</span>
+              )}
+            </div>
+            <div>
+              <div className="flex items-center justify-between text-[0.75rem] text-gray-500">
+                <span className="font-semibold text-gray-900">
+                  {isStarted ? '進行中' : 'まだ未体験'}
+                </span>
+                <span>
+                  {isInteractive
+                    ? (interactiveProgress ? 'プレイ履歴あり' : '未プレイ')
+                    : isStarted
+                      ? `${messageCount}件`
+                      : '記録なし'}
+                </span>
+              </div>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className={`h-full rounded-full ${isInteractive ? 'bg-gradient-to-r from-indigo-500 to-sky-500' : 'bg-gradient-to-r from-gray-900 to-gray-500'}`}
+                  style={{ width: `${progressPercent}%` }}
+                />
               </div>
             </div>
           </div>
-        )}
-
-        {/* Hover effect */}
-        <div className="absolute inset-0 border-3 border-transparent group-hover:border-blue-300 rounded-2xl pointer-events-none transition-colors" />
-      </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
-        }
-      `}</style>
+        </div>
+      </article>
     </button>
   );
 }
