@@ -4,7 +4,6 @@ import type {
   BranchMapPath,
   CareerProfile,
   InteractiveActivityData,
-  InteractiveModuleDataMap,
   InteractiveModuleId,
   LifeSimulatorSelections,
   ParentSelfScaleResponses,

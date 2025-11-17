@@ -3,13 +3,17 @@
  * 既存のコードを置き換えるためのヘルパー関数
  */
 
+type EqCapableQuery<T> = {
+  eq(column: string, value: unknown): T;
+};
+
 /**
  * user_id または anonymous_session_id でフィルタするクエリビルダー
  */
-export function filterByUserOrAnonymous(
-  query: any,
+export function filterByUserOrAnonymous<T extends EqCapableQuery<T>>(
+  query: T,
   userIdOrAnonymous: string
-): any {
+): T {
   const isAnonymous = userIdOrAnonymous.startsWith('anon_');
 
   if (isAnonymous) {
@@ -22,10 +26,10 @@ export function filterByUserOrAnonymous(
 /**
  * upsert用のデータオブジェクトを生成
  */
-export function createUpsertData(
+export function createUpsertData<T extends Record<string, unknown>>(
   userIdOrAnonymous: string,
-  baseData: Record<string, any>
-): Record<string, any> {
+  baseData: T
+): T & { user_id: string | null; anonymous_session_id: string | null } {
   const isAnonymous = userIdOrAnonymous.startsWith('anon_');
 
   return {
