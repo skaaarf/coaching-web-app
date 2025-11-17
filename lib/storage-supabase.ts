@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import type { DBInteractiveModuleProgress, DBModuleProgress, StoredMessage } from './supabase';
 import type { InteractiveState, Message } from '@/types';
 import { ModuleProgress, UserInsights, InteractiveModuleProgress } from '@/types';
+import { getVisitCount } from './anonymous-session';
 
 const DEFAULT_SESSION_LIMIT = 10;
 const SESSION_SUFFIX = '#session:';
@@ -127,6 +128,7 @@ async function legacySaveModuleProgress(userId: string, moduleId: string, progre
   // Update latest snapshot
   const createdAtIso = progress.createdAt ? new Date(progress.createdAt).toISOString() : new Date().toISOString();
   const lastUpdatedIso = progress.lastUpdated ? new Date(progress.lastUpdated).toISOString() : new Date().toISOString();
+  const visitCount = getVisitCount();
 
   const { error } = await supabase
     .from('module_progress')
@@ -139,6 +141,7 @@ async function legacySaveModuleProgress(userId: string, moduleId: string, progre
         insights: progress.insights || [],
         created_at: createdAtIso,
         last_updated: lastUpdatedIso,
+        visit_count: visitCount,
       },
       {
         onConflict: 'user_id,module_id',
@@ -161,6 +164,7 @@ async function legacySaveModuleProgress(userId: string, moduleId: string, progre
         insights: progress.insights || [],
         created_at: createdAtIso,
         last_updated: lastUpdatedIso,
+        visit_count: visitCount,
       },
       {
         onConflict: 'user_id,module_id',
@@ -220,6 +224,7 @@ async function legacyGetInteractiveModuleProgress(userId: string, moduleId: stri
 async function legacySaveInteractiveModuleProgress(userId: string, moduleId: string, progress: InteractiveModuleProgress): Promise<void> {
   const createdAtIso = progress.createdAt ? new Date(progress.createdAt).toISOString() : new Date().toISOString();
   const lastUpdatedIso = progress.lastUpdated ? new Date(progress.lastUpdated).toISOString() : new Date().toISOString();
+  const visitCount = getVisitCount();
 
   const { error } = await supabase
     .from('interactive_module_progress')
@@ -231,6 +236,7 @@ async function legacySaveInteractiveModuleProgress(userId: string, moduleId: str
         completed: progress.completed,
         created_at: createdAtIso,
         last_updated: lastUpdatedIso,
+        visit_count: visitCount,
       },
       {
         onConflict: 'user_id,module_id',
@@ -251,6 +257,7 @@ async function legacySaveInteractiveModuleProgress(userId: string, moduleId: str
         completed: progress.completed,
         created_at: createdAtIso,
         last_updated: lastUpdatedIso,
+        visit_count: visitCount,
       },
       {
         onConflict: 'user_id,module_id',
@@ -328,6 +335,7 @@ export async function saveModuleProgress(userIdOrAnonymous: string, moduleId: st
   const createdAt = progress.createdAt ? new Date(progress.createdAt) : new Date();
   const lastUpdated = progress.lastUpdated ? new Date(progress.lastUpdated) : new Date();
   const isAnonymous = userIdOrAnonymous.startsWith('anon_');
+  const visitCount = getVisitCount();
 
   return withSessionSupport(
     async () => {
@@ -345,6 +353,7 @@ export async function saveModuleProgress(userIdOrAnonymous: string, moduleId: st
             insights: progress.insights || [],
             created_at: createdAt.toISOString(),
             last_updated: lastUpdated.toISOString(),
+            visit_count: visitCount,
           },
           {
             onConflict: isAnonymous ? 'anonymous_session_id,module_id,session_id' : 'user_id,module_id,session_id',
@@ -509,6 +518,7 @@ export async function saveInteractiveModuleProgress(userIdOrAnonymous: string, m
   const createdAt = progress.createdAt ? new Date(progress.createdAt) : new Date();
   const lastUpdated = progress.lastUpdated ? new Date(progress.lastUpdated) : new Date();
   const isAnonymous = userIdOrAnonymous.startsWith('anon_');
+  const visitCount = getVisitCount();
 
   return withSessionSupport(
     async () => {
@@ -525,6 +535,7 @@ export async function saveInteractiveModuleProgress(userIdOrAnonymous: string, m
             completed: progress.completed,
             created_at: createdAt.toISOString(),
             last_updated: lastUpdated.toISOString(),
+            visit_count: visitCount,
           },
           {
             onConflict: isAnonymous ? 'anonymous_session_id,module_id,session_id' : 'user_id,module_id,session_id',
@@ -690,6 +701,7 @@ export async function getUserInsights(userIdOrAnonymous: string): Promise<UserIn
 
 export async function saveUserInsights(userIdOrAnonymous: string, insights: UserInsights): Promise<void> {
   const isAnonymous = userIdOrAnonymous.startsWith('anon_');
+  const visitCount = getVisitCount();
 
   try {
     const { error } = await supabase
@@ -701,7 +713,8 @@ export async function saveUserInsights(userIdOrAnonymous: string, insights: User
         current_concerns: insights.currentConcerns,
         thought_flow: insights.thoughtFlow,
         patterns: insights.patterns,
-        last_analyzed: new Date().toISOString()
+        last_analyzed: new Date().toISOString(),
+        visit_count: visitCount,
       }, {
         onConflict: isAnonymous ? 'anonymous_session_id' : 'user_id'
       });
