@@ -4,6 +4,7 @@
  */
 
 const ANONYMOUS_SESSION_KEY = 'coaching_anonymous_session_id';
+const VISIT_COUNT_KEY = 'coaching_visit_count';
 
 /**
  * 匿名セッションIDを生成
@@ -92,4 +93,57 @@ export function getUserOrAnonymousId(userId?: string | null): string {
  */
 export function isAnonymousSessionId(id: string): boolean {
   return id.startsWith('anon_');
+}
+
+/**
+ * 訪問回数を取得
+ */
+export function getVisitCount(): number {
+  if (typeof window === 'undefined') {
+    return 1;
+  }
+
+  try {
+    const count = localStorage.getItem(VISIT_COUNT_KEY);
+    return count ? parseInt(count, 10) : 1;
+  } catch (error) {
+    console.error('Failed to get visit count:', error);
+    return 1;
+  }
+}
+
+/**
+ * 訪問回数をインクリメント
+ */
+export function incrementVisitCount(): number {
+  if (typeof window === 'undefined') {
+    return 1;
+  }
+
+  try {
+    const currentCount = getVisitCount();
+    const newCount = currentCount + 1;
+    localStorage.setItem(VISIT_COUNT_KEY, String(newCount));
+    console.log('📊 訪問回数をインクリメント:', newCount);
+    return newCount;
+  } catch (error) {
+    console.error('Failed to increment visit count:', error);
+    return 1;
+  }
+}
+
+/**
+ * 訪問回数をリセット（ログイン後など）
+ */
+export function resetVisitCount(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    localStorage.removeItem(VISIT_COUNT_KEY);
+    console.log('🗑️ 訪問回数をリセット');
+  } catch (error) {
+    console.error('Failed to reset visit count:', error);
+  }
 }
