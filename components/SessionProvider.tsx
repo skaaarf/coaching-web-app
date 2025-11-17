@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { User } from "@supabase/supabase-js"
+import { incrementVisitCount } from "@/lib/anonymous-session"
 
 interface AuthContextType {
   userId: string | null;
@@ -29,6 +30,13 @@ export default function SessionProvider({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 訪問回数をインクリメント（ページロード時に1回だけ）
+    const visitCountedKey = 'visit_counted_this_session';
+    if (typeof window !== 'undefined' && !sessionStorage.getItem(visitCountedKey)) {
+      incrementVisitCount();
+      sessionStorage.setItem(visitCountedKey, 'true');
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
