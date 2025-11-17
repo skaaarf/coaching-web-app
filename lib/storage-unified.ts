@@ -1,80 +1,62 @@
 /**
  * Unified storage layer that uses Supabase when authenticated, localStorage when not
+ * 未ログインユーザーは匿名セッションIDでSupabaseに保存
  */
 
 import { ModuleProgress, UserInsights, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 import * as localStorageLib from './storage';
 import * as supabaseStorageLib from './storage-supabase';
+import { getOrCreateAnonymousSessionId } from './anonymous-session';
 
 // Module Progress functions
 export async function getModuleProgress(moduleId: string, userId?: string): Promise<ModuleProgress | null> {
-  if (userId) {
-    return await supabaseStorageLib.getModuleProgress(userId, moduleId);
-  }
-  return localStorageLib.getModuleProgress(moduleId);
+  // ログイン済みまたは匿名セッションIDでSupabaseを使用
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  return await supabaseStorageLib.getModuleProgress(userOrAnonymousId, moduleId);
 }
 
 export async function saveModuleProgress(moduleId: string, progress: ModuleProgress, userId?: string): Promise<void> {
-  if (userId) {
-    await supabaseStorageLib.saveModuleProgress(userId, moduleId, progress);
-  } else {
-    localStorageLib.saveModuleProgress(moduleId, progress);
-  }
+  // ログイン済みまたは匿名セッションIDでSupabaseを使用
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  await supabaseStorageLib.saveModuleProgress(userOrAnonymousId, moduleId, progress);
 }
 
 export async function getAllModuleProgress(userId?: string): Promise<Record<string, ModuleProgress>> {
-  if (userId) {
-    return await supabaseStorageLib.getAllModuleProgress(userId);
-  }
-  return localStorageLib.getAllModuleProgress();
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  return await supabaseStorageLib.getAllModuleProgress(userOrAnonymousId);
 }
 
 // Interactive Module Progress functions
 export async function getInteractiveModuleProgress(moduleId: string, userId?: string): Promise<InteractiveModuleProgress | null> {
-  if (userId) {
-    return await supabaseStorageLib.getInteractiveModuleProgress(userId, moduleId);
-  }
-  return localStorageLib.getInteractiveModuleProgress(moduleId);
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  return await supabaseStorageLib.getInteractiveModuleProgress(userOrAnonymousId, moduleId);
 }
 
 export async function saveInteractiveModuleProgress(moduleId: string, progress: InteractiveModuleProgress, userId?: string): Promise<void> {
-  if (userId) {
-    await supabaseStorageLib.saveInteractiveModuleProgress(userId, moduleId, progress);
-  } else {
-    localStorageLib.saveInteractiveModuleProgress(moduleId, progress);
-  }
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  await supabaseStorageLib.saveInteractiveModuleProgress(userOrAnonymousId, moduleId, progress);
 }
 
 export async function getAllInteractiveModuleProgress(userId?: string): Promise<Record<string, InteractiveModuleProgress>> {
-  if (userId) {
-    return await supabaseStorageLib.getAllInteractiveModuleProgress(userId);
-  }
-  return localStorageLib.getAllInteractiveModuleProgress();
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  return await supabaseStorageLib.getAllInteractiveModuleProgress(userOrAnonymousId);
 }
 
 // User Insights functions
 export async function getUserInsights(userId?: string): Promise<UserInsights | null> {
-  if (userId) {
-    return await supabaseStorageLib.getUserInsights(userId);
-  }
-  return localStorageLib.getUserInsights();
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  return await supabaseStorageLib.getUserInsights(userOrAnonymousId);
 }
 
 export async function saveUserInsights(insights: UserInsights, userId?: string): Promise<void> {
-  if (userId) {
-    await supabaseStorageLib.saveUserInsights(userId, insights);
-  } else {
-    localStorageLib.saveUserInsights(insights);
-  }
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  await supabaseStorageLib.saveUserInsights(userOrAnonymousId, insights);
 }
 
 // Clear all data
 export async function clearAllData(userId?: string): Promise<void> {
-  if (userId) {
-    await supabaseStorageLib.clearAllData(userId);
-  } else {
-    localStorageLib.clearAllData();
-  }
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  await supabaseStorageLib.clearAllData(userOrAnonymousId);
 }
 
 // Value snapshots functions (localStorage only for now)
@@ -90,31 +72,23 @@ export async function getAllValueSnapshots(): Promise<ValueSnapshot[]> {
   return localStorageLib.getAllValueSnapshots();
 }
 
-// Session functions (localStorage only for now)
+// Session functions
 export async function getModuleSessions(moduleId: string, userId?: string): Promise<ModuleProgress[]> {
-  if (userId) {
-    return await supabaseStorageLib.getModuleSessions(userId, moduleId);
-  }
-  return localStorageLib.getModuleSessions(moduleId);
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  return await supabaseStorageLib.getModuleSessions(userOrAnonymousId, moduleId);
 }
 
 export async function getModuleSession(moduleId: string, sessionId: string, userId?: string): Promise<ModuleProgress | null> {
-  if (userId) {
-    return await supabaseStorageLib.getModuleSession(userId, moduleId, sessionId);
-  }
-  return localStorageLib.getModuleSession(moduleId, sessionId);
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  return await supabaseStorageLib.getModuleSession(userOrAnonymousId, moduleId, sessionId);
 }
 
 export async function getInteractiveModuleSessions(moduleId: string, userId?: string): Promise<InteractiveModuleProgress[]> {
-  if (userId) {
-    return await supabaseStorageLib.getInteractiveModuleSessions(userId, moduleId);
-  }
-  return localStorageLib.getInteractiveModuleSessions(moduleId);
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  return await supabaseStorageLib.getInteractiveModuleSessions(userOrAnonymousId, moduleId);
 }
 
 export async function getInteractiveModuleSession(moduleId: string, sessionId: string, userId?: string): Promise<InteractiveModuleProgress | null> {
-  if (userId) {
-    return await supabaseStorageLib.getInteractiveModuleSession(userId, moduleId, sessionId);
-  }
-  return localStorageLib.getInteractiveModuleSession(moduleId, sessionId);
+  const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
+  return await supabaseStorageLib.getInteractiveModuleSession(userOrAnonymousId, moduleId, sessionId);
 }
