@@ -3,6 +3,8 @@
 -- ==========================================
 -- 未ログインユーザーのデータもSupabaseに保存できるようにする
 -- 匿名セッションIDを使用して、後でログイン時にデータをマージ可能
+-- 使い方: このファイル全体を Supabase の SQL Editor にコピーして実行してください。
+--        IF NOT EXISTS 付きなので複数回実行しても安全です。
 
 -- ==========================================
 -- 1. テーブルに anonymous_session_id カラムを追加
@@ -46,21 +48,49 @@ ALTER TABLE value_snapshots
 -- ==========================================
 -- user_id と anonymous_session_id のどちらか一方は必須
 
-ALTER TABLE module_progress
-  ADD CONSTRAINT module_progress_user_or_anon_check
-  CHECK (user_id IS NOT NULL OR anonymous_session_id IS NOT NULL);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'module_progress_user_or_anon_check'
+  ) THEN
+    ALTER TABLE module_progress
+      ADD CONSTRAINT module_progress_user_or_anon_check
+      CHECK (user_id IS NOT NULL OR anonymous_session_id IS NOT NULL);
+  END IF;
+END $$;
 
-ALTER TABLE interactive_module_progress
-  ADD CONSTRAINT interactive_module_progress_user_or_anon_check
-  CHECK (user_id IS NOT NULL OR anonymous_session_id IS NOT NULL);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'interactive_module_progress_user_or_anon_check'
+  ) THEN
+    ALTER TABLE interactive_module_progress
+      ADD CONSTRAINT interactive_module_progress_user_or_anon_check
+      CHECK (user_id IS NOT NULL OR anonymous_session_id IS NOT NULL);
+  END IF;
+END $$;
 
-ALTER TABLE user_insights
-  ADD CONSTRAINT user_insights_user_or_anon_check
-  CHECK (user_id IS NOT NULL OR anonymous_session_id IS NOT NULL);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'user_insights_user_or_anon_check'
+  ) THEN
+    ALTER TABLE user_insights
+      ADD CONSTRAINT user_insights_user_or_anon_check
+      CHECK (user_id IS NOT NULL OR anonymous_session_id IS NOT NULL);
+  END IF;
+END $$;
 
-ALTER TABLE value_snapshots
-  ADD CONSTRAINT value_snapshots_user_or_anon_check
-  CHECK (user_id IS NOT NULL OR anonymous_session_id IS NOT NULL);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'value_snapshots_user_or_anon_check'
+  ) THEN
+    ALTER TABLE value_snapshots
+      ADD CONSTRAINT value_snapshots_user_or_anon_check
+      CHECK (user_id IS NOT NULL OR anonymous_session_id IS NOT NULL);
+  END IF;
+END $$;
 
 -- ==========================================
 -- 4. インデックスを追加
@@ -86,16 +116,54 @@ WHERE anonymous_session_id IS NOT NULL;
 -- ==========================================
 -- 5. UNIQUE制約を更新
 -- ==========================================
--- user_id だけでなく anonymous_session_id も考慮
+-- user_id だけでなく anonymous_session_id も考慮（存在しない場合のみ追加）
 
--- 既存の制約を削除
 ALTER TABLE user_insights
   DROP CONSTRAINT IF EXISTS user_insights_user_id_key;
 
--- 新しい制約を追加
--- user_id がある場合は user_id でユニーク
--- anonymous_session_id がある場合は anonymous_session_id でユニーク
--- （完全なユニーク制約は複雑なので、アプリケーション側で制御）
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'module_progress_anon_unique'
+  ) THEN
+    ALTER TABLE module_progress
+      ADD CONSTRAINT module_progress_anon_unique
+      UNIQUE (anonymous_session_id, module_id);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'interactive_module_progress_anon_unique'
+  ) THEN
+    ALTER TABLE interactive_module_progress
+      ADD CONSTRAINT interactive_module_progress_anon_unique
+      UNIQUE (anonymous_session_id, module_id);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'user_insights_anon_unique'
+  ) THEN
+    ALTER TABLE user_insights
+      ADD CONSTRAINT user_insights_anon_unique
+      UNIQUE (anonymous_session_id);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'value_snapshots_anon_unique'
+  ) THEN
+    ALTER TABLE value_snapshots
+      ADD CONSTRAINT value_snapshots_anon_unique
+      UNIQUE (anonymous_session_id, id);
+  END IF;
+END $$;
 
 -- ==========================================
 -- 6. RLSポリシーを更新
@@ -107,6 +175,10 @@ DROP POLICY IF EXISTS "Users can view their own module progress" ON module_progr
 DROP POLICY IF EXISTS "Users can insert their own module progress" ON module_progress;
 DROP POLICY IF EXISTS "Users can update their own module progress" ON module_progress;
 DROP POLICY IF EXISTS "Users can delete their own module progress" ON module_progress;
+DROP POLICY IF EXISTS "Anyone can view their own module progress" ON module_progress;
+DROP POLICY IF EXISTS "Anyone can insert module progress" ON module_progress;
+DROP POLICY IF EXISTS "Anyone can update their own module progress" ON module_progress;
+DROP POLICY IF EXISTS "Anyone can delete their own module progress" ON module_progress;
 
 -- 匿名ユーザーも含めて読み書き可能に
 CREATE POLICY "Anyone can view their own module progress"
@@ -142,6 +214,10 @@ DROP POLICY IF EXISTS "Users can view their own interactive module progress" ON 
 DROP POLICY IF EXISTS "Users can insert their own interactive module progress" ON interactive_module_progress;
 DROP POLICY IF EXISTS "Users can update their own interactive module progress" ON interactive_module_progress;
 DROP POLICY IF EXISTS "Users can delete their own interactive module progress" ON interactive_module_progress;
+DROP POLICY IF EXISTS "Anyone can view their own interactive module progress" ON interactive_module_progress;
+DROP POLICY IF EXISTS "Anyone can insert interactive module progress" ON interactive_module_progress;
+DROP POLICY IF EXISTS "Anyone can update their own interactive module progress" ON interactive_module_progress;
+DROP POLICY IF EXISTS "Anyone can delete their own interactive module progress" ON interactive_module_progress;
 
 CREATE POLICY "Anyone can view their own interactive module progress"
   ON interactive_module_progress FOR SELECT
@@ -176,6 +252,10 @@ DROP POLICY IF EXISTS "Users can view their own insights" ON user_insights;
 DROP POLICY IF EXISTS "Users can insert their own insights" ON user_insights;
 DROP POLICY IF EXISTS "Users can update their own insights" ON user_insights;
 DROP POLICY IF EXISTS "Users can delete their own insights" ON user_insights;
+DROP POLICY IF EXISTS "Anyone can view their own insights" ON user_insights;
+DROP POLICY IF EXISTS "Anyone can insert insights" ON user_insights;
+DROP POLICY IF EXISTS "Anyone can update their own insights" ON user_insights;
+DROP POLICY IF EXISTS "Anyone can delete their own insights" ON user_insights;
 
 CREATE POLICY "Anyone can view their own insights"
   ON user_insights FOR SELECT
@@ -210,6 +290,10 @@ DROP POLICY IF EXISTS "Users can view their own value snapshots" ON value_snapsh
 DROP POLICY IF EXISTS "Users can insert their own value snapshots" ON value_snapshots;
 DROP POLICY IF EXISTS "Users can update their own value snapshots" ON value_snapshots;
 DROP POLICY IF EXISTS "Users can delete their own value snapshots" ON value_snapshots;
+DROP POLICY IF EXISTS "Anyone can view their own value snapshots" ON value_snapshots;
+DROP POLICY IF EXISTS "Anyone can insert value snapshots" ON value_snapshots;
+DROP POLICY IF EXISTS "Anyone can update their own value snapshots" ON value_snapshots;
+DROP POLICY IF EXISTS "Anyone can delete their own value snapshots" ON value_snapshots;
 
 CREATE POLICY "Anyone can view their own value snapshots"
   ON value_snapshots FOR SELECT
