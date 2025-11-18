@@ -7,6 +7,12 @@ const INSIGHTS_KEY = `${STORAGE_PREFIX}insights`;
 const INTERACTIVE_PROGRESS_KEY = `${STORAGE_PREFIX}interactive-progress`;
 const VALUES_KEY = `${STORAGE_PREFIX}values`;
 
+const debugLog = (...args: unknown[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(...args);
+  }
+};
+
 // Migrate old progress data to new sessions format
 export function migrateToSessions(): void {
   if (typeof window === 'undefined') return;
@@ -14,11 +20,11 @@ export function migrateToSessions(): void {
   try {
     const allSessions = localStorage.getItem(SESSIONS_KEY);
     if (allSessions) {
-      console.log('Sessions already migrated');
+      debugLog('Sessions already migrated');
       return; // Already migrated
     }
 
-    console.log('Starting migration to sessions format...');
+    debugLog('Starting migration to sessions format...');
     const sessionsMap: Record<string, Array<ModuleProgress | InteractiveModuleProgress>> = {};
 
     // Migrate chat modules
@@ -33,7 +39,7 @@ export function migrateToSessions(): void {
             createdAt: progress.createdAt || progress.lastUpdated || new Date(),
           };
           sessionsMap[moduleId] = [session];
-          console.log(`Migrated chat module: ${moduleId}`);
+          debugLog(`Migrated chat module: ${moduleId}`);
         }
       });
     }
@@ -51,7 +57,7 @@ export function migrateToSessions(): void {
           };
           const sessionKey = `interactive-${moduleId}`;
           sessionsMap[sessionKey] = [session];
-          console.log(`Migrated interactive module: ${moduleId}`);
+          debugLog(`Migrated interactive module: ${moduleId}`);
         }
       });
     }
@@ -59,9 +65,9 @@ export function migrateToSessions(): void {
     // Save migrated sessions
     if (Object.keys(sessionsMap).length > 0) {
       localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessionsMap));
-      console.log('Migration complete. Migrated sessions:', sessionsMap);
+      debugLog('Migration complete. Migrated sessions:', sessionsMap);
     } else {
-      console.log('No data to migrate');
+      debugLog('No data to migrate');
     }
   } catch (error) {
     console.error('Error during migration:', error);
@@ -241,14 +247,14 @@ export function saveInteractiveModuleProgress(moduleId: string, progress: Intera
   if (typeof window === 'undefined') return;
 
   try {
-    console.log('=== saveInteractiveModuleProgress (storage) ===');
-    console.log('moduleId:', moduleId);
-    console.log('progress:', progress);
+    debugLog('=== saveInteractiveModuleProgress (storage) ===');
+    debugLog('moduleId:', moduleId);
+    debugLog('progress:', progress);
 
     // Add sessionId and createdAt if not present
     if (!progress.sessionId) {
       progress.sessionId = `session-${Date.now()}`;
-      console.log('Generated new sessionId:', progress.sessionId);
+      debugLog('Generated new sessionId:', progress.sessionId);
     }
     if (!progress.createdAt) {
       progress.createdAt = new Date();
@@ -259,7 +265,7 @@ export function saveInteractiveModuleProgress(moduleId: string, progress: Intera
     const sessionsMap = allSessions ? JSON.parse(allSessions) : {};
 
     const sessionKey = `interactive-${moduleId}`;
-    console.log('sessionKey:', sessionKey);
+    debugLog('sessionKey:', sessionKey);
 
     if (!sessionsMap[sessionKey]) {
       sessionsMap[sessionKey] = [];
@@ -267,17 +273,17 @@ export function saveInteractiveModuleProgress(moduleId: string, progress: Intera
 
     // Find and update existing session or add new one
     const sessionIndex = sessionsMap[sessionKey].findIndex((s: InteractiveModuleProgress) => s.sessionId === progress.sessionId);
-    console.log('Existing session index:', sessionIndex);
+    debugLog('Existing session index:', sessionIndex);
 
     if (sessionIndex >= 0) {
-      console.log('Updating existing session at index', sessionIndex);
+      debugLog('Updating existing session at index', sessionIndex);
       sessionsMap[sessionKey][sessionIndex] = progress;
     } else {
-      console.log('Adding new session');
+      debugLog('Adding new session');
       sessionsMap[sessionKey].unshift(progress); // Add at the beginning
     }
 
-    console.log('Total sessions for', sessionKey, ':', sessionsMap[sessionKey].length);
+    debugLog('Total sessions for', sessionKey, ':', sessionsMap[sessionKey].length);
 
     // Keep only last 10 sessions per module
     if (sessionsMap[sessionKey].length > 10) {
@@ -285,7 +291,7 @@ export function saveInteractiveModuleProgress(moduleId: string, progress: Intera
     }
 
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessionsMap));
-    console.log('Saved to localStorage');
+    debugLog('Saved to localStorage');
 
     // Also save to old format for backward compatibility (only the latest session)
     const allProgress = localStorage.getItem(INTERACTIVE_PROGRESS_KEY);
@@ -392,14 +398,14 @@ export function getModuleSessions(moduleId: string): ModuleProgress[] {
 
   try {
     const allSessions = localStorage.getItem(SESSIONS_KEY);
-    console.log('getModuleSessions - allSessions raw:', allSessions);
+    debugLog('getModuleSessions - allSessions raw:', allSessions);
     if (!allSessions) return [];
 
     const sessionsMap = JSON.parse(allSessions) as Record<string, ModuleProgress[]>;
-    console.log('getModuleSessions - sessionsMap:', sessionsMap);
-    console.log('getModuleSessions - moduleId:', moduleId);
+    debugLog('getModuleSessions - sessionsMap:', sessionsMap);
+    debugLog('getModuleSessions - moduleId:', moduleId);
     const sessions = sessionsMap[moduleId] || [];
-    console.log('getModuleSessions - sessions:', sessions);
+    debugLog('getModuleSessions - sessions:', sessions);
 
     // Parse dates
     return sessions.map(session => ({
@@ -436,15 +442,15 @@ export function getInteractiveModuleSessions(moduleId: string): InteractiveModul
 
   try {
     const allSessions = localStorage.getItem(SESSIONS_KEY);
-    console.log('getInteractiveModuleSessions - allSessions raw:', allSessions);
+    debugLog('getInteractiveModuleSessions - allSessions raw:', allSessions);
     if (!allSessions) return [];
 
     const sessionsMap = JSON.parse(allSessions) as Record<string, InteractiveModuleProgress[]>;
-    console.log('getInteractiveModuleSessions - sessionsMap:', sessionsMap);
+    debugLog('getInteractiveModuleSessions - sessionsMap:', sessionsMap);
     const sessionKey = `interactive-${moduleId}`;
-    console.log('getInteractiveModuleSessions - sessionKey:', sessionKey);
+    debugLog('getInteractiveModuleSessions - sessionKey:', sessionKey);
     const sessions = sessionsMap[sessionKey] || [];
-    console.log('getInteractiveModuleSessions - sessions:', sessions);
+    debugLog('getInteractiveModuleSessions - sessions:', sessions);
 
     // Parse dates
     return sessions.map(session => ({
