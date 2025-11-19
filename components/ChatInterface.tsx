@@ -227,14 +227,16 @@ export default function ChatInterface({
         )}
 
         {isLoading ? (
-          <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-100 px-4 py-3 text-sm text-gray-600">
-            <div className="flex space-x-1">
-              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '120ms' }} />
-              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '240ms' }} />
+          <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-100 px-4 py-3 text-gray-600">
+            <div className="flex items-center gap-3">
+              <div className="flex space-x-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '120ms' }} />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '240ms' }} />
+              </div>
+              <div className="flex-1 text-sm font-semibold min-w-0 truncate">みかたくんが考え中です…</div>
             </div>
-            <span className="font-semibold">みかたくんが考え中です…</span>
-            <span className="text-xs text-gray-500">少し待っててね</span>
+            <p className="text-xs text-gray-500 mt-2">少し待っててね</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex items-end space-x-2">
