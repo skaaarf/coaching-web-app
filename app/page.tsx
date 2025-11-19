@@ -345,8 +345,8 @@ export default function Home() {
         )}
       </main>
 
-      <nav className="fixed bottom-6 left-1/2 z-30 w-full max-w-md -translate-x-1/2 px-4">
-        <div className="flex items-center justify-between rounded-3xl border border-white/70 bg-white/90 px-4 py-3 shadow-xl shadow-gray-900/10 backdrop-blur">
+      <nav className="fixed bottom-6 inset-x-0 z-30 px-4">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between rounded-3xl border border-white/70 bg-white/90 px-4 py-3 shadow-xl shadow-gray-900/10 backdrop-blur">
           {sectionTabs.map(tab => {
             const isActive = activeSection === tab.id;
             return (
