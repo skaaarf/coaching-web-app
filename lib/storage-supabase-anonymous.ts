@@ -3,17 +3,17 @@
  * 既存のコードを置き換えるためのヘルパー関数
  */
 
-type EqCapableQuery<T> = {
-  eq(column: string, value: unknown): T;
+type EqCapableQuery = {
+  eq(column: string, value: unknown): EqCapableQuery;
 };
 
 /**
  * user_id または anonymous_session_id でフィルタするクエリビルダー
  */
-export function filterByUserOrAnonymous<T extends EqCapableQuery<T>>(
-  query: T,
+export function filterByUserOrAnonymous(
+  query: EqCapableQuery,
   userIdOrAnonymous: string
-): T {
+): EqCapableQuery {
   const isAnonymous = userIdOrAnonymous.startsWith('anon_');
 
   if (isAnonymous) {

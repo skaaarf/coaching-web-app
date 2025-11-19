@@ -3,7 +3,7 @@ import type { DBInteractiveModuleProgress, DBModuleProgress, StoredMessage } fro
 import type { InteractiveState, Message } from '@/types';
 import { ModuleProgress, UserInsights, InteractiveModuleProgress } from '@/types';
 import { getVisitCount } from './anonymous-session';
-import { createUpsertData, filterByUserOrAnonymous, getConflictConstraint } from './storage-supabase-anonymous';
+import { createUpsertData, getConflictConstraint } from './storage-supabase-anonymous';
 
 const DEFAULT_SESSION_LIMIT = 10;
 const SESSION_SUFFIX = '#session:';
@@ -16,7 +16,13 @@ let hasLoggedSessionFallback = false;
 type SupabaseErrorLike = { code?: string; message?: string };
 const isNoRowError = (error: SupabaseErrorLike | null | undefined) =>
   !!error && error.code === 'PGRST116';
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const applyUserFilter = (query: any, userIdOrAnonymous: string) => {
+  if (userIdOrAnonymous.startsWith('anon_')) {
+    return query.eq('anonymous_session_id', userIdOrAnonymous);
+  }
+  return query.eq('user_id', userIdOrAnonymous);
+};
 const normalizeMessages = (rawMessages?: StoredMessage[] | null): Message[] => {
   if (!rawMessages) return [];
   return rawMessages.map((message) => ({
@@ -111,7 +117,7 @@ async function withSessionSupport<T>(operation: () => Promise<T>, legacyOperatio
 }
 
 async function legacyGetModuleProgress(userIdOrAnonymous: string, moduleId: string): Promise<ModuleProgress | null> {
-  const query = filterByUserOrAnonymous(
+  const query = applyUserFilter(
     supabase.from('module_progress').select('*'),
     userIdOrAnonymous
   );
@@ -172,7 +178,7 @@ async function legacySaveModuleProgress(userIdOrAnonymous: string, moduleId: str
 }
 
 async function legacyGetModuleSessions(userIdOrAnonymous: string, moduleId: string, limit = DEFAULT_SESSION_LIMIT): Promise<ModuleProgress[]> {
-  const baseQuery = filterByUserOrAnonymous(
+  const baseQuery = applyUserFilter(
     supabase.from('module_progress').select('*'),
     userIdOrAnonymous
   );
@@ -190,7 +196,7 @@ async function legacyGetModuleSessions(userIdOrAnonymous: string, moduleId: stri
 
 async function legacyGetModuleSession(userIdOrAnonymous: string, moduleId: string, sessionId: string): Promise<ModuleProgress | null> {
   const encodedModuleId = encodeSessionModuleId(moduleId, sessionId);
-  const query = filterByUserOrAnonymous(
+  const query = applyUserFilter(
     supabase.from('module_progress').select('*'),
     userIdOrAnonymous
   );
@@ -204,7 +210,7 @@ async function legacyGetModuleSession(userIdOrAnonymous: string, moduleId: strin
 }
 
 async function legacyGetInteractiveModuleProgress(userIdOrAnonymous: string, moduleId: string): Promise<InteractiveModuleProgress | null> {
-  const query = filterByUserOrAnonymous(
+  const query = applyUserFilter(
     supabase.from('interactive_module_progress').select('*'),
     userIdOrAnonymous
   );
@@ -261,7 +267,7 @@ async function legacySaveInteractiveModuleProgress(userIdOrAnonymous: string, mo
 }
 
 async function legacyGetInteractiveModuleSessions(userIdOrAnonymous: string, moduleId: string, limit = DEFAULT_SESSION_LIMIT): Promise<InteractiveModuleProgress[]> {
-  const baseQuery = filterByUserOrAnonymous(
+  const baseQuery = applyUserFilter(
     supabase.from('interactive_module_progress').select('*'),
     userIdOrAnonymous
   );
@@ -279,7 +285,7 @@ async function legacyGetInteractiveModuleSessions(userIdOrAnonymous: string, mod
 
 async function legacyGetInteractiveModuleSession(userIdOrAnonymous: string, moduleId: string, sessionId: string): Promise<InteractiveModuleProgress | null> {
   const encodedModuleId = encodeSessionModuleId(moduleId, sessionId);
-  const query = filterByUserOrAnonymous(
+  const query = applyUserFilter(
     supabase.from('interactive_module_progress').select('*'),
     userIdOrAnonymous
   );
@@ -661,7 +667,7 @@ export async function getInteractiveModuleSession(userIdOrAnonymous: string, mod
 
 // User Insights functions
 export async function getUserInsights(userIdOrAnonymous: string): Promise<UserInsights | null> {
-  const query = filterByUserOrAnonymous(
+  const query = applyUserFilter(
     supabase.from('user_insights').select('*'),
     userIdOrAnonymous
   );
