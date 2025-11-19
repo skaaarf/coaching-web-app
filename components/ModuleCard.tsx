@@ -11,13 +11,13 @@ export default function ModuleCard({ module, progress, interactiveProgress, onCl
   // Handle both chat and interactive modules
   const isInteractive = module.moduleType === 'interactive';
   const messageCount = progress?.messages.length || 0;
-  const isStarted = isInteractive
-    ? !!interactiveProgress
-    : messageCount > 0;
-  const moduleLabel = isInteractive ? 'Interactive' : 'Dialogue';
-  const progressPercent = isInteractive
-    ? (interactiveProgress ? 100 : 0)
-    : Math.min(100, (messageCount / 10) * 100);
+  const lastUpdatedLabel = interactiveProgress?.lastUpdated
+    ? `${new Date(interactiveProgress.lastUpdated).toLocaleDateString('ja-JP', {
+        month: 'numeric',
+        day: 'numeric'
+      })} 更新`
+    : null;
+  const dialogueMeta = !isInteractive && messageCount > 0 ? `${messageCount}件の対話` : null;
 
   return (
     <button onClick={onClick} className="w-full text-left group">
@@ -28,19 +28,11 @@ export default function ModuleCard({ module, progress, interactiveProgress, onCl
             {module.icon}
           </div>
           <div className="flex-1 space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[0.6rem] uppercase tracking-[0.35em] text-gray-400">{module.estimatedTime}</p>
-                <h3 className="text-lg font-semibold text-gray-900 leading-snug">
-                  {module.title}
-                </h3>
-              </div>
-              <span className="rounded-full border border-gray-200 px-2.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-[0.3em] text-gray-500">
-                {moduleLabel}
-              </span>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900 leading-snug">
+              {module.title}
+            </h3>
             <p
-              className="text-sm text-gray-600 leading-snug"
+              className="text-sm text-gray-600 leading-snug min-h-[2.6rem]"
               style={{
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
@@ -50,44 +42,15 @@ export default function ModuleCard({ module, progress, interactiveProgress, onCl
             >
               {module.description}
             </p>
-            <div className="flex items-center gap-3 text-[0.75rem] text-gray-500">
-              <div className="flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 font-semibold text-gray-700">
-                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <div className="flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-1.5 font-semibold text-gray-700">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {module.estimatedTime}
+                <span>{module.estimatedTime}</span>
               </div>
-              {isInteractive && interactiveProgress?.lastUpdated && (
-                <span>
-                  {new Date(interactiveProgress.lastUpdated).toLocaleDateString('ja-JP', {
-                    month: 'numeric',
-                    day: 'numeric'
-                  })} 更新
-                </span>
-              )}
-              {!isInteractive && isStarted && (
-                <span>{messageCount}件の対話</span>
-              )}
-            </div>
-            <div>
-              <div className="flex items-center justify-between text-[0.75rem] text-gray-500">
-                <span className="font-semibold text-gray-900">
-                  {isStarted ? '進行中' : 'まだ未体験'}
-                </span>
-                <span>
-                  {isInteractive
-                    ? (interactiveProgress ? 'プレイ履歴あり' : '未プレイ')
-                    : isStarted
-                      ? `${messageCount}件`
-                      : '記録なし'}
-                </span>
-              </div>
-              <div className="mt-1 h-1 overflow-hidden rounded-full bg-gray-100">
-                <div
-                  className={`h-full rounded-full ${isInteractive ? 'bg-gradient-to-r from-indigo-500 to-sky-500' : 'bg-gradient-to-r from-gray-900 to-gray-500'}`}
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
+              {lastUpdatedLabel && <span>{lastUpdatedLabel}</span>}
+              {dialogueMeta && <span>{dialogueMeta}</span>}
             </div>
           </div>
         </div>

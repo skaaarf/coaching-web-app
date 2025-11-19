@@ -25,6 +25,7 @@ export default function Home() {
   const [previousValues, setPreviousValues] = useState<ValueSnapshot | null>(null);
   const [loadingValues, setLoadingValues] = useState(false);
   const [activeTab, setActiveTab] = useState<'values' | 'insights'>('values');
+  const [activeSection, setActiveSection] = useState<'analysis' | 'modules' | 'history'>('analysis');
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showModuleDialog, setShowModuleDialog] = useState(false);
   const [moduleSessions, setModuleSessions] = useState<ModuleProgress[]>([]);
@@ -148,6 +149,11 @@ export default function Home() {
   };
 
   const hasAnyProgress = Object.keys(allProgress).length > 0 || Object.keys(allInteractiveProgress).length > 0;
+  const sectionTabs: Array<{ id: 'analysis' | 'modules' | 'history'; label: string; icon: string }> = [
+    { id: 'analysis', label: '分析', icon: '📊' },
+    { id: 'modules', label: 'モジュール', icon: '🎮' },
+    { id: 'history', label: '履歴', icon: '🕘' },
+  ];
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#f5f5f7]">
       <div className="pointer-events-none absolute inset-x-0 top-[-280px] h-[420px] bg-gradient-to-b from-sky-200/60 via-transparent to-transparent blur-3xl" />
@@ -177,161 +183,187 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="relative z-20 mx-auto w-full max-w-3xl px-5 pb-16">
-        <section className="mt-6 rounded-[28px] border border-white/70 bg-white/80 px-5 py-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-gray-400">Personal data</p>
-              <h3 className="text-xl font-semibold text-gray-900">あなただけのコンパス</h3>
-              <p className="text-sm text-gray-500 mt-1">価値観とキャリア志向の2軸から、今日の問いを決めましょう。</p>
-            </div>
-            <div className="rounded-full border border-gray-200/80 px-4 py-1 text-xs font-semibold text-gray-500">
-              {activeTab === 'values' ? 'Values' : 'Insights'}
-            </div>
-          </div>
-          <div className="mt-5 inline-flex rounded-full border border-gray-200 bg-gray-100 p-1 text-sm font-semibold text-gray-500">
-            <button
-              onClick={() => setActiveTab('values')}
-              className={`rounded-full px-4 py-2 transition ${
-                activeTab === 'values'
-                  ? 'bg-white text-gray-900 shadow'
-                  : 'text-gray-500'
-              }`}
-            >
-              💎 あなたの価値観
-            </button>
-            <button
-              onClick={() => setActiveTab('insights')}
-              className={`rounded-full px-4 py-2 transition ${
-                activeTab === 'insights'
-                  ? 'bg-white text-gray-900 shadow'
-                  : 'text-gray-500'
-              }`}
-            >
-              🧠 キャリア志向
-            </button>
-          </div>
+      <main className="relative z-20 mx-auto w-full max-w-3xl px-5 pb-32">
+        {activeSection === 'analysis' && (
+          <>
+            <section className="mt-6 rounded-[28px] border border-white/70 bg-white/80 px-5 py-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.4em] text-gray-400">Personal data</p>
+                  <h3 className="text-xl font-semibold text-gray-900">あなただけのコンパス</h3>
+                  <p className="text-sm text-gray-500 mt-1">価値観とキャリア志向の2軸から、今日の問いを決めましょう。</p>
+                </div>
+                <div className="rounded-full border border-gray-200/80 px-4 py-1 text-xs font-semibold text-gray-500">
+                  {activeTab === 'values' ? 'Values' : 'Insights'}
+                </div>
+              </div>
+              <div className="mt-5 inline-flex rounded-full border border-gray-200 bg-gray-100 p-1 text-sm font-semibold text-gray-500">
+                <button
+                  onClick={() => setActiveTab('values')}
+                  className={`rounded-full px-4 py-2 transition ${
+                    activeTab === 'values'
+                      ? 'bg-white text-gray-900 shadow'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  💎 あなたの価値観
+                </button>
+                <button
+                  onClick={() => setActiveTab('insights')}
+                  className={`rounded-full px-4 py-2 transition ${
+                    activeTab === 'insights'
+                      ? 'bg-white text-gray-900 shadow'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  🧠 キャリア志向
+                </button>
+              </div>
 
-          <div className="mt-6">
-            {activeTab === 'values' && (
-              <div className="rounded-3xl border border-gray-200/70 bg-white/90 p-4">
-                {loadingValues ? (
-                  <div className="text-center py-8">
-                    <div className="flex items-center justify-center gap-3 mb-3">
-                      <div className="w-6 h-6 border-4 border-gray-900/40 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-base font-medium text-gray-700">価値観を読み込み中...</span>
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      対話から抽出された価値観を分析しています
-                    </p>
+              <div className="mt-6">
+                {activeTab === 'values' && (
+                  <div className="rounded-3xl border border-gray-200/70 bg-white/90 p-4">
+                    {loadingValues ? (
+                      <div className="text-center py-8">
+                        <div className="flex items-center justify-center gap-3 mb-3">
+                          <div className="w-6 h-6 border-4 border-gray-900/40 border-t-transparent rounded-full animate-spin" />
+                          <span className="text-base font-medium text-gray-700">価値観を読み込み中...</span>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          対話から抽出された価値観を分析しています
+                        </p>
+                      </div>
+                    ) : currentValues ? (
+                      <ValuesDisplay current={currentValues} previous={previousValues} showHeader={false} showFooter={false} />
+                    ) : (
+                      <div className="rounded-2xl border border-dashed border-gray-300 px-6 py-8 text-center">
+                        <div className="text-5xl mb-3">💎</div>
+                        <p className="text-gray-700 mb-2 text-sm">まだ価値観が抽出されていません</p>
+                        <p className="text-xs text-gray-500">
+                          対話やゲームモジュールを進めると、AIがあなたの価値観を分析します
+                        </p>
+                      </div>
+                    )}
                   </div>
-                ) : currentValues ? (
-                  <ValuesDisplay current={currentValues} previous={previousValues} showHeader={false} showFooter={false} />
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-gray-300 px-6 py-8 text-center">
-                    <div className="text-5xl mb-3">💎</div>
-                    <p className="text-gray-700 mb-2 text-sm">まだ価値観が抽出されていません</p>
-                    <p className="text-xs text-gray-500">
-                      対話やゲームモジュールを進めると、AIがあなたの価値観を分析します
-                    </p>
+                )}
+
+                {activeTab === 'insights' && (
+                  <div className="rounded-3xl border border-gray-200/70 bg-white/90 p-4">
+                    {hasAnyProgress ? (
+                      <InsightsPanel insights={insights} isLoading={isLoadingInsights} />
+                    ) : (
+                      <div className="rounded-2xl border border-dashed border-gray-300 px-6 py-8 text-center">
+                        <div className="text-5xl mb-3">🎯</div>
+                        <p className="text-gray-700 mb-2 text-sm">まだ対話やゲームを始めていません</p>
+                        <p className="text-xs text-gray-500">
+                          対話やゲームモジュールを進めると、AIがあなたのキャリア志向を分析します
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
+            </section>
 
-            {activeTab === 'insights' && (
-              <div className="rounded-3xl border border-gray-200/70 bg-white/90 p-4">
-                {hasAnyProgress ? (
-                  <InsightsPanel insights={insights} isLoading={isLoadingInsights} />
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-gray-300 px-6 py-8 text-center">
-                    <div className="text-5xl mb-3">🎯</div>
-                    <p className="text-gray-700 mb-2 text-sm">まだ対話やゲームを始めていません</p>
-                    <p className="text-xs text-gray-500">
-                      対話やゲームモジュールを進めると、AIがあなたのキャリア志向を分析します
-                    </p>
-                  </div>
-                )}
+            {!hasAnyProgress && (
+              <div className="mt-6 overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-br from-gray-900 via-gray-800 to-black px-6 py-8 text-white shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
+                <div className="text-xs uppercase tracking-[0.4em] text-white/60">First step</div>
+                <h2 className="mt-3 text-2xl font-semibold">ようこそ、みかたスタジオへ</h2>
+                <p className="mt-2 text-sm text-white/80">
+                  ここから先は、あなただけのキャリア実験室。直感的に話してみて、問いの連鎖を楽しみましょう。
+                </p>
               </div>
             )}
-          </div>
-        </section>
-
-        <DialogueHistoryHome
-          chatProgress={allProgress}
-          onSessionClick={(moduleId, sessionId) => {
-            router.push(`/module/${moduleId}?sessionId=${sessionId}`);
-          }}
-        />
-
-        {!hasAnyProgress && (
-          <div className="mb-6 overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-br from-gray-900 via-gray-800 to-black px-6 py-8 text-white shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
-            <div className="text-xs uppercase tracking-[0.4em] text-white/60">First step</div>
-            <h2 className="mt-3 text-2xl font-semibold">ようこそ、みかたスタジオへ</h2>
-            <p className="mt-2 text-sm text-white/80">
-              ここから先は、あなただけのキャリア実験室。直感的に話してみて、問いの連鎖を楽しみましょう。
-            </p>
-          </div>
+          </>
         )}
 
-        <div ref={modulesSectionRef} className="scroll-mt-24">
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-gray-400">Programs</p>
-              <h2 className="text-2xl font-semibold text-gray-900">モジュール</h2>
-              <p className="text-sm text-gray-500 mt-1">対話とゲームで、自分の意志を磨こう</p>
-            </div>
-            <div className="text-xs text-gray-500">
-              {CAREER_MODULES.length}件
-            </div>
-          </div>
+        {activeSection === 'modules' && (
+          <>
+            <div ref={modulesSectionRef} className="scroll-mt-24 mt-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold text-gray-900">モジュール</h2>
+                <p className="text-sm text-gray-500 mt-1">対話とゲームで、自分の意志を磨こう</p>
+              </div>
 
-          <div className="space-y-5">
-            {CAREER_MODULES.filter(m => m.moduleType === 'chat').map(moduleDefinition => (
-              <ModuleCard
-                key={moduleDefinition.id}
-                module={moduleDefinition}
-                progress={allProgress[moduleDefinition.id]}
-                interactiveProgress={allInteractiveProgress[moduleDefinition.id]}
-                onClick={() => handleModuleClick(moduleDefinition.id, moduleDefinition.moduleType || 'chat')}
-              />
-            ))}
-            {CAREER_MODULES.filter(m => m.moduleType === 'interactive').map(moduleDefinition => (
-              <ModuleCard
-                key={moduleDefinition.id}
-                module={moduleDefinition}
-                progress={allProgress[moduleDefinition.id]}
-                interactiveProgress={allInteractiveProgress[moduleDefinition.id]}
-                onClick={() => handleModuleClick(moduleDefinition.id, moduleDefinition.moduleType || 'interactive')}
-              />
-            ))}
-          </div>
-        </div>
+              <div className="space-y-5">
+                {CAREER_MODULES.filter(m => m.moduleType === 'chat').map(moduleDefinition => (
+                  <ModuleCard
+                    key={moduleDefinition.id}
+                    module={moduleDefinition}
+                    progress={allProgress[moduleDefinition.id]}
+                    interactiveProgress={allInteractiveProgress[moduleDefinition.id]}
+                    onClick={() => handleModuleClick(moduleDefinition.id, moduleDefinition.moduleType || 'chat')}
+                  />
+                ))}
+                {CAREER_MODULES.filter(m => m.moduleType === 'interactive').map(moduleDefinition => (
+                  <ModuleCard
+                    key={moduleDefinition.id}
+                    module={moduleDefinition}
+                    progress={allProgress[moduleDefinition.id]}
+                    interactiveProgress={allInteractiveProgress[moduleDefinition.id]}
+                    onClick={() => handleModuleClick(moduleDefinition.id, moduleDefinition.moduleType || 'interactive')}
+                  />
+                ))}
+              </div>
+            </div>
 
-        <section className="mt-10 overflow-hidden rounded-[32px] border border-gray-900/10 bg-gradient-to-br from-gray-900 via-[#0d1422] to-black px-6 py-8 text-white shadow-[0_40px_90px_rgba(10,10,10,0.6)]">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <div className="flex-1 space-y-3">
-              <p className="text-xs uppercase tracking-[0.4em] text-white/60">Mikata signal</p>
-              <h3 className="text-2xl font-semibold">気になることを見つけたら、いつでも声をかけてね</h3>
-              <p className="text-sm text-white/70">
-                モジュールの途中でも質問があれば「ヒントがほしい」と送ってみよう。みかたくんが次の一歩を一緒に考えます。
-              </p>
-            </div>
-            <div className="relative h-32 w-32 flex-shrink-0">
-              <Image
-                src="/mascot/coach-standing.png"
-                alt="みかたくん"
-                fill
-                sizes="128px"
-                className="object-contain drop-shadow-[0_20px_40px_rgba(32,32,32,0.45)]"
-              />
-            </div>
+            <section className="mt-10 overflow-hidden rounded-[32px] border border-gray-900/10 bg-gradient-to-br from-gray-900 via-[#0d1422] to-black px-6 py-8 text-white shadow-[0_40px_90px_rgba(10,10,10,0.6)]">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+                <div className="flex-1 space-y-3">
+                  <p className="text-xs uppercase tracking-[0.4em] text-white/60">Mikata signal</p>
+                  <h3 className="text-2xl font-semibold">気になることを見つけたら、いつでも声をかけてね</h3>
+                  <p className="text-sm text-white/70">
+                    モジュールの途中でも質問があれば「ヒントがほしい」と送ってみよう。みかたくんが次の一歩を一緒に考えます。
+                  </p>
+                </div>
+                <div className="relative h-32 w-32 flex-shrink-0">
+                  <Image
+                    src="/mascot/coach-standing.png"
+                    alt="みかたくん"
+                    fill
+                    sizes="128px"
+                    className="object-contain drop-shadow-[0_20px_40px_rgba(32,32,32,0.45)]"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 text-xs text-white/60">
+                対話の中で価値観が見えてきたら、「価値観バトル」にも挑戦してみよう！
+              </div>
+            </section>
+          </>
+        )}
+
+        {activeSection === 'history' && (
+          <div className="mt-6">
+            <DialogueHistoryHome
+              chatProgress={allProgress}
+              onSessionClick={(moduleId, sessionId) => {
+                router.push(`/module/${moduleId}?sessionId=${sessionId}`);
+              }}
+            />
           </div>
-          <div className="mt-6 text-xs text-white/60">
-            対話の中で価値観が見えてきたら、「価値観バトル」にも挑戦してみよう！
-          </div>
-        </section>
+        )}
       </main>
+
+      <nav className="fixed bottom-6 left-1/2 z-30 w-full max-w-md -translate-x-1/2 px-4">
+        <div className="flex items-center justify-between rounded-3xl border border-white/70 bg-white/90 px-4 py-3 shadow-xl shadow-gray-900/10 backdrop-blur">
+          {sectionTabs.map(tab => {
+            const isActive = activeSection === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveSection(tab.id)}
+                className={`flex flex-col items-center text-xs font-semibold transition ${
+                  isActive ? 'text-gray-900' : 'text-gray-400'
+                }`}
+              >
+                <span className="text-lg">{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
       {showModuleDialog && selectedModule && (() => {
         const moduleDefinition = CAREER_MODULES.find(m => m.id === selectedModule);
