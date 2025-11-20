@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { ModuleProgress, InteractiveModuleProgress } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
 
@@ -11,6 +12,8 @@ interface ModuleSelectionDialogProps {
     onContinue: (sessionId: string) => void;
 }
 
+type SessionType = ModuleProgress | InteractiveModuleProgress;
+
 export default function ModuleSelectionDialog({
     isOpen,
     onClose,
@@ -20,6 +23,61 @@ export default function ModuleSelectionDialog({
     onStartNew,
     onContinue,
 }: ModuleSelectionDialogProps) {
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const startButtonRef = useRef<HTMLButtonElement>(null);
+
+    // Escキーでダイアログを閉じる
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isOpen) {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscape);
+            // ダイアログが開いたら最初のボタンにフォーカス
+            startButtonRef.current?.focus();
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [isOpen, onClose]);
+
+    // フォーカストラップ
+    useEffect(() => {
+        if (!isOpen || !dialogRef.current) return;
+
+        const dialog = dialogRef.current;
+        const focusableElements = dialog.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        const handleTab = (e: KeyboardEvent) => {
+            if (e.key !== 'Tab') return;
+
+            if (e.shiftKey) {
+                if (document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement?.focus();
+                }
+            } else {
+                if (document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement?.focus();
+                }
+            }
+        };
+
+        dialog.addEventListener('keydown', handleTab as EventListener);
+        return () => {
+            dialog.removeEventListener('keydown', handleTab as EventListener);
+        };
+    }, [isOpen, moduleSessions, interactiveModuleSessions]);
+
     if (!isOpen || !selectedModuleId) return null;
 
     const moduleDefinition = CAREER_MODULES.find(m => m.id === selectedModuleId);
@@ -27,18 +85,72 @@ export default function ModuleSelectionDialog({
     const sessions = isInteractive ? interactiveModuleSessions : moduleSessions;
     const hasSessions = sessions.length > 0;
 
+    // セッションボタンをレンダリングするヘルパー関数
+    const renderSessionButton = (session: SessionType, index: number) => {
+        const isModuleProgress = 'messages' in session;
+
+        let sessionTitle: string;
+        let subtitle: string | null = null;
+
+        if (isModuleProgress) {
+            const firstUserMessage = session.messages?.find(m => m.role === 'user');
+            const titleText = firstUserMessage?.content.substring(0, 30) || `セッション ${index + 1}`;
+            sessionTitle = firstUserMessage && firstUserMessage.content.length > 30
+                ? `${titleText}...`
+                : titleText;
+            subtitle = `${session.messages?.length || 0}件のメッセージ`;
+        } else {
+            sessionTitle = `プレイ ${index + 1}`;
+        }
+
+        const formattedDate = new Date(session.lastUpdated).toLocaleDateString('ja-JP', {
+            month: 'numeric',
+            day: 'numeric',
+        });
+
+        return (
+            <button
+                key={session.sessionId}
+                onClick={() => onContinue(session.sessionId)}
+                className="w-full bg-white border border-gray-200 hover:border-gray-400 hover:bg-gray-50 text-left px-4 py-3 rounded-2xl transition group"
+            >
+                <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate group-hover:text-gray-900">
+                            {sessionTitle}
+                        </p>
+                        {subtitle && (
+                            <p className="text-xs text-gray-500 mt-1">
+                                {subtitle}
+                            </p>
+                        )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                        <p className="text-xs text-gray-400">
+                            {formattedDate}
+                        </p>
+                    </div>
+                </div>
+            </button>
+        );
+    };
+
     return (
         <div
             className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm"
             onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dialog-title"
         >
             <div
+                ref={dialogRef}
                 className="bg-white/95 rounded-3xl shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-fade-in border border-gray-200 backdrop-blur"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6 border-b border-gray-200 flex-shrink-0">
                     <p className="text-xs uppercase tracking-[0.4em] text-gray-400">Session</p>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    <h3 id="dialog-title" className="text-xl font-bold text-gray-900 mb-2">
                         {moduleDefinition?.title}
                     </h3>
                     <p className="text-gray-600 text-sm">
@@ -48,6 +160,7 @@ export default function ModuleSelectionDialog({
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-3">
                     <button
+                        ref={startButtonRef}
                         onClick={onStartNew}
                         className="w-full bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-2xl font-semibold transition shadow-lg shadow-gray-900/30"
                     >
@@ -57,67 +170,7 @@ export default function ModuleSelectionDialog({
                     {hasSessions && (
                         <div className="space-y-3 pt-1">
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">過去のプレイ履歴</p>
-                            {!isInteractive && moduleSessions.map((session, index) => {
-                                const firstUserMessage = session.messages?.find(m => m.role === 'user');
-                                const sessionTitle = firstUserMessage?.content.substring(0, 30) || `セッション ${index + 1}`;
-                                const displayTitle = firstUserMessage && firstUserMessage.content.length > 30
-                                    ? `${sessionTitle}...`
-                                    : sessionTitle;
-
-                                return (
-                                    <button
-                                        key={`${session.sessionId}-${index}`}
-                                        onClick={() => onContinue(session.sessionId)}
-                                        className="w-full bg-white border border-gray-200 hover:border-gray-400 hover:bg-gray-50 text-left px-4 py-3 rounded-2xl transition group"
-                                    >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-gray-900 text-sm truncate group-hover:text-gray-900">
-                                                    {displayTitle}
-                                                </p>
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    {session.messages?.length || 0}件のメッセージ
-                                                </p>
-                                            </div>
-                                            <div className="text-right flex-shrink-0">
-                                                <p className="text-xs text-gray-400">
-                                                    {new Date(session.lastUpdated).toLocaleDateString('ja-JP', {
-                                                        month: 'numeric',
-                                                        day: 'numeric',
-                                                    })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                            {isInteractive && interactiveModuleSessions.map((session, index) => {
-                                const sessionTitle = `プレイ ${index + 1}`;
-
-                                return (
-                                    <button
-                                        key={`${session.sessionId}-${index}`}
-                                        onClick={() => onContinue(session.sessionId)}
-                                        className="w-full bg-white border border-gray-200 hover:border-gray-400 hover:bg-gray-50 text-left px-4 py-3 rounded-2xl transition group"
-                                    >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-gray-900 text-sm truncate group-hover:text-gray-900">
-                                                    {sessionTitle}
-                                                </p>
-                                            </div>
-                                            <div className="text-right flex-shrink-0">
-                                                <p className="text-xs text-gray-400">
-                                                    {new Date(session.lastUpdated).toLocaleDateString('ja-JP', {
-                                                        month: 'numeric',
-                                                        day: 'numeric',
-                                                    })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </button>
-                                );
-                            })}
+                            {sessions.map((session, index) => renderSessionButton(session, index))}
                         </div>
                     )}
                 </div>
