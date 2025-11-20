@@ -13,9 +13,11 @@ export function useHomeData() {
     const [allInteractiveProgress, setAllInteractiveProgress] = useState<Record<string, InteractiveModuleProgress>>({});
     const [insights, setInsights] = useState<UserInsights | null>(null);
     const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+    const [insightsError, setInsightsError] = useState<Error | null>(null);
     const [currentValues, setCurrentValues] = useState<ValueSnapshot | null>(null);
     const [previousValues, setPreviousValues] = useState<ValueSnapshot | null>(null);
     const [loadingValues, setLoadingValues] = useState(false);
+    const [valuesError, setValuesError] = useState<Error | null>(null);
     const [activeTab, setActiveTab] = useState<'values' | 'insights'>('values');
     const [activeSection, setActiveSection] = useState<'analysis' | 'modules' | 'history'>('analysis');
     const [selectedModule, setSelectedModule] = useState<string | null>(null);
@@ -53,6 +55,7 @@ export function useHomeData() {
     const fetchValues = async () => {
         try {
             setLoadingValues(true);
+            setValuesError(null);
             const snapshots = await storage.getAllValueSnapshots();
 
             if (snapshots && snapshots.length > 0) {
@@ -64,6 +67,7 @@ export function useHomeData() {
             }
         } catch (err) {
             console.error('Error fetching values:', err);
+            setValuesError(err instanceof Error ? err : new Error('価値観の読み込みに失敗しました'));
         } finally {
             setLoadingValues(false);
         }
@@ -71,6 +75,7 @@ export function useHomeData() {
 
     const regenerateInsights = async (progress?: Record<string, ModuleProgress>) => {
         setIsLoadingInsights(true);
+        setInsightsError(null);
         try {
             const progressToUse = progress || allProgress;
             const newInsights = await generateInsights(progressToUse);
@@ -78,6 +83,7 @@ export function useHomeData() {
             await storage.saveUserInsights(newInsights);
         } catch (error) {
             console.error('Failed to generate insights:', error);
+            setInsightsError(error instanceof Error ? error : new Error('キャリア志向の分析に失敗しました'));
         } finally {
             setIsLoadingInsights(false);
         }
@@ -147,9 +153,11 @@ export function useHomeData() {
         allInteractiveProgress,
         insights,
         isLoadingInsights,
+        insightsError,
         currentValues,
         previousValues,
         loadingValues,
+        valuesError,
         activeTab,
         setActiveTab,
         activeSection,
