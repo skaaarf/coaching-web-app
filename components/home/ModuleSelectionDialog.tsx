@@ -24,7 +24,6 @@ export default function ModuleSelectionDialog({
     onContinue,
 }: ModuleSelectionDialogProps) {
     const dialogRef = useRef<HTMLDivElement>(null);
-    const startButtonRef = useRef<HTMLButtonElement>(null);
 
     // Escキーでダイアログを閉じる
     useEffect(() => {
@@ -36,14 +35,26 @@ export default function ModuleSelectionDialog({
 
         if (isOpen) {
             document.addEventListener('keydown', handleEscape);
-            // ダイアログが開いたら最初のボタンにフォーカス
-            startButtonRef.current?.focus();
         }
 
         return () => {
             document.removeEventListener('keydown', handleEscape);
         };
     }, [isOpen, onClose]);
+
+    // 自動起動: セッションがない場合は自動的に新規作成
+    useEffect(() => {
+        if (!isOpen || !selectedModuleId) return;
+
+        const moduleDefinition = CAREER_MODULES.find(m => m.id === selectedModuleId);
+        const isInteractive = moduleDefinition?.moduleType === 'interactive';
+        const sessions = isInteractive ? interactiveModuleSessions : moduleSessions;
+
+        if (sessions.length === 0) {
+            // セッションがない場合は自動的に開始
+            onStartNew();
+        }
+    }, [isOpen, selectedModuleId, moduleSessions, interactiveModuleSessions, onStartNew]);
 
     // フォーカストラップ
     useEffect(() => {
@@ -84,6 +95,11 @@ export default function ModuleSelectionDialog({
     const isInteractive = moduleDefinition?.moduleType === 'interactive';
     const sessions = isInteractive ? interactiveModuleSessions : moduleSessions;
     const hasSessions = sessions.length > 0;
+
+    // セッションがない場合はダイアログを表示しない（自動起動される）
+    if (!hasSessions) {
+        return null;
+    }
 
     // セッションボタンをレンダリングするヘルパー関数
     const renderSessionButton = (session: SessionType, index: number) => {
@@ -154,25 +170,25 @@ export default function ModuleSelectionDialog({
                         {moduleDefinition?.title}
                     </h3>
                     <p className="text-gray-600 text-sm">
-                        {hasSessions ? '新しく始めるか、過去のプレイから選んでください' : 'このモジュールを始めますか？'}
+                        過去のプレイ履歴から選択してください
                     </p>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-3">
-                    <button
-                        ref={startButtonRef}
-                        onClick={onStartNew}
-                        className="w-full bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-2xl font-semibold transition shadow-lg shadow-gray-900/30"
-                    >
-                        ✨ 新しく始める
-                    </button>
-
-                    {hasSessions && (
-                        <div className="space-y-3 pt-1">
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">過去のプレイ履歴</p>
-                            {sessions.map((session, index) => renderSessionButton(session, index))}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between mb-2">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                履歴 ({sessions.length})
+                            </p>
+                            <button
+                                onClick={onStartNew}
+                                className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                                + 新規作成
+                            </button>
                         </div>
-                    )}
+                        {sessions.map((session, index) => renderSessionButton(session, index))}
+                    </div>
                 </div>
 
                 <div className="p-4 border-t border-gray-200 flex-shrink-0">

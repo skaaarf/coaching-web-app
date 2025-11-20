@@ -1,28 +1,22 @@
 'use client';
 
-import { EraData } from '@/types';
+import { EraData, LifeReflectionData } from '@/types';
 import { getEraById } from '@/lib/lifeReflectionData';
 
 interface Props {
     eraId: string;
-    eraData: EraData;
-    onQuestionSelect: (questionId: string) => void;
-    onSatisfactionInput: () => void;
+    data: LifeReflectionData;
+    onSelectQuestion: (eraId: string, questionId: string) => void;
+    onUpdateSatisfaction: (eraId: string, value: number) => void;
     onBack: () => void;
 }
 
-export default function QuestionListScreen({
-    eraId,
-    eraData,
-    onQuestionSelect,
-    onSatisfactionInput,
-    onBack,
-}: Props) {
+export default function QuestionListScreen({ eraId, data, onSelectQuestion, onUpdateSatisfaction, onBack }: Props) {
     const eraConfig = getEraById(eraId);
+    const eraKey = eraId as keyof typeof data.eras;
+    const eraData = data.eras[eraKey];
 
-    if (!eraConfig) {
-        return <div>Era not found</div>;
-    }
+    if (!eraConfig) return null;
 
     const totalQuestions = eraConfig.questions.length;
     const answeredQuestions = eraData.questionResponses.length;
@@ -30,6 +24,19 @@ export default function QuestionListScreen({
 
     return (
         <div className="max-w-2xl mx-auto px-4 py-6">
+            <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <button
+                        onClick={onBack}
+                        className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h2 className="text-xl font-bold text-gray-800">{eraConfig.name}</h2>
+                </div>
+            </div>
             {/* Header */}
             <div className="mb-6">
                 <button
@@ -126,8 +133,8 @@ export default function QuestionListScreen({
                     onClick={onSatisfactionInput}
                     disabled={!allQuestionsAnswered}
                     className={`w-full py-3 px-6 rounded-xl font-bold text-sm transition-all duration-200 ${allQuestionsAnswered
-                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02]'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02]'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         }`}
                 >
                     {eraData.satisfaction !== null && eraData.satisfaction !== undefined

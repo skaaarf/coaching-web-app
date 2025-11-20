@@ -89,10 +89,20 @@ export function useHomeData() {
         }
     };
 
-    const instantModules = new Set(['persona-dictionary', 'career-dictionary']);
+    const instantModules = new Set(['persona-dictionary', 'career-dictionary', 'life-reflection']);
 
     const handleModuleClick = async (moduleId: string, moduleType: 'chat' | 'interactive') => {
         if (instantModules.has(moduleId)) {
+            // Life Reflectionは常に同じセッションを使う（編集モード）
+            if (moduleId === 'life-reflection') {
+                const sessions = await storage.getInteractiveModuleSessions(moduleId);
+                const sessionId = sessions.length > 0 ? sessions[0].sessionId : 'life-reflection-main';
+                const path = `/interactive/${moduleId}?sessionId=${sessionId}`;
+                router.push(path);
+                return;
+            }
+
+            // Other instant modules
             const path = moduleType === 'chat'
                 ? `/module/${moduleId}`
                 : `/interactive/${moduleId}`;

@@ -107,20 +107,48 @@ export default function InteractiveModulePage() {
         if (progress && progress.data) {
           const savedState = progress.data as InteractiveState;
 
-          // When loading a past session, always start from result phase
-          // This allows users to review the result before starting dialogue
-          if (savedState.phase === 'dialogue') {
+          // Special handling for life-reflection: ALWAYS start in activity phase (stage selection)
+          // This ensures we behave like a game save (Mario world map), not resuming mid-dialogue
+          if (moduleId === 'life-reflection') {
             setState({
-              phase: 'result',
-              data: savedState.data,
+              phase: 'activity',
+              // Use saved data if available, otherwise initialize empty
+              activityData: savedState.data || { eras: {}, graphPoints: [], turningPoints: [] }
             });
+          }
+          // Normal handling for other modules
+          else if (savedState.phase === 'dialogue') {
+            // Resume existing dialogue
+            console.log('Resuming existing dialogue');
+            setState({
+              phase: 'dialogue',
+              data: savedState.data,
+              messages: savedState.messages,
+            });
+
+            // Find the dialogue session ID from the saved progress
+            const dialogueModuleId = `${moduleId}-dialogue`;
+            const allSessions = await storage.getModuleSessions(dialogueModuleId);
+            if (allSessions.length > 0) {
+              // Find the most recent dialogue session for this game
+              const recentDialogue = allSessions[0];
+              setDialogueSessionId(recentDialogue.sessionId);
+            }
           } else {
             setState(savedState);
           }
         } else {
           // New session - start fresh
           console.log('New session, starting fresh');
-          setState({ phase: 'activity' });
+
+          if (moduleId === 'life-reflection') {
+            setState({
+              phase: 'activity',
+              activityData: { eras: {}, graphPoints: [], turningPoints: [] }
+            });
+          } else {
+            setState({ phase: 'activity' });
+          }
         }
       } else {
         // No sessionId in URL - load latest session
@@ -129,13 +157,36 @@ export default function InteractiveModulePage() {
           setCurrentSessionId(progress.sessionId);
           if (progress.data) {
             const savedState = progress.data as InteractiveState;
-            setState(savedState);
+
+            // Force activity for life-reflection
+            if (moduleId === 'life-reflection') {
+              setState({
+                phase: 'activity',
+                activityData: savedState.data || { eras: {}, graphPoints: [], turningPoints: [] }
+              });
+            } else {
+              setState(savedState);
+            }
+          } else if (moduleId === 'life-reflection') {
+            // Session exists but no data
+            setState({
+              phase: 'activity',
+              activityData: { eras: {}, graphPoints: [], turningPoints: [] }
+            });
           }
         } else {
           // No existing progress
           const newSessionId = `session-${Date.now()}`;
           setCurrentSessionId(newSessionId);
-          setState({ phase: 'activity' });
+
+          if (moduleId === 'life-reflection') {
+            setState({
+              phase: 'activity',
+              activityData: { eras: {}, graphPoints: [], turningPoints: [] }
+            });
+          } else {
+            setState({ phase: 'activity' });
+          }
         }
       }
 
@@ -596,7 +647,12 @@ ${interviewSnippet}
 
   const handleBackToResult = () => {
     if (state.phase === 'dialogue') {
-      setState({ phase: 'result', data: state.data });
+      // For life-reflection, go back to activity (edit mode)
+      if (moduleId === 'life-reflection') {
+        setState({ phase: 'activity', data: state.data });
+      } else {
+        setState({ phase: 'result', data: state.data });
+      }
     }
   };
 
@@ -779,6 +835,7 @@ ${interviewSnippet}
                 <LifeReflection
                   initialData={state.data as LifeReflectionData | undefined}
                   onComplete={(data) => handleActivityComplete(data)}
+                  onStartDialogue={(questionContext) => handleStartDialogue(questionContext)}
                 />
               )}
             </>

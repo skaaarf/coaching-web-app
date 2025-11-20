@@ -14,6 +14,7 @@ import { getEraById } from '@/lib/lifeReflectionData';
 interface Props {
     initialData?: LifeReflectionData;
     onComplete: (data: LifeReflectionData) => void;
+    onStartDialogue?: (questionContext: string) => void;
 }
 
 type Screen =
@@ -31,7 +32,7 @@ const createEmptyEraData = (eraId: string): EraData => ({
     completed: false,
 });
 
-export default function LifeReflection({ initialData, onComplete }: Props) {
+export default function LifeReflection({ initialData, onComplete, onStartDialogue }: Props) {
     const [lifeData, setLifeData] = useState<LifeReflectionData>(
         initialData || {
             userAge: 0,
@@ -46,44 +47,73 @@ export default function LifeReflection({ initialData, onComplete }: Props) {
         }
     );
 
-    const [currentScreen, setCurrentScreen] = useState<Screen>(
-        lifeData.userAge === 0 ? { type: 'age-selection' } : { type: 'era-list' }
-    );
+    const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
+        // 年齢が設定済みなら、最初から時代リストを表示
+        if (initialData?.userAge) {
+            return { type: 'era-list' };
+        }
+        return { type: 'age-selection' };
+    });
 
     const [showTurningPointDialog, setShowTurningPointDialog] = useState(false);
 
-    // Update parent on data changes
-    useEffect(() => {
-        if (lifeData.userAge > 0) {
-            onComplete(lifeData);
-        }
-    }, [lifeData, onComplete]);
+    // Don't auto-call onComplete - only call it when user explicitly views graph
 
-    const handleAgeSelect = (ageRange: number) => {
-        setLifeData((prev) => ({
-            ...prev,
-            userAge: ageRange,
-        }));
+    const handleAgeSelect = (ageRange: string) => {
+        const newData = { ...lifeData, userAge: ageRange };
+        setLifeData(newData);
+        // 年齢選択後は時代リストへ
         setCurrentScreen({ type: 'era-list' });
+        // ここで一旦保存して、次回以降スキップできるようにする
+        onComplete(newData);
     };
 
     const handleEraSelect = (eraId: string) => {
-        // Ensure era data exists
-        const eraKey = eraId as keyof typeof lifeData.eras;
-        if (!lifeData.eras[eraKey]) {
-            setLifeData((prev) => ({
+        // 時代が選択されたら、その時代の質問リストへ
+        // データ構造を初期化
+        if (!lifeData.eras[eraId as keyof typeof lifeData.eras]) {
+            setLifeData(prev => ({
                 ...prev,
                 eras: {
                     ...prev.eras,
-                    [eraKey]: createEmptyEraData(eraId),
+                    [eraId]: createEmptyEraData(eraId)
                 },
             }));
         }
         setCurrentScreen({ type: 'question-list', eraId });
     };
 
+    const handleBack = () => {
+        if (currentScreen.type === 'question-list') {
+            setCurrentScreen({ type: 'era-list' });
+        } else if (currentScreen.type === 'era-list') {
+            // 年齢選択に戻るか、ホームに戻るか
+            // ユーザーの要望「初期設定は一回だけ」に基づき、
+            // ここでの戻るは実質的に何もしないか、年齢再選択を許容するか。
+            // 今回は年齢再選択に戻れるようにする（設定変更のため）
+            setCurrentScreen({ type: 'age-selection' });
+        }
+    };
+
     const handleQuestionSelect = (eraId: string, questionId: string) => {
-        setCurrentScreen({ type: 'question-input', eraId, questionId });
+        // AI対話を開始
+        const eraConfig = getEraById(eraId);
+        const question = eraConfig?.questions.find(q => q.id === questionId);
+        const eraKey = eraId as keyof typeof lifeData.eras;
+        const eraData = lifeData.eras[eraKey];
+
+        if (onStartDialogue && question) {
+            // 既存の回答があれば含める
+            const existingResponse = eraData?.questionResponses.find(
+                r => r.questionId === questionId
+            )?.response;
+
+            const contextMessage = existingResponse
+                ? `[質問]: ${question.text}\n\n[前回の回答]:\n${existingResponse}\n\n※この回答を見直したり、深掘りしてみましょう。`
+                : `[質問]: ${question.text}`;
+
+            onStartDialogue(contextMessage);
+        }
     };
 
     const handleSaveResponse = (eraId: string, questionId: string, response: string) => {
@@ -172,7 +202,10 @@ export default function LifeReflection({ initialData, onComplete }: Props) {
                         userAge={lifeData.userAge}
                         lifeData={lifeData}
                         onEraSelect={handleEraSelect}
-                        onViewGraph={() => setCurrentScreen({ type: 'graph' })}
+                        onViewGraph={() => {
+                            onComplete(lifeData);
+                            setCurrentScreen({ type: 'graph' });
+                        }}
                     />
                 );
 
