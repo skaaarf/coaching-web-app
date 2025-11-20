@@ -14,9 +14,11 @@ export default function Home() {
     allInteractiveProgress,
     insights,
     isLoadingInsights,
+    insightsError,
     currentValues,
     previousValues,
     loadingValues,
+    valuesError,
     activeTab,
     setActiveTab,
     activeSection,
@@ -74,11 +76,13 @@ export default function Home() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             loadingValues={loadingValues}
+            valuesError={valuesError}
             currentValues={currentValues}
             previousValues={previousValues}
             hasAnyProgress={hasAnyProgress}
             insights={insights}
             isLoadingInsights={isLoadingInsights}
+            insightsError={insightsError}
           />
         )}
 

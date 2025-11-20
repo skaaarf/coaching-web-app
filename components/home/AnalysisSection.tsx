@@ -6,22 +6,26 @@ interface AnalysisSectionProps {
     activeTab: 'values' | 'insights';
     setActiveTab: (tab: 'values' | 'insights') => void;
     loadingValues: boolean;
+    valuesError: Error | null;
     currentValues: ValueSnapshot | null;
     previousValues: ValueSnapshot | null;
     hasAnyProgress: boolean;
     insights: UserInsights | null;
     isLoadingInsights: boolean;
+    insightsError: Error | null;
 }
 
 export default function AnalysisSection({
     activeTab,
     setActiveTab,
     loadingValues,
+    valuesError,
     currentValues,
     previousValues,
     hasAnyProgress,
     insights,
     isLoadingInsights,
+    insightsError,
 }: AnalysisSectionProps) {
     return (
         <>
@@ -40,8 +44,8 @@ export default function AnalysisSection({
                     <button
                         onClick={() => setActiveTab('values')}
                         className={`rounded-full px-4 py-2 transition ${activeTab === 'values'
-                                ? 'bg-white text-gray-900 shadow'
-                                : 'text-gray-500'
+                            ? 'bg-white text-gray-900 shadow'
+                            : 'text-gray-500'
                             }`}
                     >
                         💎 あなたの価値観
@@ -49,8 +53,8 @@ export default function AnalysisSection({
                     <button
                         onClick={() => setActiveTab('insights')}
                         className={`rounded-full px-4 py-2 transition ${activeTab === 'insights'
-                                ? 'bg-white text-gray-900 shadow'
-                                : 'text-gray-500'
+                            ? 'bg-white text-gray-900 shadow'
+                            : 'text-gray-500'
                             }`}
                     >
                         🧠 キャリア志向
@@ -60,7 +64,21 @@ export default function AnalysisSection({
                 <div className="mt-6">
                     {activeTab === 'values' && (
                         <div className="rounded-3xl border border-gray-200/70 bg-white/90 p-4">
-                            {loadingValues ? (
+                            {valuesError ? (
+                                <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center">
+                                    <div className="text-5xl mb-3">⚠️</div>
+                                    <p className="text-red-800 mb-2 text-sm font-semibold">エラーが発生しました</p>
+                                    <p className="text-xs text-red-600 mb-4">
+                                        {valuesError.message}
+                                    </p>
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="text-sm text-red-700 hover:text-red-900 underline"
+                                    >
+                                        ページを再読み込み
+                                    </button>
+                                </div>
+                            ) : loadingValues ? (
                                 <div className="text-center py-8">
                                     <div className="flex items-center justify-center gap-3 mb-3">
                                         <div className="w-6 h-6 border-4 border-gray-900/40 border-t-transparent rounded-full animate-spin" />
@@ -86,7 +104,21 @@ export default function AnalysisSection({
 
                     {activeTab === 'insights' && (
                         <div className="rounded-3xl border border-gray-200/70 bg-white/90 p-4">
-                            {hasAnyProgress ? (
+                            {insightsError ? (
+                                <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center">
+                                    <div className="text-5xl mb-3">⚠️</div>
+                                    <p className="text-red-800 mb-2 text-sm font-semibold">エラーが発生しました</p>
+                                    <p className="text-xs text-red-600 mb-4">
+                                        {insightsError.message}
+                                    </p>
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="text-sm text-red-700 hover:text-red-900 underline"
+                                    >
+                                        ページを再読み込み
+                                    </button>
+                                </div>
+                            ) : hasAnyProgress ? (
                                 <InsightsPanel insights={insights} isLoading={isLoadingInsights} />
                             ) : (
                                 <div className="rounded-2xl border border-dashed border-gray-300 px-6 py-8 text-center">
