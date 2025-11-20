@@ -125,6 +125,45 @@ export interface CareerProfile {
   lessons: string[];
 }
 
+// Life Reflection module types
+export interface EraQuestion {
+  id: string;
+  text: string;
+}
+
+export interface EraResponse {
+  questionId: string;
+  response: string;
+  timestamp: Date;
+}
+
+export interface EraData {
+  eraId: string;
+  questionResponses: EraResponse[];
+  satisfaction: number | null; // 1-10
+  completed: boolean;
+}
+
+export interface TurningPoint {
+  id: string;
+  age: number;
+  description: string;
+  timestamp: Date;
+}
+
+export interface LifeReflectionData {
+  userAge: number; // Current age selected
+  eras: {
+    elementary: EraData | null;
+    middleschool: EraData | null;
+    highschool: EraData | null;
+    college: EraData | null;
+    working: EraData | null;
+  };
+  turningPoints: TurningPoint[];
+}
+
+
 export type InteractiveModuleId =
   | 'value-battle'
   | 'life-simulator'
@@ -132,7 +171,8 @@ export type InteractiveModuleId =
   | 'time-machine'
   | 'branch-map'
   | 'persona-dictionary'
-  | 'career-dictionary';
+  | 'career-dictionary'
+  | 'life-reflection';
 
 export type InteractiveModuleDataMap = {
   'value-battle': ValueBattleResult;
@@ -142,6 +182,7 @@ export type InteractiveModuleDataMap = {
   'branch-map': BranchMapPath;
   'persona-dictionary': PersonaProfile;
   'career-dictionary': CareerProfile;
+  'life-reflection': LifeReflectionData;
 };
 
 export type InteractiveActivityData =

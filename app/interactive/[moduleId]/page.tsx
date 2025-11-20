@@ -17,7 +17,8 @@ import {
   TimeMachineLetters,
   BranchMapPath,
   PersonaProfile,
-  CareerProfile
+  CareerProfile,
+  LifeReflectionData,
 } from '@/types';
 import ValueBattle from '@/components/ValueBattle';
 import ValueBattleResultView from '@/components/ValueBattleResult';
@@ -29,6 +30,8 @@ import TimeMachine from '@/components/TimeMachine';
 import BranchMap from '@/components/BranchMap';
 import PersonaDictionary from '@/components/PersonaDictionary';
 import CareerDictionary, { CareerDictionaryHandle } from '@/components/CareerDictionary';
+import LifeReflection from '@/components/LifeReflection';
+import LifeReflectionResult from '@/components/LifeReflectionResult';
 import ChatInterface from '@/components/ChatInterface';
 import ModuleResultSidebar from '@/components/ModuleResultSidebar';
 import DialogueHistorySidebar from '@/components/DialogueHistorySidebar';
@@ -772,6 +775,12 @@ ${interviewSnippet}
                   onSelectCareer={(career) => handleActivityComplete(career)}
                 />
               )}
+              {moduleId === 'life-reflection' && (
+                <LifeReflection
+                  initialData={state.data as LifeReflectionData | undefined}
+                  onComplete={(data) => handleActivityComplete(data)}
+                />
+              )}
             </>
           )}
 
@@ -847,6 +856,12 @@ ${interviewSnippet}
                   </div>
                 </div>
               )}
+              {moduleId === 'life-reflection' && state.data && (
+                <LifeReflectionResult
+                  data={state.data as LifeReflectionData}
+                  onStartDialogue={() => handleStartDialogue()}
+                />
+              )}
             </>
           )}
 
@@ -861,11 +876,10 @@ ${interviewSnippet}
                     onClick={() => setShowHistorySidebar(false)}
                   />
                   {/* Sidebar */}
-                  <div className={`${
-                    showHistorySidebar
-                      ? 'fixed lg:relative left-0 top-0 bottom-0 z-50 lg:z-0'
-                      : 'hidden'
-                  } w-80 lg:w-80 flex-shrink-0`}>
+                  <div className={`${showHistorySidebar
+                    ? 'fixed lg:relative left-0 top-0 bottom-0 z-50 lg:z-0'
+                    : 'hidden'
+                    } w-80 lg:w-80 flex-shrink-0`}>
                     <DialogueHistorySidebar
                       allProgress={allProgress}
                       currentModuleId={moduleId}
