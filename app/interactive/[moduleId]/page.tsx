@@ -90,6 +90,9 @@ export default function InteractiveModulePage() {
             data: {}, // We don't have the original activity data, but that's okay
             messages: dialogueProgress.messages,
           });
+          const allInteractiveProgress = await storage.getAllInteractiveModuleProgress();
+          setAllProgress(allInteractiveProgress);
+          setIsLoading(false);
           return;
         }
       }
@@ -106,14 +109,32 @@ export default function InteractiveModulePage() {
         // If progress exists and has data, load it
         if (progress && progress.data) {
           const savedState = progress.data as InteractiveState;
+          console.log('Saved state phase:', savedState.phase);
 
           // Special handling for life-reflection: ALWAYS start in activity phase (stage selection)
           // This ensures we behave like a game save (Mario world map), not resuming mid-dialogue
           if (moduleId === 'life-reflection') {
+            console.log('Forcing activity phase for life-reflection');
+            console.log('Saved state full object:', savedState);
+
+            // Extract data correctly based on the saved phase
+            // Check both activityData and data properties
+            let savedData: any = null;
+
+            if ('activityData' in savedState) {
+              savedData = (savedState as any).activityData;
+              console.log('Found data in activityData:', savedData);
+            } else if ('data' in savedState) {
+              savedData = (savedState as any).data;
+              console.log('Found data in data:', savedData);
+            }
+
+            console.log('Final extracted savedData:', savedData);
+
             setState({
               phase: 'activity',
               // Use saved data if available, otherwise initialize empty
-              activityData: savedState.data || { eras: {}, graphPoints: [], turningPoints: [] }
+              activityData: savedData || { userAge: 0, eras: {}, graphPoints: [], turningPoints: [] }
             });
           }
           // Normal handling for other modules
@@ -135,6 +156,7 @@ export default function InteractiveModulePage() {
               setDialogueSessionId(recentDialogue.sessionId);
             }
           } else {
+            console.log('Restoring saved state:', savedState.phase);
             setState(savedState);
           }
         } else {
@@ -160,9 +182,25 @@ export default function InteractiveModulePage() {
 
             // Force activity for life-reflection
             if (moduleId === 'life-reflection') {
+              console.log('Forcing activity phase for life-reflection (latest session)');
+              console.log('Saved state full object:', savedState);
+
+              // Extract data correctly based on the saved phase
+              let savedData: any = null;
+
+              if ('activityData' in savedState) {
+                savedData = (savedState as any).activityData;
+                console.log('Found data in activityData:', savedData);
+              } else if ('data' in savedState) {
+                savedData = (savedState as any).data;
+                console.log('Found data in data:', savedData);
+              }
+
+              console.log('Final extracted savedData:', savedData);
+
               setState({
                 phase: 'activity',
-                activityData: savedState.data || { eras: {}, graphPoints: [], turningPoints: [] }
+                activityData: savedData || { userAge: 0, eras: {}, graphPoints: [], turningPoints: [] }
               });
             } else {
               setState(savedState);
@@ -171,7 +209,7 @@ export default function InteractiveModulePage() {
             // Session exists but no data
             setState({
               phase: 'activity',
-              activityData: { eras: {}, graphPoints: [], turningPoints: [] }
+              activityData: { userAge: 0, eras: {}, graphPoints: [], turningPoints: [] }
             });
           }
         } else {
@@ -193,6 +231,7 @@ export default function InteractiveModulePage() {
       // Load all progress for history sidebar
       const allInteractiveProgress = await storage.getAllInteractiveModuleProgress();
       setAllProgress(allInteractiveProgress);
+      setIsLoading(false);
     };
 
     loadProgress();
@@ -222,9 +261,16 @@ export default function InteractiveModulePage() {
   };
 
   const handleActivityComplete = (data: InteractiveActivityData) => {
-    const newState = { phase: 'result' as const, data };
-    setState(newState);
-    saveProgress(newState);
+    // Special handling for life-reflection: stay in activity phase
+    if (moduleId === 'life-reflection') {
+      const newState = { phase: 'activity' as const, activityData: data };
+      setState(newState);
+      saveProgress(newState);
+    } else {
+      const newState = { phase: 'result' as const, data };
+      setState(newState);
+      saveProgress(newState);
+    }
   };
 
   const handleStartDialogue = async (dataOrQuestion?: InteractiveActivityData | string) => {
@@ -232,7 +278,11 @@ export default function InteractiveModulePage() {
     const isQuestion = typeof dataOrQuestion === 'string';
     const initialQuestion = isQuestion ? dataOrQuestion : undefined;
     let activityData: InteractiveActivityData | undefined =
-      state.phase === 'result' || state.phase === 'dialogue' ? state.data : undefined;
+      state.phase === 'result' || state.phase === 'dialogue'
+        ? state.data
+        : state.phase === 'activity'
+          ? state.activityData
+          : undefined;
 
     if (!isQuestion && dataOrQuestion && typeof dataOrQuestion !== 'string') {
       activityData = dataOrQuestion;
@@ -649,7 +699,7 @@ ${interviewSnippet}
     if (state.phase === 'dialogue') {
       // For life-reflection, go back to activity (edit mode)
       if (moduleId === 'life-reflection') {
-        setState({ phase: 'activity', data: state.data });
+        setState({ phase: 'activity', activityData: state.data });
       } else {
         setState({ phase: 'result', data: state.data });
       }
@@ -833,7 +883,7 @@ ${interviewSnippet}
               )}
               {moduleId === 'life-reflection' && (
                 <LifeReflection
-                  initialData={state.data as LifeReflectionData | undefined}
+                  initialData={state.activityData as LifeReflectionData | undefined}
                   onComplete={(data) => handleActivityComplete(data)}
                   onStartDialogue={(questionContext) => handleStartDialogue(questionContext)}
                 />

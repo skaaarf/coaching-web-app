@@ -33,6 +33,8 @@ const createEmptyEraData = (eraId: string): EraData => ({
 });
 
 export default function LifeReflection({ initialData, onComplete, onStartDialogue }: Props) {
+    console.log('LifeReflection Render:', { initialData });
+
     const [lifeData, setLifeData] = useState<LifeReflectionData>(
         initialData || {
             userAge: 0,
@@ -48,23 +50,61 @@ export default function LifeReflection({ initialData, onComplete, onStartDialogu
     );
 
     const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
-        // 年齢が設定済みなら、最初から時代リストを表示
-        if (initialData?.userAge) {
+        console.log('LifeReflection Initial Screen State:', { userAge: initialData?.userAge });
+        // 年齢が設定済みなら（0より大きい）、最初から時代リストを表示
+        if (initialData?.userAge && initialData.userAge > 0) {
             return { type: 'era-list' };
         }
         return { type: 'age-selection' };
     });
 
+    // Update state when initialData changes (e.g. after async load)
+    useEffect(() => {
+        if (initialData) {
+            console.log('LifeReflection useEffect: initialData updated', initialData);
+            setLifeData(prevData => {
+                // CRITICAL FIX: If we have ANY local data (userAge > 0), DO NOT OVERWRITE IT with initialData
+                // This assumes that once the user starts, local state is the source of truth until reload.
+                if (prevData.userAge > 0) {
+                    console.log('Ignoring initialData update because local state has data');
+                    return prevData;
+                }
+
+                // Only update if local state is empty
+                if (initialData.userAge > 0) {
+                    return initialData;
+                }
+
+                return prevData;
+            });
+
+            // If we have a valid age and we're still on age selection, move to era list
+            if (initialData.userAge > 0) {
+                setCurrentScreen(prevScreen => {
+                    if (prevScreen.type === 'age-selection') {
+                        console.log('Switching to era-list because userAge is set');
+                        return { type: 'era-list' };
+                    }
+                    return prevScreen;
+                });
+            }
+        }
+    }, [initialData]);
+
+    console.log('LifeReflection State:', { currentScreen, lifeData });
+
     const [showTurningPointDialog, setShowTurningPointDialog] = useState(false);
 
     // Don't auto-call onComplete - only call it when user explicitly views graph
 
-    const handleAgeSelect = (ageRange: string) => {
+    const handleAgeSelect = (ageRange: number) => {
+        console.log('handleAgeSelect called:', ageRange);
         const newData = { ...lifeData, userAge: ageRange };
         setLifeData(newData);
         // 年齢選択後は時代リストへ
         setCurrentScreen({ type: 'era-list' });
         // ここで一旦保存して、次回以降スキップできるようにする
+        console.log('Calling onComplete with:', newData);
         onComplete(newData);
     };
 
@@ -135,10 +175,10 @@ export default function LifeReflection({ initialData, onComplete, onStartDialogu
         const totalQuestions = eraConfig?.questions.length || 3;
         const newResponses = [...filteredResponses, newResponse];
 
-        setLifeData((prev) => ({
-            ...prev,
+        const newData = {
+            ...lifeData,
             eras: {
-                ...prev.eras,
+                ...lifeData.eras,
                 [eraKey]: {
                     ...currentEra,
                     questionResponses: newResponses,
@@ -148,7 +188,11 @@ export default function LifeReflection({ initialData, onComplete, onStartDialogu
                         currentEra.satisfaction !== null,
                 },
             },
-        }));
+        };
+
+        setLifeData(newData);
+        console.log('Saving response:', newData);
+        onComplete(newData);
 
         setCurrentScreen({ type: 'question-list', eraId });
     };
@@ -160,18 +204,22 @@ export default function LifeReflection({ initialData, onComplete, onStartDialogu
         const eraConfig = getEraById(eraId);
         const totalQuestions = eraConfig?.questions.length || 3;
 
-        setLifeData((prev) => ({
-            ...prev,
+        const newData = {
+            ...lifeData,
             eras: {
-                ...prev.eras,
+                ...lifeData.eras,
                 [eraKey]: {
                     ...currentEra,
                     satisfaction,
-                    completed: currentEra.questionResponses.length === totalQuestions,
+                    completed:
+                        currentEra.questionResponses.length === totalQuestions,
                 },
             },
-        }));
+        };
 
+        setLifeData(newData);
+        console.log('Saving satisfaction:', newData);
+        onComplete(newData);
         setCurrentScreen({ type: 'era-list' });
     };
 
@@ -202,10 +250,6 @@ export default function LifeReflection({ initialData, onComplete, onStartDialogu
                         userAge={lifeData.userAge}
                         lifeData={lifeData}
                         onEraSelect={handleEraSelect}
-                        onViewGraph={() => {
-                            onComplete(lifeData);
-                            setCurrentScreen({ type: 'graph' });
-                        }}
                     />
                 );
 
@@ -215,15 +259,12 @@ export default function LifeReflection({ initialData, onComplete, onStartDialogu
                 return (
                     <QuestionListScreen
                         eraId={currentScreen.eraId}
-                        eraData={eraData}
-                        onQuestionSelect={(qId) =>
-                            handleQuestionSelect(currentScreen.eraId, qId)
+                        data={lifeData}
+                        onSelectQuestion={(eraId: string, questionId: string) =>
+                            handleQuestionSelect(eraId, questionId)
                         }
-                        onSatisfactionInput={() =>
-                            setCurrentScreen({
-                                type: 'satisfaction-input',
-                                eraId: currentScreen.eraId,
-                            })
+                        onUpdateSatisfaction={(eraId: string, value: number) =>
+                            handleSatisfactionSave(eraId, value)
                         }
                         onBack={() => setCurrentScreen({ type: 'era-list' })}
                     />

@@ -11,6 +11,7 @@ interface Props {
 }
 
 export default function LifeReflectionResult({ data, onStartDialogue }: Props) {
+    console.log('LifeReflectionResult Render:', { data });
     const [showTurningPointDialog, setShowTurningPointDialog] = useState(false);
 
     return (

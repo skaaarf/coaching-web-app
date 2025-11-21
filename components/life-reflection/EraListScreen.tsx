@@ -7,26 +7,18 @@ interface Props {
     userAge: number;
     lifeData: LifeReflectionData;
     onEraSelect: (eraId: string) => void;
-    onViewGraph: () => void;
 }
 
 export default function EraListScreen({
     userAge,
     lifeData,
     onEraSelect,
-    onViewGraph,
 }: Props) {
     const availableEras = getErasForAge(userAge);
 
-    // Check if at least one era is completed (all questions answered and satisfaction set)
-    const hasCompletedEra = availableEras.some((era) => {
-        const eraData = lifeData.eras[era.id];
-        return eraData?.completed;
-    });
-
     return (
         <div className="max-w-2xl mx-auto px-4 py-6">
-            {/* Header with Graph Button */}
+            {/* Header */}
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <div>
@@ -36,17 +28,6 @@ export default function EraListScreen({
                         </p>
                     </div>
                 </div>
-
-                <button
-                    onClick={onViewGraph}
-                    disabled={!hasCompletedEra}
-                    className={`w-full py-3 px-6 rounded-2xl font-bold text-sm transition-all duration-200 ${hasCompletedEra
-                            ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02]'
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        }`}
-                >
-                    {hasCompletedEra ? '📊 グラフを見る' : '📊 グラフを見る（1つ以上完了後）'}
-                </button>
             </div>
 
             {/* Era Cards */}
@@ -95,8 +76,8 @@ export default function EraListScreen({
                                                     <div
                                                         key={i}
                                                         className={`w-2 h-2 rounded-full ${i < answeredQuestions
-                                                                ? 'bg-blue-500'
-                                                                : 'bg-gray-300'
+                                                            ? 'bg-blue-500'
+                                                            : 'bg-gray-300'
                                                             }`}
                                                     />
                                                 ))}

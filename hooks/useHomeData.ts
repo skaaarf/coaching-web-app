@@ -19,7 +19,7 @@ export function useHomeData() {
     const [loadingValues, setLoadingValues] = useState(false);
     const [valuesError, setValuesError] = useState<Error | null>(null);
     const [activeTab, setActiveTab] = useState<'values' | 'insights'>('values');
-    const [activeSection, setActiveSection] = useState<'analysis' | 'modules' | 'history'>('analysis');
+    const [activeSection, setActiveSection] = useState<'analysis' | 'modules' | 'history'>('modules');
     const [selectedModule, setSelectedModule] = useState<string | null>(null);
     const [showModuleDialog, setShowModuleDialog] = useState(false);
     const [moduleSessions, setModuleSessions] = useState<ModuleProgress[]>([]);
