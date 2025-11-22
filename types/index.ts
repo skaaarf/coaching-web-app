@@ -161,6 +161,8 @@ export interface LifeReflectionData {
     working: EraData | null;
   };
   turningPoints: TurningPoint[];
+  // 問いごとの対話セッションIDを保持して、再開を簡単にする
+  dialogueSessions?: Record<string, string>;
 }
 
 

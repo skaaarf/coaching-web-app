@@ -6,12 +6,9 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-
 export default function UserMenu() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -19,13 +16,11 @@ export default function UserMenu() {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      setIsAdmin(session?.user?.email === ADMIN_EMAIL)
     })
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
-      setIsAdmin(session?.user?.email === ADMIN_EMAIL)
     })
 
     return () => subscription.unsubscribe()
@@ -85,25 +80,9 @@ export default function UserMenu() {
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
-          {isAdmin && (
-            <>
-              <div className="px-4 py-2 border-b border-gray-100">
-                <div className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded text-center">
-                  🔐 管理者
-                </div>
-              </div>
-              <Link
-                href="/dashboard"
-                className="w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors block font-medium"
-                onClick={() => setIsOpen(false)}
-              >
-                🔐 管理者ダッシュボード
-              </Link>
-            </>
-          )}
           <button
             onClick={handleSignOut}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-semibold"
           >
             ログアウト
           </button>

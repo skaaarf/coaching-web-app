@@ -15,8 +15,6 @@ import {
   LifeSimulatorSelections,
   ParentSelfScaleResponses,
   TimeMachineLetters,
-  BranchMapPath,
-  PersonaProfile,
   CareerProfile,
   LifeReflectionData,
 } from '@/types';
@@ -27,8 +25,6 @@ import LifeSimulatorResult from '@/components/LifeSimulatorResult';
 import ParentSelfScale from '@/components/ParentSelfScale';
 import ParentSelfScaleResult from '@/components/ParentSelfScaleResult';
 import TimeMachine from '@/components/TimeMachine';
-import BranchMap from '@/components/BranchMap';
-import PersonaDictionary from '@/components/PersonaDictionary';
 import CareerDictionary, { CareerDictionaryHandle } from '@/components/CareerDictionary';
 import LifeReflection from '@/components/LifeReflection';
 import LifeReflectionResult from '@/components/LifeReflectionResult';
@@ -36,6 +32,60 @@ import ChatInterface from '@/components/ChatInterface';
 import ModuleResultSidebar from '@/components/ModuleResultSidebar';
 import DialogueHistorySidebar from '@/components/DialogueHistorySidebar';
 import AnalyzingAnimation from '@/components/AnalyzingAnimation';
+import { LifeReflectionQuestionContext } from '@/types/lifeReflection';
+import { getEraById } from '@/lib/lifeReflectionData';
+
+const emptyLifeData: LifeReflectionData = {
+  userAge: 0,
+  eras: {
+    elementary: null,
+    middleschool: null,
+    highschool: null,
+    college: null,
+    working: null,
+  },
+  turningPoints: [],
+  dialogueSessions: {},
+};
+
+const getLifeDataFromState = (
+  state: InteractiveState,
+  activityData?: InteractiveActivityData
+): LifeReflectionData => {
+  const candidate =
+    (state.phase === 'activity' && state.activityData) ||
+    (state.phase !== 'activity' && state.data) ||
+    activityData;
+
+  if (candidate && typeof candidate === 'object' && 'eras' in (candidate as any)) {
+    return candidate as LifeReflectionData;
+  }
+  const localFallback =
+    typeof window !== 'undefined'
+      ? (() => {
+          try {
+            const raw = localStorage.getItem('mikata-life-reflection');
+            if (raw) return JSON.parse(raw) as LifeReflectionData;
+          } catch {
+            /* ignore */
+          }
+          return null;
+        })()
+      : null;
+  return localFallback || emptyLifeData;
+};
+
+const readLocalLifeReflection = (): LifeReflectionData | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('mikata-life-reflection');
+    if (!raw) return null;
+    return JSON.parse(raw) as LifeReflectionData;
+  } catch (error) {
+    console.warn('Failed to read local life reflection', error);
+    return null;
+  }
+};
 
 export default function InteractiveModulePage() {
   const params = useParams();
@@ -63,6 +113,8 @@ export default function InteractiveModulePage() {
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [lastAnalyzedMessageCount, setLastAnalyzedMessageCount] = useState(0);
   const careerDictionaryRef = useRef<CareerDictionaryHandle | null>(null);
+  const [lifeQuestionId, setLifeQuestionId] = useState<string | null>(null);
+  const [lifeQuestionText, setLifeQuestionText] = useState<string | null>(null);
 
   useEffect(() => {
     if (!moduleDefinition || moduleDefinition.moduleType !== 'interactive') {
@@ -106,6 +158,19 @@ export default function InteractiveModulePage() {
           progress = null;
         }
 
+        if (!progress && moduleId === 'life-reflection') {
+          const fallback = readLocalLifeReflection();
+          if (fallback) {
+            console.log('Using local fallback for life-reflection (sessionId path)');
+            setState({
+              phase: 'activity',
+              activityData: fallback,
+            });
+            setIsLoading(false);
+            return;
+          }
+        }
+
         // If progress exists and has data, load it
         if (progress && progress.data) {
           const savedState = progress.data as InteractiveState;
@@ -127,6 +192,14 @@ export default function InteractiveModulePage() {
             } else if ('data' in savedState) {
               savedData = (savedState as any).data;
               console.log('Found data in data:', savedData);
+            }
+
+            if (!savedData) {
+              const fallback = readLocalLifeReflection();
+              if (fallback) {
+                console.log('Loaded fallback life reflection from local storage (sessionId path)');
+                savedData = fallback;
+              }
             }
 
             console.log('Final extracted savedData:', savedData);
@@ -175,8 +248,17 @@ export default function InteractiveModulePage() {
       } else {
         // No sessionId in URL - load latest session
         progress = await storage.getInteractiveModuleProgress(moduleId);
-        if (progress?.sessionId) {
-          setCurrentSessionId(progress.sessionId);
+        if (progress) {
+          const resolvedSessionId =
+            progress.sessionId && progress.sessionId.trim().length > 0
+              ? progress.sessionId
+              : `session-${Date.now()}`;
+          setCurrentSessionId(resolvedSessionId);
+
+          if (!progress.sessionId || progress.sessionId.trim().length === 0) {
+            progress = { ...progress, sessionId: resolvedSessionId };
+          }
+
           if (progress.data) {
             const savedState = progress.data as InteractiveState;
 
@@ -196,6 +278,14 @@ export default function InteractiveModulePage() {
                 console.log('Found data in data:', savedData);
               }
 
+              if (!savedData) {
+                const fallback = readLocalLifeReflection();
+                if (fallback) {
+                  console.log('Loaded fallback life reflection from local storage (latest session)');
+                  savedData = fallback;
+                }
+              }
+
               console.log('Final extracted savedData:', savedData);
 
               setState({
@@ -205,14 +295,27 @@ export default function InteractiveModulePage() {
             } else {
               setState(savedState);
             }
-          } else if (moduleId === 'life-reflection') {
-            // Session exists but no data
-            setState({
-              phase: 'activity',
-              activityData: { userAge: 0, eras: {}, graphPoints: [], turningPoints: [] }
-            });
-          }
+            } else if (moduleId === 'life-reflection') {
+              // Session exists but no data
+              setState({
+                phase: 'activity',
+                activityData: { userAge: 0, eras: {}, graphPoints: [], turningPoints: [] }
+              });
+            }
         } else {
+          if (moduleId === 'life-reflection') {
+            const fallback = readLocalLifeReflection();
+            if (fallback) {
+              console.log('Using local fallback for life-reflection (no session)');
+              setState({
+                phase: 'activity',
+                activityData: fallback,
+              });
+              setIsLoading(false);
+              return;
+            }
+          }
+
           // No existing progress
           const newSessionId = `session-${Date.now()}`;
           setCurrentSessionId(newSessionId);
@@ -237,6 +340,15 @@ export default function InteractiveModulePage() {
     loadProgress();
   }, [moduleDefinition, router, moduleId, storage, sessionId, urlDialogueSessionId]);
 
+  const resolveSessionId = () => {
+    if (currentSessionId && currentSessionId.trim().length > 0) {
+      return currentSessionId;
+    }
+    const generatedId = `session-${Date.now()}`;
+    setCurrentSessionId(generatedId);
+    return generatedId;
+  };
+
   const saveProgress = async (newState: InteractiveState, completed: boolean = false) => {
     console.log('=== saveProgress (Interactive) ===');
     console.log('moduleId:', moduleId);
@@ -244,9 +356,11 @@ export default function InteractiveModulePage() {
     console.log('newState:', newState);
     console.log('completed:', completed);
 
+    const sessionIdToUse = resolveSessionId();
+
     const progress: InteractiveModuleProgress = {
       moduleId,
-      sessionId: currentSessionId,
+      sessionId: sessionIdToUse,
       data: newState,
       createdAt: new Date(), // Will be ignored if session already exists
       lastUpdated: new Date(),
@@ -273,10 +387,14 @@ export default function InteractiveModulePage() {
     }
   };
 
-  const handleStartDialogue = async (dataOrQuestion?: InteractiveActivityData | string) => {
-    // Check if the argument is a question string
-    const isQuestion = typeof dataOrQuestion === 'string';
-    const initialQuestion = isQuestion ? dataOrQuestion : undefined;
+  const handleStartDialogue = async (dataOrQuestion?: InteractiveActivityData | string | LifeReflectionQuestionContext) => {
+    const isLifeReflectionContext = typeof dataOrQuestion === 'object' && dataOrQuestion !== null && 'questionId' in (dataOrQuestion as any);
+    const isQuestion = typeof dataOrQuestion === 'string' || isLifeReflectionContext;
+    const initialQuestion = typeof dataOrQuestion === 'string'
+      ? dataOrQuestion
+      : isLifeReflectionContext
+        ? `【質問】${(dataOrQuestion as LifeReflectionQuestionContext).questionText}\n\nメモ: ${(dataOrQuestion as LifeReflectionQuestionContext).answer || '未入力'}` 
+        : undefined;
     let activityData: InteractiveActivityData | undefined =
       state.phase === 'result' || state.phase === 'dialogue'
         ? state.data
@@ -288,10 +406,57 @@ export default function InteractiveModulePage() {
       activityData = dataOrQuestion;
     }
 
+    const currentLifeData =
+      moduleId === 'life-reflection'
+        ? getLifeDataFromState(state, activityData)
+        : null;
+
+    if (moduleId === 'life-reflection' && isLifeReflectionContext) {
+      const ctx = dataOrQuestion as LifeReflectionQuestionContext;
+      setLifeQuestionId(ctx.questionId);
+      setLifeQuestionText(ctx.questionText);
+
+      // 既存対話の復元を最優先
+      const lifeData = currentLifeData || emptyLifeData;
+      const knownSessionId = lifeData.dialogueSessions?.[ctx.questionId];
+      const dialogueModuleId = `${moduleId}-dialogue-${ctx.questionId}`;
+      if (knownSessionId) {
+        const savedChat = await storage.getModuleSession(dialogueModuleId, knownSessionId);
+        if (savedChat?.messages?.length) {
+          setDialogueSessionId(knownSessionId);
+          setState({
+            phase: 'dialogue',
+            data: lifeData,
+            messages: savedChat.messages,
+          });
+          return;
+        }
+      }
+
+      // 既存セッションIDが無くても、最新の同質問セッションがあれば復元
+      const sessions = await storage.getModuleSessions(dialogueModuleId);
+      if (sessions.length > 0) {
+        const latest = sessions[0];
+        if (latest.messages?.length) {
+          setDialogueSessionId(latest.sessionId);
+          setState({
+            phase: 'dialogue',
+            data: lifeData,
+            messages: latest.messages,
+          });
+          return;
+        }
+      }
+    } else {
+      setLifeQuestionId(null);
+      setLifeQuestionText(null);
+    }
+
     // If a question is provided, always start a new dialogue
     if (!initialQuestion) {
       // Check if there's already a dialogue session for this game session
-      const currentProgress = await storage.getInteractiveModuleSession(moduleId, currentSessionId);
+      const sessionIdToUse = resolveSessionId();
+      const currentProgress = await storage.getInteractiveModuleSession(moduleId, sessionIdToUse);
       if (currentProgress && currentProgress.data) {
         const savedState = currentProgress.data as InteractiveState;
         if (savedState.phase === 'dialogue' && savedState.messages && savedState.messages.length > 0) {
@@ -304,7 +469,9 @@ export default function InteractiveModulePage() {
           });
 
           // Find the dialogue session ID from the saved progress
-          const dialogueModuleId = `${moduleId}-dialogue`;
+          const dialogueModuleId = moduleId === 'life-reflection' && lifeQuestionId
+            ? `${moduleId}-dialogue-${lifeQuestionId}`
+            : `${moduleId}-dialogue`;
           const allSessions = await storage.getModuleSessions(dialogueModuleId);
           if (allSessions.length > 0) {
             // Find the most recent dialogue session for this game
@@ -353,73 +520,27 @@ export default function InteractiveModulePage() {
           futureLetter: '',
         };
         contextMessage = `タイムマシンで書いた手紙：\n\n[1年前の自分へ]\n${pastLetter}\n\n[10年後の自分から]\n${futureLetter}`;
-      } else if (moduleId === 'branch-map') {
-        const path = (activityData as BranchMapPath) || [];
-
-        // Analyze pattern
-        const tagCounts: Record<string, number> = {};
-        path.slice(1).forEach(branch => {
-          branch.tags?.forEach(tag => {
-            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-          });
-        });
-
-        const topTags = Object.entries(tagCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 3)
-          .map(([tag]) => {
-            const tagLabels: Record<string, string> = {
-              stability: '安定',
-              challenge: '挑戦',
-              money: 'お金',
-              passion: '情熱',
-              family: '家族',
-              career: 'キャリア',
-            };
-            return tagLabels[tag] || tag;
-          });
-
-        contextMessage = `IF分岐マップで${path.length - 1}個の選択をしてきました。
-
-【選んだ道】
-${path.map((b, i) => `${i}. ${b.label}`).join('\n')}
-
-【選択の傾向】
-あなたは特に「${topTags.join('、')}」を重視する傾向がありました。
-
-【振り返りのテーマ】
-1. 一番難しかった選択はどれでしたか？
-2. 何を大切にして選んできましたか？
-3. 意外だったことは何ですか？
-4. どの選択が今の自分に一番影響しましたか？
-5. やり直せるなら変えたい選択はありますか？
-6. この道を選んだ自分に伝えたいことは？
-
-まずは、これらの振り返りテーマについて、一緒に考えていきましょう。`;
-      } else if (moduleId === 'persona-dictionary') {
-        const persona = (activityData as PersonaProfile) || {
-          name: '',
-          grade: '',
-          tagline: '',
-          description: '',
-        };
-        contextMessage = `心の図鑑で「${persona.name}（${persona.grade}）」を選びました。
-
-【${persona.name}のプロフィール】
-${persona.tagline}
-
-${persona.description}
-
-【${persona.name}の価値観】
-${persona.values?.join('、')}
-
-【${persona.name}の悩み】
-${persona.concerns?.join('、')}
-
-【${persona.name}の言葉】
-「${persona.quote}」
-
-このキャラクターについて、一緒に話しましょう。`;
+      } else if (moduleId === 'life-reflection') {
+        const lifeData = currentLifeData || emptyLifeData;
+        const eraGuess =
+          (lifeQuestionId && lifeQuestionId.split('_')[0]) ||
+          (lifeData.eras.elementary ? 'elementary' : lifeData.eras.middleschool ? 'middleschool' : 'elementary');
+        const eraName = getEraById(eraGuess)?.name || 'この時期';
+        const answerText =
+          isLifeReflectionContext && typeof dataOrQuestion === 'object'
+            ? ((dataOrQuestion as LifeReflectionQuestionContext).answer || '').trim()
+            : '';
+        if (isLifeReflectionContext && lifeQuestionText) {
+          contextMessage = `【時代】${eraName}
+【質問】${lifeQuestionText}
+あなたの経験や気持ちを一緒に整理したいです。自由に教えてください。`;
+          if (answerText) {
+            contextMessage += `\n\n参考メモ: ${answerText}`;
+          }
+        } else {
+          contextMessage = `人生を振り返る質問に取り組みます。
+印象に残っている出来事や気持ちを自由に教えてください。`;
+        }
       } else if (moduleId === 'career-dictionary') {
         const career = (activityData as CareerProfile) || {
           name: '',
@@ -491,11 +612,63 @@ ${interviewSnippet}
       };
 
       // Create a new dialogue session ID
-      const newDialogueSessionId = `session-${Date.now()}`;
+      let newDialogueSessionId = `session-${Date.now()}`;
+      // life-reflection: reuse per-question session if exists
+      if (moduleId === 'life-reflection' && isLifeReflectionContext && lifeQuestionId) {
+        const lifeData = (activityData as LifeReflectionData) || { dialogueSessions: {} };
+        const existingSession = lifeData.dialogueSessions?.[lifeQuestionId];
+        if (existingSession) {
+          newDialogueSessionId = existingSession;
+        }
+      }
       setDialogueSessionId(newDialogueSessionId);
 
       const dialogueData: InteractiveActivityData = activityData
         ?? (state.phase !== 'activity' && state.data ? state.data : ({} as InteractiveActivityData));
+      // persist dialogue session mapping for life-reflection
+      if (moduleId === 'life-reflection' && isLifeReflectionContext && lifeQuestionId) {
+        const existingLifeData =
+          (dialogueData as LifeReflectionData) || currentLifeData || emptyLifeData;
+        const updatedLifeData: LifeReflectionData = {
+          ...existingLifeData,
+          dialogueSessions: {
+            ...(existingLifeData.dialogueSessions || {}),
+            [lifeQuestionId]: newDialogueSessionId,
+          },
+        };
+        // avoid mutating const; create a new object for dialogue data
+        const mergedDialogueData: InteractiveActivityData = {
+          ...(dialogueData as Record<string, unknown>),
+          ...updatedLifeData,
+        };
+        const newState = {
+          phase: 'dialogue' as const,
+          data: mergedDialogueData,
+          messages: [assistantMessage],
+        };
+        setState(newState);
+        saveProgress(newState);
+
+        if (!(moduleId === 'life-reflection' && isLifeReflectionContext && !lifeQuestionId)) {
+          const dialogueModuleId =
+            moduleId === 'life-reflection' && lifeQuestionId
+              ? `${moduleId}-dialogue-${lifeQuestionId}`
+              : `${moduleId}-dialogue`;
+          const chatProgress: ModuleProgress = {
+            moduleId: dialogueModuleId,
+            sessionId: newDialogueSessionId,
+            messages: [assistantMessage],
+            createdAt: new Date(),
+            lastUpdated: new Date(),
+            completed: false,
+            userId: storage.userId || undefined,
+            userEmail: storage.userEmail || undefined,
+          };
+          await storage.saveModuleProgress(dialogueModuleId, chatProgress);
+        }
+        setIsLoading(false);
+        return;
+      }
       const newState = {
         phase: 'dialogue' as const,
         data: dialogueData,
@@ -505,18 +678,23 @@ ${interviewSnippet}
       saveProgress(newState);
 
       // Save dialogue as a regular chat module session
-      const dialogueModuleId = `${moduleId}-dialogue`;
-      const chatProgress: ModuleProgress = {
-        moduleId: dialogueModuleId,
-        sessionId: newDialogueSessionId,
-        messages: [assistantMessage],
-        createdAt: new Date(),
-        lastUpdated: new Date(),
-        completed: false,
-        userId: storage.userId || undefined,
-        userEmail: storage.userEmail || undefined,
-      };
-      await storage.saveModuleProgress(dialogueModuleId, chatProgress);
+      if (!(moduleId === 'life-reflection' && isLifeReflectionContext && !lifeQuestionId)) {
+        const dialogueModuleId =
+          moduleId === 'life-reflection' && lifeQuestionId
+            ? `${moduleId}-dialogue-${lifeQuestionId}`
+            : `${moduleId}-dialogue`;
+        const chatProgress: ModuleProgress = {
+          moduleId: dialogueModuleId,
+          sessionId: newDialogueSessionId,
+          messages: [assistantMessage],
+          createdAt: new Date(),
+          lastUpdated: new Date(),
+          completed: false,
+          userId: storage.userId || undefined,
+          userEmail: storage.userEmail || undefined,
+        };
+        await storage.saveModuleProgress(dialogueModuleId, chatProgress);
+      }
     } catch (error) {
       console.error('Error starting dialogue:', error);
       setError('対話を開始できませんでした。もう一度お試しください。');
@@ -591,7 +769,10 @@ ${interviewSnippet}
 
       // Also save to chat module session for dialogue history
       if (dialogueSessionId) {
-        const dialogueModuleId = `${moduleId}-dialogue`;
+        const dialogueModuleId =
+          moduleId === 'life-reflection' && lifeQuestionId
+            ? `${moduleId}-dialogue-${lifeQuestionId}`
+            : `${moduleId}-dialogue`;
         const chatProgress: ModuleProgress = {
           moduleId: dialogueModuleId,
           sessionId: dialogueSessionId,
@@ -603,6 +784,48 @@ ${interviewSnippet}
           userEmail: storage.userEmail || undefined,
         };
         await storage.saveModuleProgress(dialogueModuleId, chatProgress);
+      }
+
+      if (moduleId === 'life-reflection' && lifeQuestionId && lifeQuestionText) {
+        // Mark question as "実施済み" with latest user message
+        const lifeData = getLifeDataFromState(state);
+        const era =
+          lifeData.eras?.elementary ||
+          lifeData.eras?.middleschool ||
+          lifeData.eras?.highschool ||
+          lifeData.eras?.college ||
+          lifeData.eras?.working || { eraId: 'overall', questionResponses: [], satisfaction: null, completed: false };
+
+        const lastUser = [...finalMessages].reverse().find(m => m.role === 'user');
+        const updatedResponses = [
+          ...(era.questionResponses || []).filter(r => r.questionId !== lifeQuestionId),
+          {
+            questionId: lifeQuestionId,
+            response: lastUser?.content || lifeQuestionText,
+            timestamp: new Date(),
+          },
+        ];
+
+        const updatedEra = {
+          ...era,
+          questionResponses: updatedResponses,
+        };
+
+        const updatedLifeData: LifeReflectionData = {
+          ...lifeData,
+          eras: {
+            ...lifeData.eras,
+            elementary: updatedEra,
+          },
+          dialogueSessions: {
+            ...(lifeData.dialogueSessions || {}),
+            [lifeQuestionId]: dialogueSessionId || `session-${Date.now()}`,
+          },
+        };
+
+        const newStateWithLife: InteractiveState = { ...newState, data: updatedLifeData };
+        setState(newStateWithLife);
+        saveProgress(newStateWithLife);
       }
 
       // Trigger value analysis after every message exchange (minimum 2 messages)
@@ -628,7 +851,10 @@ ${interviewSnippet}
 
       // Also save to chat module session for dialogue history
       if (dialogueSessionId) {
-        const dialogueModuleId = `${moduleId}-dialogue`;
+        const dialogueModuleId =
+          moduleId === 'life-reflection' && lifeQuestionId
+            ? `${moduleId}-dialogue-${lifeQuestionId}`
+            : `${moduleId}-dialogue`;
         const chatProgress: ModuleProgress = {
           moduleId: dialogueModuleId,
           sessionId: dialogueSessionId,
@@ -715,11 +941,16 @@ ${interviewSnippet}
       careerDictionaryRef.current.goBack();
       return;
     }
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push('/');
+    // ライフ振り返りの対話中はホームに戻さず質問一覧へ戻す
+    if (moduleId === 'life-reflection' && state.phase === 'dialogue') {
+      setState({ phase: 'activity', activityData: state.data });
+      return;
     }
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    router.push('/');
   };
 
   return (
@@ -728,27 +959,18 @@ ${interviewSnippet}
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center space-x-2 min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center space-x-3 min-w-0 flex-1">
               <button
                 onClick={handleHeaderBack}
-                className="text-gray-600 hover:text-gray-900 active:text-gray-900 transition-colors flex-shrink-0 p-2 -ml-2 touch-manipulation"
-                aria-label="ホームに戻る"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                aria-label="1つ前に戻る"
                 type="button"
               >
-                <svg
-                  className="w-6 h-6 sm:w-7 sm:h-7"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
+                <span className="text-sm font-semibold hidden sm:inline">戻る</span>
               </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2">
@@ -760,10 +982,10 @@ ${interviewSnippet}
                 <p className="text-xs text-gray-500 block truncate">{moduleDefinition.description}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => router.push('/')}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
                 title="ホームへ戻る"
                 aria-label="ホームへ戻る"
                 type="button"
@@ -771,41 +993,8 @@ ${interviewSnippet}
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10l9-7 9 7v10a2 2 0 01-2 2h-4a2 2 0 01-2-2V13H9v7a2 2 0 01-2 2H3z" />
                 </svg>
+                <span className="text-sm font-semibold hidden sm:inline">ホーム</span>
               </button>
-              {state.phase === 'dialogue' && (
-                <>
-                  <button
-                    onClick={() => setShowHistorySidebar(!showHistorySidebar)}
-                    className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                    title="対話履歴"
-                    aria-label="対話履歴"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => setShowResultSidebar(!showResultSidebar)}
-                    className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                    title="結果を表示"
-                    aria-label="結果を表示"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={handleBackToResult}
-                    className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors block"
-                    title="結果に戻る"
-                    aria-label="結果に戻る"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                    </svg>
-                  </button>
-                </>
-              )}
             </div>
           </div>
         </div>
@@ -868,12 +1057,6 @@ ${interviewSnippet}
                     handleStartDialogue({ pastLetter, futureLetter })
                   }
                 />
-              )}
-              {moduleId === 'branch-map' && (
-                <BranchMap onComplete={(path) => handleStartDialogue(path)} />
-              )}
-              {moduleId === 'persona-dictionary' && (
-                <PersonaDictionary onSelectPersona={(persona) => handleActivityComplete(persona)} />
               )}
               {moduleId === 'career-dictionary' && (
                 <CareerDictionary

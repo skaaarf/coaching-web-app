@@ -12,11 +12,18 @@ export async function POST(request: NextRequest) {
     }
 
     const apiKey = process.env.OPENAI_API_KEY;
+    const lastUserMessage = [...messages]
+      .reverse()
+      .find((msg: { role: string }) => msg.role === "user")?.content;
+    const fallbackReply = () => {
+      const summary = lastUserMessage
+        ? `「${lastUserMessage.slice(0, 60)}」について考えています。`
+        : "さっきの話の続きですね。";
+      return `${summary}\n\nいまの気持ちをもう少し教えてくれる？具体的な場面やきっかけがあると、一緒に整理しやすいよ。`;
+    };
+
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "OpenAI API key is not configured" },
-        { status: 500 }
-      );
+      return NextResponse.json({ message: fallbackReply() });
     }
 
     // Use provided systemPrompt or fall back to default
@@ -51,42 +58,43 @@ export async function POST(request: NextRequest) {
 
     const finalSystemPrompt = systemPrompt || defaultSystemPrompt;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: finalSystemPrompt },
-          ...messages.map((msg: { role: string; content: string }) => ({
-            role: msg.role === "user" ? "user" : "assistant",
-            content: msg.content,
-          })),
-        ],
-        temperature: 0.7,
-        max_tokens: 350,
-      }),
-    });
+    let assistantMessage: string | null = null;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return NextResponse.json(
-        { error: errorData.error?.message || "Failed to get response from OpenAI" },
-        { status: response.status }
-      );
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: finalSystemPrompt },
+            ...messages.map((msg: { role: string; content: string }) => ({
+              role: msg.role === "user" ? "user" : "assistant",
+              content: msg.content,
+            })),
+          ],
+          temperature: 0.7,
+          max_tokens: 350,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        assistantMessage = data.choices?.[0]?.message?.content || null;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn("OpenAI responded with error status", response.status, errorData);
+      }
+    } catch (error) {
+      console.error("Error calling OpenAI API:", error);
     }
 
-    const data = await response.json();
-    const assistantMessage = data.choices?.[0]?.message?.content;
-
     if (!assistantMessage) {
-      return NextResponse.json(
-        { error: "No response from AI" },
-        { status: 500 }
-      );
+      // Fallback response to keep UX smooth when OpenAI/network is unavailable
+      return NextResponse.json({ message: fallbackReply() });
     }
 
     return NextResponse.json({ message: assistantMessage });

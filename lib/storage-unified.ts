@@ -9,7 +9,12 @@ import * as supabaseStorageLib from './storage-supabase';
 import { getOrCreateAnonymousSessionId } from './anonymous-session';
 import { isSupabaseConfigured } from './supabase';
 
+const GLOBAL_FLAG = '__mikataSupabaseDisabled';
+const isGlobalSupabaseDisabled =
+  typeof globalThis !== 'undefined' && (globalThis as Record<string, unknown>)[GLOBAL_FLAG] === true;
+
 let hasLoggedSupabaseFallback = false;
+let supabaseAvailable = isSupabaseConfigured && !isGlobalSupabaseDisabled;
 
 const logSupabaseFallback = (error: unknown) => {
   if (hasLoggedSupabaseFallback) return;
@@ -18,13 +23,17 @@ const logSupabaseFallback = (error: unknown) => {
 };
 
 async function withStorageFallback<T>(supabaseOp: () => Promise<T>, localOp: () => T | Promise<T>): Promise<T> {
-  if (!isSupabaseConfigured) {
+  if (!supabaseAvailable) {
     return await Promise.resolve(localOp());
   }
 
   try {
     return await supabaseOp();
   } catch (error) {
+    supabaseAvailable = false;
+    if (typeof globalThis !== 'undefined') {
+      (globalThis as Record<string, unknown>)[GLOBAL_FLAG] = true;
+    }
     logSupabaseFallback(error);
     return await Promise.resolve(localOp());
   }

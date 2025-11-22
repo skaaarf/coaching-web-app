@@ -16,10 +16,17 @@ export default function QuestionListScreen({ eraId, data, onSelectQuestion, onUp
     const eraKey = eraId as keyof typeof data.eras;
     const eraData = data.eras[eraKey];
 
-    if (!eraConfig || !eraData) return null;
+    if (!eraConfig) return null;
+    // Ensure eraData exists so answered状態を正しく判定
+    const ensuredEraData = eraData || {
+        eraId,
+        questionResponses: [],
+        satisfaction: null,
+        completed: false,
+    };
 
     const totalQuestions = eraConfig.questions.length;
-    const answeredQuestions = eraData.questionResponses.length;
+    const answeredQuestions = ensuredEraData.questionResponses.length;
     const allQuestionsAnswered = answeredQuestions === totalQuestions;
 
     return (
@@ -64,7 +71,7 @@ export default function QuestionListScreen({ eraId, data, onSelectQuestion, onUp
                 {/* Questions List */}
                 <div className="space-y-3">
                     {eraConfig.questions.map((question, index) => {
-                        const response = eraData.questionResponses.find(
+                        const response = ensuredEraData.questionResponses.find(
                             (r) => r.questionId === question.id
                         );
                         const isAnswered = !!response;

@@ -23,10 +23,18 @@ export default function QuestionInputScreen({
     const eraConfig = getEraById(eraId);
     const question = eraConfig?.questions.find((q) => q.id === questionId);
 
-    const handleSave = () => {
+    const handleSaveAndBack = () => {
         if (response.trim()) {
-            onSaveResponse(response);
+            onSaveResponse(response.trim());
         }
+        onBack();
+    };
+
+    const handleBackClick = () => {
+        if (response.trim()) {
+            onSaveResponse(response.trim());
+        }
+        onBack();
     };
 
     if (!question) {
@@ -38,10 +46,10 @@ export default function QuestionInputScreen({
             {/* Header */}
             <div className="mb-6">
                 <button
-                    onClick={onBack}
+                    onClick={handleBackClick}
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium mb-4 flex items-center gap-1"
                 >
-                    ← 質問一覧に戻る
+                    ← 時代一覧に戻る
                 </button>
 
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border-2 border-blue-200 rounded-2xl p-5">
@@ -76,12 +84,8 @@ export default function QuestionInputScreen({
             {/* Buttons */}
             <div className="space-y-3">
                 <button
-                    onClick={handleSave}
-                    disabled={!response.trim()}
-                    className={`w-full py-4 px-6 rounded-2xl font-bold text-base transition-all duration-200 ${response.trim()
-                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02]'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
+                    onClick={handleSaveAndBack}
+                    className="w-full py-4 px-6 rounded-2xl font-bold text-base transition-all duration-200 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02]"
                 >
                     💾 保存して戻る
                 </button>
