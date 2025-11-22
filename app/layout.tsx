@@ -4,8 +4,31 @@ import SessionProvider from "@/components/SessionProvider";
 import { DataMigration } from "@/components/DataMigration";
 
 export const metadata: Metadata = {
-  title: "Coaching Web App",
-  description: "A coaching web application for managing coaching sessions",
+  metadataBase: new URL("https://app.career-counseller.jp"),
+  title: "みかたくん",
+  description: "対話とゲームでキャリアを考えるアプリ",
+  openGraph: {
+    title: "みかたくん",
+    description: "対話とゲームでキャリアを考えるアプリ",
+    url: "https://app.career-counseller.jp",
+    siteName: "みかたくん",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "みかたくんのイラスト",
+      },
+    ],
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "みかたくん",
+    description: "対話とゲームでキャリアを考えるアプリ",
+    images: ["/og.png"],
+  },
 };
 
 export const viewport = {
