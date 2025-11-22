@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://app.career-counseller.jp"),
   title: "みかたくん",
   description: "対話とゲームでキャリアを考えるアプリ",
+  icons: {
+    icon: "/mikatakun-icon.png",
+    shortcut: "/mikatakun-icon.png",
+    apple: "/mikatakun-icon.png",
+  },
   openGraph: {
     title: "みかたくん",
     description: "対話とゲームでキャリアを考えるアプリ",
