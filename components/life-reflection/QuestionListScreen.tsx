@@ -135,7 +135,7 @@ export default function QuestionListScreen({ eraId, data, onSelectQuestion, onUp
                             ? '✅ すべての質問に答えました！満足度を入力してください'
                             : '📝 すべての質問に答えると、満足度を入力できます'}
                     </p>
-                    {eraData.satisfaction !== null && eraData.satisfaction !== undefined ? (
+                    {eraData && eraData.satisfaction !== null && eraData.satisfaction !== undefined ? (
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium text-gray-700">現在の満足度:</span>
