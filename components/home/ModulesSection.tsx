@@ -16,6 +16,14 @@ export default function ModulesSection({
     allInteractiveProgress,
     onModuleClick,
 }: ModulesSectionProps) {
+    const interactiveModules = CAREER_MODULES
+        .filter(m => m.moduleType === 'interactive')
+        .sort((a, b) => {
+            if (a.id === 'life-reflection') return -1;
+            if (b.id === 'life-reflection') return 1;
+            return 0;
+        });
+
     return (
         <>
             <div ref={modulesSectionRef} className="scroll-mt-24 mt-6">
@@ -34,7 +42,7 @@ export default function ModulesSection({
                             onClick={() => onModuleClick(moduleDefinition.id, moduleDefinition.moduleType || 'chat')}
                         />
                     ))}
-                    {CAREER_MODULES.filter(m => m.moduleType === 'interactive').map(moduleDefinition => (
+                    {interactiveModules.map(moduleDefinition => (
                         <ModuleCard
                             key={moduleDefinition.id}
                             module={moduleDefinition}
