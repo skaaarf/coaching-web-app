@@ -207,7 +207,7 @@ export default function InteractiveModulePage() {
             setState({
               phase: 'activity',
               // Use saved data if available, otherwise initialize empty
-              activityData: savedData || { userAge: 0, eras: {}, graphPoints: [], turningPoints: [] }
+              activityData: savedData || emptyLifeData
             });
           }
           // Normal handling for other modules
@@ -239,7 +239,7 @@ export default function InteractiveModulePage() {
           if (moduleId === 'life-reflection') {
             setState({
               phase: 'activity',
-              activityData: { eras: {}, graphPoints: [], turningPoints: [] }
+              activityData: emptyLifeData
             });
           } else {
             setState({ phase: 'activity' });
@@ -290,7 +290,7 @@ export default function InteractiveModulePage() {
 
               setState({
                 phase: 'activity',
-                activityData: savedData || { userAge: 0, eras: {}, graphPoints: [], turningPoints: [] }
+                activityData: savedData || emptyLifeData
               });
             } else {
               setState(savedState);
@@ -299,7 +299,7 @@ export default function InteractiveModulePage() {
               // Session exists but no data
               setState({
                 phase: 'activity',
-                activityData: { userAge: 0, eras: {}, graphPoints: [], turningPoints: [] }
+                activityData: emptyLifeData
               });
             }
         } else {
