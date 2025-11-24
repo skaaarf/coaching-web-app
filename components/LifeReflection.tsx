@@ -123,7 +123,7 @@ export default function LifeReflection({ initialData, onComplete, onStartDialogu
     prevCompletedRef.current = completedNow;
   }, [sortedEpisodes, step]);
 
-  const updateEpisode = (id: string, patch: Partial<Episode>) => {
+  const updateEpisode = (id: string, patch: Partial<Episode>, _forcePersist?: boolean) => {
     setEpisodes(prev => prev.map(ep => (ep.id === id ? { ...ep, ...patch } : ep)));
   };
 
