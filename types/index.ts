@@ -137,6 +137,16 @@ export interface EraResponse {
   timestamp: Date;
 }
 
+export interface Episode {
+  id: string;
+  title: string;          // タイトル
+  age: string;            // 年齢/時期（数値文字列や「高校3年生」など）
+  isCompleted: boolean;   // 対話完了フラグ
+  messageCount: number;   // 対話メッセージ数
+  conversationHistory: Message[]; // 対話履歴
+  discoveries?: string[]; // 発見キーワード
+}
+
 export interface EraData {
   eraId: string;
   questionResponses: EraResponse[];
@@ -163,6 +173,9 @@ export interface LifeReflectionData {
   turningPoints: TurningPoint[];
   // 問いごとの対話セッションIDを保持して、再開を簡単にする
   dialogueSessions?: Record<string, string>;
+  // --- V2: エピソードベースの振り返り ---
+  episodes?: Episode[];
+  overallProgress?: number;
 }
 
 

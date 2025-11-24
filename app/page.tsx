@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import UserMenu from '@/components/UserMenu';
 import AnalysisSection from '@/components/home/AnalysisSection';
 import ModulesSection from '@/components/home/ModulesSection';
@@ -9,6 +11,7 @@ import ModuleSelectionDialog from '@/components/home/ModuleSelectionDialog';
 import { useHomeData } from '@/hooks/useHomeData';
 
 export default function Home() {
+  const searchParams = useSearchParams();
   const {
     allProgress,
     allInteractiveProgress,
@@ -40,6 +43,13 @@ export default function Home() {
     { id: 'modules', label: 'モジュール', icon: '🎮' },
     { id: 'history', label: '履歴', icon: '🕘' },
   ];
+
+  useEffect(() => {
+    const sectionParam = searchParams.get('section');
+    if (sectionParam === 'analysis' || sectionParam === 'modules' || sectionParam === 'history') {
+      setActiveSection(sectionParam);
+    }
+  }, [searchParams, setActiveSection]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#f5f5f7]">
