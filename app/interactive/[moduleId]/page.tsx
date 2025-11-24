@@ -1047,7 +1047,9 @@ ${interviewSnippet}
       return;
     }
     if (state.phase !== 'dialogue' || !lifeQuestionId) {
-      setState({ phase: 'activity', activityData: state.data });
+      const activityData =
+        state.phase === 'activity' ? state.activityData : (state as any).data;
+      setState({ phase: 'activity', activityData });
       return;
     }
 
