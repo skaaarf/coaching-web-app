@@ -26,6 +26,7 @@ export default function ChatInterface({
   const [input, setInput] = useState('');
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Separate messages into older and latest two
   const olderMessages = messages.length > 2 ? messages.slice(0, -2) : [];
@@ -83,6 +84,17 @@ export default function ChatInterface({
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [suggestedQuestions]);
+
+  const adjustInputHeight = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
+  };
+
+  useEffect(() => {
+    adjustInputHeight();
+  }, [input]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,14 +253,21 @@ export default function ChatInterface({
         ) : (
           <form onSubmit={handleSubmit} className="flex items-end space-x-2">
             <textarea
+              ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                adjustInputHeight();
+              }}
               onKeyDown={handleKeyDown}
-              onFocus={handleInputFocus}
+              onFocus={() => {
+                handleInputFocus();
+                adjustInputHeight();
+              }}
               placeholder={placeholder}
               rows={1}
               className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 text-gray-900 shadow-sm"
-              style={{ maxHeight: '120px', fontSize: '16px' }}
+              style={{ maxHeight: '180px', fontSize: '16px' }}
             />
             <button
               type="submit"
