@@ -10,6 +10,19 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  const getRedirectUrl = () => {
+    // Prefer an explicitly configured public site URL to avoid falling back to localhost in emails
+    const baseFromEnv =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.NEXT_PUBLIC_VERCEL_URL
+        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+        : null);
+
+    const base = baseFromEnv || (typeof window !== 'undefined' ? window.location.origin : '');
+    return `${base?.replace(/\/$/, '')}/auth/callback`;
+  };
+
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -20,7 +33,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getRedirectUrl(),
         },
       });
 
