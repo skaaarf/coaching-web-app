@@ -266,7 +266,7 @@ export default function ChatInterface({
               }}
               placeholder={placeholder}
               rows={1}
-              className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 text-gray-900 shadow-sm"
+              className="flex-1 resize-none rounded-xl border-2 border-gray-400 px-4 py-3 font-medium focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 text-gray-900 shadow-sm overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
               style={{ maxHeight: '180px', fontSize: '16px' }}
             />
             <button
