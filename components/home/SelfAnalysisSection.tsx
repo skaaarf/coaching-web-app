@@ -21,28 +21,26 @@ export default function SelfAnalysisSection({ allProgress, allInteractiveProgres
   const canGenerate = totalDialogues > 0 && !isGenerating;
 
   return (
-    <section className="mt-6 space-y-6">
-      <div className="rounded-[28px] border border-white/70 bg-gradient-to-br from-white via-white to-slate-50 px-6 py-7 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.4em] text-gray-400">Self portrait</p>
-              <h2 className="text-2xl font-semibold text-gray-900">あなたの自己分析結果</h2>
-              <p className="text-sm text-gray-600 mt-2">
-                対話とエピソードから、価値観と強みを抽出しました。
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="rounded-full bg-gray-900 text-white px-3 py-1 text-xs font-semibold shadow-sm">
-                対話 {totalDialogues} 件
-              </span>
-            </div>
+    <section className="mt-4 space-y-4">
+      <div className="rounded-3xl border border-white/70 bg-gradient-to-br from-white via-white to-slate-50 px-5 py-5 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur">
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-[11px] uppercase tracking-[0.35em] text-gray-400">Self portrait</p>
+            <h2 className="text-xl font-semibold text-gray-900 leading-tight">自己分析結果</h2>
+            <p className="text-xs text-gray-600">
+              対話とエピソードから価値観と強みを抽出しました。
+            </p>
           </div>
+          <span className="rounded-full bg-gray-900 text-white px-3 py-1 text-[11px] font-semibold shadow-sm whitespace-nowrap">
+            対話 {totalDialogues} 件
+          </span>
+        </div>
 
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-wrap gap-2">
           <button
             onClick={generate}
             disabled={!canGenerate}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow transition ${
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold shadow transition ${
               canGenerate
                 ? 'bg-gray-900 text-white hover:bg-black'
                 : 'bg-gray-200 text-gray-500 cursor-not-allowed'
