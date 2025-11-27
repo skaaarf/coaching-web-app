@@ -66,12 +66,9 @@ export function useSelfAnalysis({ allProgress, allInteractiveProgress }: Generat
           messages: p.messages,
         }));
 
-      const completedEpisodes = episodes.filter(ep => ep.isCompleted || (ep.messageCount ?? 0) > 0);
-
       const payload = {
         conversations,
-        episodes: completedEpisodes,
-        completedEpisodeCount: completedEpisodes.length,
+        episodes,
       };
 
       const res = await fetch('/api/self-analysis', {

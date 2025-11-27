@@ -36,7 +36,7 @@ const SELF_ANALYSIS_PROMPT = `あなたは世界最高クラスのキャリア�
 
 # 出力フォーマット（JSONのみ。説明文は禁止）
 {
-  "summary": "完了エピソード数と全体像の短い一文",
+  "summary": "全体像の短い一文（完了エピソード数には触れない）",
   "values": [
     { "title": "価値観A", "description": "簡潔な説明", "evidences": ["• 具体例1", "• 具体例2"] },
     { "title": "価値観B", "description": "簡潔な説明", "evidences": ["• 具体例1"] },
@@ -64,7 +64,7 @@ function formatConversations(conversations: ConversationPayload[]) {
 }
 
 function formatEpisodes(episodes: EpisodePayload[]) {
-  if (!episodes.length) return '完了エピソードはありません。';
+  if (!episodes.length) return 'エピソードはまだありません。';
   return episodes
     .map(ep => {
       const logs = ep.conversationHistory || [];
@@ -79,7 +79,7 @@ function formatEpisodes(episodes: EpisodePayload[]) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { conversations = [], episodes = [], completedEpisodeCount = 0 } = (await request.json()) as SelfAnalysisPayload;
+    const { conversations = [], episodes = [] } = (await request.json()) as SelfAnalysisPayload;
 
     const totalDialogueCount =
       conversations.reduce((sum, c) => sum + (c.messages?.length || 0), 0) +
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     const conversationText = formatConversations(conversations);
     const episodeText = formatEpisodes(episodes);
 
-    const userPrompt = `# 対話ログ\n${conversationText}\n\n# エピソード\n${episodeText}\n\n完了エピソード数: ${completedEpisodeCount}`;
+    const userPrompt = `# 対話ログ\n${conversationText}\n\n# エピソード\n${episodeText}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -144,7 +144,6 @@ export async function POST(request: NextRequest) {
         summary: parsed.summary || '',
         values: parsed.values || [],
         strengths: parsed.strengths || [],
-        completedEpisodeCount,
         totalDialogueCount,
         generatedAt: new Date().toISOString(),
       },
