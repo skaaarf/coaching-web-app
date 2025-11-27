@@ -14,11 +14,16 @@ export async function GET() {
       secret: !!process.env.AUTH_SECRET,
       url: !!process.env.AUTH_URL,
     },
-    supabase: {
-      serverUrl: !!process.env.SUPABASE_URL,
-      serverKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      clientUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      clientKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    firebaseClient: {
+      apiKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      appId: !!process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    },
+    firebaseAdmin: {
+      projectId: !!process.env.FIREBASE_PROJECT_ID,
+      clientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: !!process.env.FIREBASE_PRIVATE_KEY,
     },
   };
 
@@ -28,10 +33,13 @@ export async function GET() {
     checks.googleOAuth.clientSecret &&
     checks.nextAuth.secret &&
     checks.nextAuth.url &&
-    checks.supabase.serverUrl &&
-    checks.supabase.serverKey &&
-    checks.supabase.clientUrl &&
-    checks.supabase.clientKey;
+    checks.firebaseClient.apiKey &&
+    checks.firebaseClient.authDomain &&
+    checks.firebaseClient.projectId &&
+    checks.firebaseClient.appId &&
+    checks.firebaseAdmin.projectId &&
+    checks.firebaseAdmin.clientEmail &&
+    checks.firebaseAdmin.privateKey;
 
   return NextResponse.json({
     status: allGood ? 'healthy' : 'warning',

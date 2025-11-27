@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ValueSnapshot, AxisReasoning, ValueAxes } from '@/types';
 import ValueSlider from './ValueSlider';
 import SimpleRadarChart from './SimpleRadarChart';
+import { useAuth } from '@/components/SessionProvider';
 
 interface ValuesDisplayProps {
   current?: ValueSnapshot | null;
@@ -119,6 +120,7 @@ export default function ValuesDisplay({ current, previous, editable = false, onU
   // Local state to track current values
   const [localValues, setLocalValues] = useState<ValueAxes | null>(current?.axes || null);
   const [isSaving, setIsSaving] = useState(false);
+  const { user } = useAuth();
 
   // Create default values if no current data exists
   const displayData = current || {
@@ -158,10 +160,17 @@ export default function ValuesDisplay({ current, previous, editable = false, onU
     // Save to API
     try {
       setIsSaving(true);
+      const token = await user?.getIdToken();
+
+      if (!token) {
+        throw new Error('ログインが必要です');
+      }
+
       const response = await fetch('/api/values', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           axes: updatedAxes,

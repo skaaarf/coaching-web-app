@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import { DataMigration } from "@/components/DataMigration";
+import AnalyticsInit from "@/components/AnalyticsInit";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.career-counseller.jp"),
@@ -51,6 +52,7 @@ export default function RootLayout({
     <html lang="ja">
       <body className="antialiased font-sans">
         <SessionProvider>
+          <AnalyticsInit />
           <DataMigration />
           {children}
         </SessionProvider>

@@ -1,10 +1,10 @@
 /**
  * Data migration utilities
- * Migrates data from localStorage to Supabase when user logs in
+ * Migrates data from localStorage to Firebase when user logs in
  */
 
 import * as localStorageLib from './storage';
-import * as supabaseStorageLib from './storage-supabase';
+import * as remoteStorageLib from './storage-firestore';
 
 const MIGRATION_KEY = 'mikata-migration-completed';
 
@@ -25,10 +25,10 @@ function markMigrationCompleted(): void {
 }
 
 /**
- * Migrate all data from localStorage to Supabase
+ * Migrate all data from localStorage to Firebase
  * This should be called once when user first logs in
  */
-export async function migrateLocalStorageToSupabase(userId: string): Promise<{
+export async function migrateLocalStorageToFirebase(userId: string): Promise<{
   success: boolean;
   migratedModules: number;
   migratedInteractiveModules: number;
@@ -55,7 +55,7 @@ export async function migrateLocalStorageToSupabase(userId: string): Promise<{
     const allModuleProgress = localStorageLib.getAllModuleProgress();
     for (const [moduleId, progress] of Object.entries(allModuleProgress)) {
       try {
-        await supabaseStorageLib.saveModuleProgress(userId, moduleId, progress);
+        await remoteStorageLib.saveModuleProgress(userId, moduleId, progress);
         migratedModules++;
         console.log(`Migrated module progress: ${moduleId}`);
       } catch (error) {
@@ -67,7 +67,7 @@ export async function migrateLocalStorageToSupabase(userId: string): Promise<{
     const allInteractiveProgress = localStorageLib.getAllInteractiveModuleProgress();
     for (const [moduleId, progress] of Object.entries(allInteractiveProgress)) {
       try {
-        await supabaseStorageLib.saveInteractiveModuleProgress(userId, moduleId, progress);
+        await remoteStorageLib.saveInteractiveModuleProgress(userId, moduleId, progress);
         migratedInteractiveModules++;
         console.log(`Migrated interactive module progress: ${moduleId}`);
       } catch (error) {
@@ -79,7 +79,7 @@ export async function migrateLocalStorageToSupabase(userId: string): Promise<{
     const insights = localStorageLib.getUserInsights();
     if (insights) {
       try {
-        await supabaseStorageLib.saveUserInsights(userId, insights);
+        await remoteStorageLib.saveUserInsights(userId, insights);
         migratedInsights = true;
         console.log('Migrated user insights');
       } catch (error) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/SessionProvider';
-import { migrateLocalStorageToSupabase, hasLocalStorageData } from '@/lib/migration';
+import { migrateLocalStorageToFirebase, hasLocalStorageData } from '@/lib/migration';
 
 /**
  * Component that handles automatic data migration from localStorage to Supabase
@@ -27,7 +27,7 @@ export function DataMigration() {
       setMigrationStatus('migrating');
       console.log('Starting data migration from localStorage to Supabase...');
 
-      const result = await migrateLocalStorageToSupabase(userId);
+      const result = await migrateLocalStorageToFirebase(userId);
 
       if (result.success) {
         setMigrationStatus('completed');

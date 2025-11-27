@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { firebaseAuth } from '@/lib/firebase-client';
+import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -11,49 +12,36 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // マジックリンクのトークンをセッションに交換
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
+        if (typeof window !== 'undefined' && isSignInWithEmailLink(firebaseAuth, window.location.href)) {
+          let email = window.localStorage.getItem('emailForSignIn') || '';
+          if (!email) {
+            email = window.prompt('ログインに使用したメールアドレスを入力してください') || '';
+          }
 
-        console.log('🔐 Auth callback triggered', { type, hasAccessToken: !!accessToken });
+          if (!email) {
+            setError('メールアドレスが必要です');
+            setTimeout(() => router.push('/login'), 1500);
+            return;
+          }
 
-        if (type === 'magiclink' || type === 'recovery') {
-          if (accessToken && refreshToken) {
-            // トークンを使ってセッションを確立
-            const { data, error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
+          const result = await signInWithEmailLink(firebaseAuth, email, window.location.href);
+          window.localStorage.removeItem('emailForSignIn');
 
-            if (error) {
-              console.error('❌ Session error:', error);
-              setError(error.message);
-              setTimeout(() => router.push('/login?error=認証に失敗しました'), 2000);
-              return;
-            }
-
-            if (data.session) {
-              console.log('✅ Session established:', data.session.user.email);
-              // セッション確立成功、ホームへリダイレクト
-              setTimeout(() => router.push('/'), 1000);
-              return;
-            }
+          if (result.user) {
+            setTimeout(() => router.push('/'), 500);
+            return;
           }
         }
 
         // トークンがない、または認証タイプが不明な場合
         console.log('⚠️ No valid auth params, checking existing session');
-        const { data: sessionData } = await supabase.auth.getSession();
-
-        if (sessionData.session) {
-          console.log('✅ Existing session found');
+        const currentUser = firebaseAuth.currentUser;
+        if (currentUser) {
           router.push('/');
-        } else {
-          console.log('❌ No session found');
-          router.push('/login');
+          return;
         }
+
+        router.push('/login');
       } catch (error) {
         console.error('❌ Callback error:', error);
         setError('認証処理中にエラーが発生しました');

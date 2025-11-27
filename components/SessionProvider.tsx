@@ -1,8 +1,8 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import { User } from "@supabase/supabase-js"
+import { User, onAuthStateChanged } from "firebase/auth"
+import { firebaseAuth } from "@/lib/firebase-client"
 import { incrementVisitCount } from "@/lib/anonymous-session"
 
 interface AuthContextType {
@@ -37,24 +37,16 @@ export default function SessionProvider({
       sessionStorage.setItem(visitCountedKey, 'true');
     }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (authUser) => {
+      setUser(authUser);
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const value = {
-    userId: user?.id ?? null,
+    userId: user?.uid ?? null,
     userEmail: user?.email ?? null,
     user,
   };

@@ -20,21 +20,29 @@ AUTH_SECRET=your_auth_secret_here
 # Application URL (use http://localhost:3000 for development)
 AUTH_URL=http://localhost:3000
 
-# Supabase credentials (for user authentication and data storage)
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
+# Firebase client credentials (for auth + Firestore)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=1234567890
+NEXT_PUBLIC_FIREBASE_APP_ID=1:1234567890:web:abcdef123456
+
+# Firebase Admin credentials (service account) for API routes
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxx@your-project-id.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 ```
 
 #### Getting API Keys:
 
 1. **OpenAI API Key**: Get it from [OpenAI Platform](https://platform.openai.com/api-keys)
 
-2. **Supabase Credentials**:
-   - Go to [Supabase](https://supabase.com) and create a new project
-   - Once created, go to Settings → API
-   - Copy the Project URL (for SUPABASE_URL)
-   - Copy the service_role key (for SUPABASE_SERVICE_ROLE_KEY)
-   - Go to SQL Editor and run the schema from `supabase/schema.sql`
+2. **Firebase Credentials**:
+   - Go to [Firebase Console](https://console.firebase.google.com/) and create a project
+   - Enable Authentication (Email link) and Firestore
+   - Go to Project Settings → General to copy the client config values
+   - Create a service account key (Project Settings → Service accounts) for the admin credentials
 
 3. **Google OAuth Credentials**:
    - Go to [Google Cloud Console](https://console.cloud.google.com/)

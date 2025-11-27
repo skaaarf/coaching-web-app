@@ -5,32 +5,32 @@
 
 import { ModuleProgress, UserInsights, InteractiveModuleProgress, ValueSnapshot } from '@/types';
 import * as localStorageLib from './storage';
-import * as supabaseStorageLib from './storage-supabase';
+import * as remoteStorageLib from './storage-firestore';
 import { getOrCreateAnonymousSessionId } from './anonymous-session';
-import { isSupabaseConfigured } from './supabase';
+import { isFirebaseConfigured } from './firebase-client';
 
-const GLOBAL_FLAG = '__mikataSupabaseDisabled';
-const isGlobalSupabaseDisabled =
+const GLOBAL_FLAG = '__mikataFirebaseDisabled';
+const isGlobalRemoteDisabled =
   typeof globalThis !== 'undefined' && (globalThis as Record<string, unknown>)[GLOBAL_FLAG] === true;
 
 let hasLoggedSupabaseFallback = false;
-let supabaseAvailable = isSupabaseConfigured && !isGlobalSupabaseDisabled;
+let remoteAvailable = isFirebaseConfigured && !isGlobalRemoteDisabled;
 
 const logSupabaseFallback = (error: unknown) => {
   if (hasLoggedSupabaseFallback) return;
-  console.warn('Supabase unavailable, falling back to local storage.', error);
+  console.warn('Firebase unavailable, falling back to local storage.', error);
   hasLoggedSupabaseFallback = true;
 };
 
 async function withStorageFallback<T>(supabaseOp: () => Promise<T>, localOp: () => T | Promise<T>): Promise<T> {
-  if (!supabaseAvailable) {
+  if (!remoteAvailable) {
     return await Promise.resolve(localOp());
   }
 
   try {
     return await supabaseOp();
   } catch (error) {
-    supabaseAvailable = false;
+    remoteAvailable = false;
     if (typeof globalThis !== 'undefined') {
       (globalThis as Record<string, unknown>)[GLOBAL_FLAG] = true;
     }
@@ -44,7 +44,7 @@ export async function getModuleProgress(moduleId: string, userId?: string): Prom
   return await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      return await supabaseStorageLib.getModuleProgress(userOrAnonymousId, moduleId);
+      return await remoteStorageLib.getModuleProgress(userOrAnonymousId, moduleId);
     },
     () => localStorageLib.getModuleProgress(moduleId)
   );
@@ -54,7 +54,7 @@ export async function saveModuleProgress(moduleId: string, progress: ModuleProgr
   await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      await supabaseStorageLib.saveModuleProgress(userOrAnonymousId, moduleId, progress);
+      await remoteStorageLib.saveModuleProgress(userOrAnonymousId, moduleId, progress);
     },
     () => localStorageLib.saveModuleProgress(moduleId, progress)
   );
@@ -64,7 +64,7 @@ export async function getAllModuleProgress(userId?: string): Promise<Record<stri
   return await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      return await supabaseStorageLib.getAllModuleProgress(userOrAnonymousId);
+      return await remoteStorageLib.getAllModuleProgress(userOrAnonymousId);
     },
     () => localStorageLib.getAllModuleProgress()
   );
@@ -75,7 +75,7 @@ export async function getInteractiveModuleProgress(moduleId: string, userId?: st
   return await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      return await supabaseStorageLib.getInteractiveModuleProgress(userOrAnonymousId, moduleId);
+      return await remoteStorageLib.getInteractiveModuleProgress(userOrAnonymousId, moduleId);
     },
     () => localStorageLib.getInteractiveModuleProgress(moduleId)
   );
@@ -85,7 +85,7 @@ export async function saveInteractiveModuleProgress(moduleId: string, progress: 
   await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      await supabaseStorageLib.saveInteractiveModuleProgress(userOrAnonymousId, moduleId, progress);
+      await remoteStorageLib.saveInteractiveModuleProgress(userOrAnonymousId, moduleId, progress);
     },
     () => localStorageLib.saveInteractiveModuleProgress(moduleId, progress)
   );
@@ -95,7 +95,7 @@ export async function getAllInteractiveModuleProgress(userId?: string): Promise<
   return await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      return await supabaseStorageLib.getAllInteractiveModuleProgress(userOrAnonymousId);
+      return await remoteStorageLib.getAllInteractiveModuleProgress(userOrAnonymousId);
     },
     () => localStorageLib.getAllInteractiveModuleProgress()
   );
@@ -106,7 +106,7 @@ export async function getUserInsights(userId?: string): Promise<UserInsights | n
   return await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      return await supabaseStorageLib.getUserInsights(userOrAnonymousId);
+      return await remoteStorageLib.getUserInsights(userOrAnonymousId);
     },
     () => localStorageLib.getUserInsights()
   );
@@ -116,7 +116,7 @@ export async function saveUserInsights(insights: UserInsights, userId?: string):
   await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      await supabaseStorageLib.saveUserInsights(userOrAnonymousId, insights);
+      await remoteStorageLib.saveUserInsights(userOrAnonymousId, insights);
     },
     () => localStorageLib.saveUserInsights(insights)
   );
@@ -127,7 +127,7 @@ export async function clearAllData(userId?: string): Promise<void> {
   await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      await supabaseStorageLib.clearAllData(userOrAnonymousId);
+      await remoteStorageLib.clearAllData(userOrAnonymousId);
     },
     () => localStorageLib.clearAllData()
   );
@@ -151,7 +151,7 @@ export async function getModuleSessions(moduleId: string, userId?: string): Prom
   return await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      return await supabaseStorageLib.getModuleSessions(userOrAnonymousId, moduleId);
+      return await remoteStorageLib.getModuleSessions(userOrAnonymousId, moduleId);
     },
     () => localStorageLib.getModuleSessions(moduleId)
   );
@@ -161,7 +161,7 @@ export async function getModuleSession(moduleId: string, sessionId: string, user
   return await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      return await supabaseStorageLib.getModuleSession(userOrAnonymousId, moduleId, sessionId);
+      return await remoteStorageLib.getModuleSession(userOrAnonymousId, moduleId, sessionId);
     },
     () => localStorageLib.getModuleSession(moduleId, sessionId)
   );
@@ -171,7 +171,7 @@ export async function getInteractiveModuleSessions(moduleId: string, userId?: st
   return await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      return await supabaseStorageLib.getInteractiveModuleSessions(userOrAnonymousId, moduleId);
+      return await remoteStorageLib.getInteractiveModuleSessions(userOrAnonymousId, moduleId);
     },
     () => localStorageLib.getInteractiveModuleSessions(moduleId)
   );
@@ -181,7 +181,7 @@ export async function getInteractiveModuleSession(moduleId: string, sessionId: s
   return await withStorageFallback(
     async () => {
       const userOrAnonymousId = userId || getOrCreateAnonymousSessionId();
-      return await supabaseStorageLib.getInteractiveModuleSession(userOrAnonymousId, moduleId, sessionId);
+      return await remoteStorageLib.getInteractiveModuleSession(userOrAnonymousId, moduleId, sessionId);
     },
     () => localStorageLib.getInteractiveModuleSession(moduleId, sessionId)
   );

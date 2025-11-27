@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { InteractiveState, Message } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
-import { supabase, type DBInteractiveModuleProgress, type DBModuleProgress, type StoredMessage } from '@/lib/supabase';
 import { useAuth } from '@/components/SessionProvider';
+import { collection, getDocs } from 'firebase/firestore';
+import { firebaseDb } from '@/lib/firebase-client';
+import type { StoredMessage } from '@/lib/storage-firestore';
 
 interface SessionData {
   type: 'chat' | 'interactive';
@@ -27,12 +29,28 @@ interface SessionData {
 
 type SessionFilterType = 'all' | 'chat' | 'interactive';
 
-type ChatProgressRow = DBModuleProgress & {
-  users?: { email?: string | null } | null;
+type ChatProgressRow = {
+  module_id: string;
+  session_id?: string | null;
+  messages?: StoredMessage[] | null;
+  completed?: boolean;
+  last_updated: string;
+  owner_id: string;
+  user_email?: string | null;
+  is_session?: boolean;
+  is_latest?: boolean;
 };
 
-type InteractiveProgressRow = DBInteractiveModuleProgress & {
-  users?: { email?: string | null } | null;
+type InteractiveProgressRow = {
+  module_id: string;
+  session_id?: string | null;
+  data?: InteractiveState | Record<string, unknown>;
+  completed?: boolean;
+  last_updated: string;
+  owner_id: string;
+  user_email?: string | null;
+  is_session?: boolean;
+  is_latest?: boolean;
 };
 
 export default function AdminDashboardPage() {
@@ -61,99 +79,74 @@ export default function AdminDashboardPage() {
     try {
       setLoading(true);
 
-      // Supabaseからデータを取得
       const sessionList: SessionData[] = [];
 
       // 1. チャット履歴を取得
-      const { data: chatData, error: chatError } = await supabase
-        .from('module_progress')
-        .select(`
-          *,
-          users (
-            email
-          )
-        `)
-        .order('last_updated', { ascending: false });
+      const chatSnapshot = await getDocs(collection(firebaseDb, 'module_progress'));
+      chatSnapshot.forEach((docSnap) => {
+        const progress = docSnap.data() as ChatProgressRow;
+        const moduleDefinition = CAREER_MODULES.find(m => m.id === progress.module_id);
+        if (!moduleDefinition) return;
 
-      if (chatError) {
-        console.error('Failed to load chat data:', chatError);
-      } else if (chatData) {
-        (chatData as ChatProgressRow[]).forEach((progress) => {
-          const moduleDefinition = CAREER_MODULES.find(m => m.id === progress.module_id);
-          if (!moduleDefinition) return;
+        const messages = (progress.messages as StoredMessage[] | null | undefined) || [];
+        if (messages.length === 0) return;
 
-          const messages = (progress.messages as StoredMessage[] | null | undefined) || [];
-          if (messages.length === 0) return;
+        const userMessages = messages.filter((message) => message.role === 'user');
+        const aiMessages = messages.filter((message) => message.role === 'assistant');
+        const firstUserMessage = userMessages[0]?.content || '';
+        const lastMessage = messages[messages.length - 1]?.content || '';
 
-          const userMessages = messages.filter((message) => message.role === 'user');
-          const aiMessages = messages.filter((message) => message.role === 'assistant');
-          const firstUserMessage = userMessages[0]?.content || '';
-          const lastMessage = messages[messages.length - 1]?.content || '';
-
-          sessionList.push({
-            type: 'chat',
-            moduleId: progress.module_id,
-            moduleName: moduleDefinition.title,
-            moduleIcon: moduleDefinition.icon,
-            sessionId: progress.session_id || progress.id,
-            messageCount: messages.length,
-            userMessageCount: userMessages.length,
-            aiMessageCount: aiMessages.length,
-            firstUserMessage: firstUserMessage.substring(0, 100),
-            lastMessage: lastMessage.substring(0, 100),
-            lastUpdated: new Date(progress.last_updated),
-            completed: progress.completed || false,
-            userId: progress.user_id,
-            userEmail: progress.users?.email || undefined,
-          });
+        sessionList.push({
+          type: 'chat',
+          moduleId: progress.module_id,
+          moduleName: moduleDefinition.title,
+          moduleIcon: moduleDefinition.icon,
+          sessionId: progress.session_id || docSnap.id,
+          messageCount: messages.length,
+          userMessageCount: userMessages.length,
+          aiMessageCount: aiMessages.length,
+          firstUserMessage: firstUserMessage.substring(0, 100),
+          lastMessage: lastMessage.substring(0, 100),
+          lastUpdated: progress.last_updated ? new Date(progress.last_updated) : new Date(),
+          completed: progress.completed || false,
+          userId: progress.owner_id,
+          userEmail: progress.user_email || undefined,
         });
-      }
+      });
 
       // 2. インタラクティブモジュールを取得
-      const { data: interactiveData, error: interactiveError } = await supabase
-        .from('interactive_module_progress')
-        .select(`
-          *,
-          users (
-            email
-          )
-        `)
-        .order('last_updated', { ascending: false });
+      const interactiveSnapshot = await getDocs(collection(firebaseDb, 'interactive_module_progress'));
+      interactiveSnapshot.forEach((docSnap) => {
+        const progress = docSnap.data() as InteractiveProgressRow;
+        const moduleDefinition = CAREER_MODULES.find(m => m.id === progress.module_id);
+        if (!moduleDefinition) return;
 
-      if (interactiveError) {
-        console.error('Failed to load interactive data:', interactiveError);
-      } else if (interactiveData) {
-        (interactiveData as InteractiveProgressRow[]).forEach((progress) => {
-          const moduleDefinition = CAREER_MODULES.find(m => m.id === progress.module_id);
-          if (!moduleDefinition) return;
+        const data = (progress.data as InteractiveState | null) || null;
+        const messages: Message[] = data?.phase === 'dialogue' && data.messages ? data.messages : [];
+        if (messages.length === 0) return;
 
-          const data = (progress.data as InteractiveState | null) || null;
-          const messages: Message[] = data?.phase === 'dialogue' && data.messages ? data.messages : [];
-          if (messages.length === 0) return;
+        const userMessages = messages.filter((message) => message.role === 'user');
+        const aiMessages = messages.filter((message) => message.role === 'assistant');
+        const firstUserMessage = userMessages[0]?.content || '';
+        const lastMessage = messages[messages.length - 1]?.content || '';
 
-          const userMessages = messages.filter((message) => message.role === 'user');
-          const aiMessages = messages.filter((message) => message.role === 'assistant');
-          const firstUserMessage = userMessages[0]?.content || '';
-          const lastMessage = messages[messages.length - 1]?.content || '';
-
-          sessionList.push({
-            type: 'interactive',
-            moduleId: progress.module_id,
-            moduleName: moduleDefinition.title,
-            moduleIcon: moduleDefinition.icon,
-            sessionId: progress.session_id || progress.id,
-            messageCount: messages.length,
-            userMessageCount: userMessages.length,
-            aiMessageCount: aiMessages.length,
-            firstUserMessage: firstUserMessage.substring(0, 100),
-            lastMessage: lastMessage.substring(0, 100),
-            lastUpdated: new Date(progress.last_updated),
-            completed: progress.completed || false,
-            userId: progress.user_id,
-            userEmail: progress.users?.email || undefined,
-          });
+        sessionList.push({
+          type: 'interactive',
+          moduleId: progress.module_id,
+          moduleName: moduleDefinition.title,
+          moduleIcon: moduleDefinition.icon,
+          sessionId: progress.session_id || docSnap.id,
+          messageCount: messages.length,
+          userMessageCount: userMessages.length,
+          aiMessageCount: aiMessages.length,
+          firstUserMessage: firstUserMessage.substring(0, 100),
+          lastMessage: lastMessage.substring(0, 100),
+          lastUpdated: progress.last_updated ? new Date(progress.last_updated) : new Date(),
+          completed: progress.completed || false,
+          userId: progress.owner_id,
+          userEmail: progress.user_email || undefined,
         });
-      }
+      });
 
       // Sort by last updated (most recent first)
       sessionList.sort((a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime());

@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import type { User } from "@supabase/supabase-js"
+import type { User } from "firebase/auth"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import { firebaseAuth } from "@/lib/firebase-client"
+import { onAuthStateChanged, signOut } from "firebase/auth"
 
 export default function UserMenu() {
   const router = useRouter()
@@ -13,17 +14,11 @@ export default function UserMenu() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (sessionUser) => {
+      setUser(sessionUser ?? null)
     })
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
+    return () => unsubscribe()
   }, [])
 
   useEffect(() => {
@@ -38,7 +33,7 @@ export default function UserMenu() {
   }, [])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    await signOut(firebaseAuth)
     router.push('/login')
   }
 

@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import type { User } from '@supabase/supabase-js';
+import type { User } from 'firebase/auth';
 import { useStorage } from '@/hooks/useStorage';
 import { InteractiveModuleProgress, Message } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
-import { supabase } from '@/lib/supabase';
+import { firebaseAuth } from '@/lib/firebase-client';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
@@ -20,42 +21,24 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check auth status and admin privileges
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (sessionUser) => {
+      if (!sessionUser) {
         router.push('/login');
-      } else {
-        const userEmail = session.user.email;
-        const isUserAdmin = userEmail === ADMIN_EMAIL;
+        return;
+      }
 
-        setUser(session.user);
-        setIsAdmin(isUserAdmin);
+      const userEmail = sessionUser.email;
+      const isUserAdmin = userEmail === ADMIN_EMAIL;
 
-        // Redirect non-admin users
-        if (!isUserAdmin) {
-          router.push('/');
-        }
+      setUser(sessionUser);
+      setIsAdmin(isUserAdmin);
+
+      if (!isUserAdmin) {
+        router.push('/');
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.push('/login');
-      } else {
-        const userEmail = session.user.email;
-        const isUserAdmin = userEmail === ADMIN_EMAIL;
-
-        setUser(session.user);
-        setIsAdmin(isUserAdmin);
-
-        // Redirect non-admin users
-        if (!isUserAdmin) {
-          router.push('/');
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, [router]);
 
   useEffect(() => {

@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-import { DBValueSnapshot } from "@/lib/supabase";
+import { getFirebaseAdminAuth, getFirebaseAdminDb, isFirebaseAdminConfigured } from "@/lib/firebase-admin";
 import { ValueSnapshot, ValueAxes, AxisReasoning } from "@/types";
+
+interface DBValueSnapshot {
+  id: string;
+  user_id: string;
+  module_id: string | null;
+  money_vs_meaning: number;
+  stability_vs_challenge: number;
+  team_vs_solo: number;
+  specialist_vs_generalist: number;
+  growth_vs_balance: number;
+  corporate_vs_startup: number;
+  social_vs_self: number;
+  reasoning: Record<keyof ValueAxes, AxisReasoning>;
+  overall_confidence: number;
+  created_at: string;
+  last_updated: string;
+}
 
 function dbToSnapshot(db: DBValueSnapshot): ValueSnapshot {
   return {
@@ -30,23 +41,29 @@ function dbToSnapshot(db: DBValueSnapshot): ValueSnapshot {
 }
 
 async function getUserFromRequest(request: NextRequest): Promise<string | null> {
+  if (!isFirebaseAdminConfigured) return null;
   const authHeader = request.headers.get('authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
 
   const token = authHeader.substring(7);
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-
-  if (error || !user) {
+  try {
+    const adminAuth = getFirebaseAdminAuth();
+    const decoded = await adminAuth.verifyIdToken(token);
+    return decoded.uid;
+  } catch (error) {
+    console.error('Failed to verify Firebase ID token', error);
     return null;
   }
-
-  return user.id;
 }
 
 export async function GET(request: NextRequest) {
   try {
+    if (!isFirebaseAdminConfigured) {
+      return NextResponse.json({ error: "Firebase admin が未設定です" }, { status: 500 });
+    }
+
     // Get authenticated user
     const userId = await getUserFromRequest(request);
     if (!userId) {
@@ -59,21 +76,13 @@ export async function GET(request: NextRequest) {
     const includeHistory = searchParams.get('includeHistory') === 'true';
 
     // Get all snapshots for the user, ordered by creation date
-    const { data: snapshots, error: dbError } = await supabaseAdmin
-      .from('value_snapshots')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    const snapshotsSnap = await getFirebaseAdminDb()!
+      .collection('value_snapshots')
+      .where('user_id', '==', userId)
+      .orderBy('created_at', 'desc')
+      .get();
 
-    if (dbError) {
-      console.error("Database error:", dbError);
-      return NextResponse.json(
-        { error: "データベースからの取得に失敗しました" },
-        { status: 500 }
-      );
-    }
-
-    if (!snapshots || snapshots.length === 0) {
+    if (snapshotsSnap.empty) {
       return NextResponse.json({
         current: null,
         previous: null,
@@ -81,9 +90,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const current = dbToSnapshot(snapshots[0]);
-    const previous = snapshots.length > 1 ? dbToSnapshot(snapshots[1]) : null;
-    const history = includeHistory ? snapshots.map(dbToSnapshot) : [];
+    const snapshots = snapshotsSnap.docs.map((doc) => dbToSnapshot({ id: doc.id, ...(doc.data() as DBValueSnapshot) }));
+
+    const current = snapshots[0];
+    const previous = snapshots.length > 1 ? snapshots[1] : null;
+    const history = includeHistory ? snapshots : [];
 
     return NextResponse.json({
       current,
@@ -102,6 +113,10 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    if (!isFirebaseAdminConfigured) {
+      return NextResponse.json({ error: "Firebase admin が未設定です" }, { status: 500 });
+    }
+
     // Get authenticated user
     const userId = await getUserFromRequest(request);
     if (!userId) {
@@ -122,45 +137,42 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get the most recent snapshot
-    const { data: currentSnapshot, error: fetchError } = await supabaseAdmin
-      .from('value_snapshots')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+    const currentSnapshotSnap = await getFirebaseAdminDb()!
+      .collection('value_snapshots')
+      .where('user_id', '==', userId)
+      .orderBy('created_at', 'desc')
       .limit(1)
-      .single();
+      .get();
 
-    if (fetchError || !currentSnapshot) {
+    if (currentSnapshotSnap.empty) {
       return NextResponse.json(
         { error: "既存の価値観が見つかりません" },
         { status: 404 }
       );
     }
 
-    // Update the snapshot
-    const { data: updatedSnapshot, error: updateError } = await supabaseAdmin
-      .from('value_snapshots')
-      .update({
-        money_vs_meaning: body.axes.money_vs_meaning ?? currentSnapshot.money_vs_meaning,
-        stability_vs_challenge: body.axes.stability_vs_challenge ?? currentSnapshot.stability_vs_challenge,
-        team_vs_solo: body.axes.team_vs_solo ?? currentSnapshot.team_vs_solo,
-        specialist_vs_generalist: body.axes.specialist_vs_generalist ?? currentSnapshot.specialist_vs_generalist,
-        growth_vs_balance: body.axes.growth_vs_balance ?? currentSnapshot.growth_vs_balance,
-        corporate_vs_startup: body.axes.corporate_vs_startup ?? currentSnapshot.corporate_vs_startup,
-        social_vs_self: body.axes.social_vs_self ?? currentSnapshot.social_vs_self,
-        last_updated: new Date().toISOString(),
-      })
-      .eq('id', currentSnapshot.id)
-      .select()
-      .single();
+    const currentSnapshot = currentSnapshotSnap.docs[0];
+    const currentData = currentSnapshot.data() as DBValueSnapshot;
 
-    if (updateError) {
-      console.error("Database update error:", updateError);
-      return NextResponse.json(
-        { error: "価値観の更新に失敗しました" },
-        { status: 500 }
-      );
-    }
+    // Update the snapshot
+    const updatedPayload: Partial<DBValueSnapshot> = {
+      money_vs_meaning: body.axes.money_vs_meaning ?? currentData.money_vs_meaning,
+      stability_vs_challenge: body.axes.stability_vs_challenge ?? currentData.stability_vs_challenge,
+      team_vs_solo: body.axes.team_vs_solo ?? currentData.team_vs_solo,
+      specialist_vs_generalist: body.axes.specialist_vs_generalist ?? currentData.specialist_vs_generalist,
+      growth_vs_balance: body.axes.growth_vs_balance ?? currentData.growth_vs_balance,
+      corporate_vs_startup: body.axes.corporate_vs_startup ?? currentData.corporate_vs_startup,
+      social_vs_self: body.axes.social_vs_self ?? currentData.social_vs_self,
+      last_updated: new Date().toISOString(),
+    };
+
+    await currentSnapshot.ref.update(updatedPayload);
+
+    const updatedSnapshot = {
+      ...currentData,
+      ...updatedPayload,
+      id: currentSnapshot.id,
+    } as DBValueSnapshot;
 
     return NextResponse.json({
       success: true,

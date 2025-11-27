@@ -2,48 +2,37 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { firebaseAuth } from '@/lib/firebase-client';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [isLoginMode, setIsLoginMode] = useState(true);
 
-  const getRedirectUrl = () => {
-    // Prefer an explicitly configured public site URL to avoid falling back to localhost in emails
-    const baseFromEnv =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.NEXT_PUBLIC_VERCEL_URL
-        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-        : null);
-
-    const base = baseFromEnv || (typeof window !== 'undefined' ? window.location.origin : '');
-    return `${base?.replace(/\/$/, '')}/auth/callback`;
-  };
-
-  const handleMagicLink = async (e: React.FormEvent) => {
+  const handleEmailPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setMessage(null);
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: getRedirectUrl(),
-        },
-      });
-
-      if (error) throw error;
-
-      setMessage('ログインリンクをメールで送信しました！メールを確認してください。');
-      setEmail('');
+      if (isLoginMode) {
+        await signInWithEmailAndPassword(firebaseAuth, email, password);
+        setMessage('ログインしました');
+      } else {
+        await createUserWithEmailAndPassword(firebaseAuth, email, password);
+        setMessage('アカウントを作成しました');
+      }
+      router.push('/');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : null;
-      setError(errorMessage || 'ログインリンクの送信に失敗しました');
+      setError(errorMessage || '認証に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -60,11 +49,11 @@ export default function LoginPage() {
             ログイン
           </p>
           <p className="text-gray-600 text-sm mt-2">
-            パスワード不要！メールアドレスだけでログインできます
+            メールアドレスとパスワードでログインします
           </p>
         </div>
 
-        <form onSubmit={handleMagicLink} className="space-y-4">
+        <form onSubmit={handleEmailPassword} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-1">
               メールアドレス
@@ -79,7 +68,26 @@ export default function LoginPage() {
               placeholder="example@email.com"
             />
             <p className="mt-2 text-xs text-gray-600">
-              ログインリンクをメールで送信します
+              {isLoginMode ? '登録済みのメールアドレスを入力してください' : '新しいアカウントを作成します'}
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-1">
+              パスワード
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+              placeholder="6文字以上のパスワード"
+            />
+            <p className="mt-2 text-xs text-gray-600">
+              {isLoginMode ? 'パスワードを入力してください' : '新しいパスワードを設定します'}
             </p>
           </div>
 
@@ -100,7 +108,15 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'メールを送信中...' : 'ログインリンクを送信'}
+            {loading ? '処理中...' : isLoginMode ? 'ログイン' : 'アカウントを作成'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsLoginMode((prev) => !prev)}
+            className="w-full text-sm text-blue-700 hover:text-blue-900 font-medium underline"
+          >
+            {isLoginMode ? '初めての方はこちら（新規登録）' : '既にアカウントをお持ちの方はこちら'}
           </button>
         </form>
 
@@ -120,11 +136,11 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">マジックリンク認証とは？</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">ログインに関するヒント</h3>
           <ul className="text-xs text-gray-700 space-y-1">
-            <li>✓ パスワード不要で安全</li>
-            <li>✓ メールに届くリンクをクリックするだけ</li>
-            <li>✓ パスワードを忘れる心配なし</li>
+            <li>✓ パスワードは6文字以上で設定してください</li>
+            <li>✓ パスワードを忘れた場合は新規登録し直すか、管理者に連絡してください</li>
+            <li>✓ 管理者用メールでログインするとダッシュボードにアクセスできます</li>
           </ul>
         </div>
       </div>
