@@ -230,7 +230,7 @@ export async function saveInteractiveModuleProgress(userIdOrAnonymous: string, m
     owner_type: getOwnerType(userIdOrAnonymous),
     module_id: moduleId,
     session_id: sessionId,
-    data: progress.data,
+    data: progress.data || undefined,
     completed: progress.completed ?? false,
     user_email: progress.userEmail || null,
     created_at: createdAtIso,

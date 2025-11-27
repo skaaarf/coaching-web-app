@@ -90,7 +90,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const snapshots = snapshotsSnap.docs.map((doc) => dbToSnapshot({ id: doc.id, ...(doc.data() as DBValueSnapshot) }));
+    const snapshots = snapshotsSnap.docs.map((doc) => {
+      const data = doc.data() as DBValueSnapshot;
+      return dbToSnapshot({
+        ...data,
+        id: doc.id,
+      });
+    });
 
     const current = snapshots[0];
     const previous = snapshots.length > 1 ? snapshots[1] : null;
