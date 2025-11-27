@@ -2,6 +2,8 @@ import { getApp, getApps, initializeApp, type FirebaseApp, type FirebaseOptions 
 import { getAuth, browserLocalPersistence, setPersistence, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
+const isBrowser = typeof window !== 'undefined';
+
 const requiredFirebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
@@ -20,7 +22,7 @@ const missingRequiredFirebaseEnv = Object.entries(requiredFirebaseConfig)
 
 export const isFirebaseConfigured = missingRequiredFirebaseEnv.length === 0;
 
-if (missingRequiredFirebaseEnv.length) {
+if (missingRequiredFirebaseEnv.length && isBrowser) {
   console.warn(
     `Firebase client is missing required env vars: ${missingRequiredFirebaseEnv.join(', ')}. Auth will be disabled until these are set.`,
   );
@@ -38,6 +40,7 @@ let db: Firestore | null = null;
 
 function initApp() {
   if (app) return app;
+  if (!isBrowser) return null;
   if (!isFirebaseConfigured) {
     throw new Error('Firebase client is not configured. Check Firebase env vars.');
   }
@@ -48,6 +51,7 @@ function initApp() {
 function initAuth() {
   if (auth) return auth;
   const firebaseApp = initApp();
+  if (!firebaseApp) return null;
   auth = getAuth(firebaseApp);
 
   // Use local persistence on the client so sessions survive reloads.
@@ -63,10 +67,11 @@ function initAuth() {
 function initDb() {
   if (db) return db;
   const firebaseApp = initApp();
+  if (!firebaseApp) return null;
   db = getFirestore(firebaseApp);
   return db;
 }
 
-export const firebaseApp = initApp();
-export const firebaseAuth = initAuth();
-export const firebaseDb = initDb();
+export const firebaseApp = isBrowser ? initApp() : null;
+export const firebaseAuth = isBrowser ? initAuth() : null;
+export const firebaseDb = isBrowser ? initDb() : null;

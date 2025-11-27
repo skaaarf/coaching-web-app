@@ -8,6 +8,7 @@ export default function AnalyticsInit() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
+      if (!firebaseApp) return;
       const analytics = getAnalytics(firebaseApp);
       logEvent(analytics, 'page_view');
       logEvent(analytics, 'debug_test_event');
