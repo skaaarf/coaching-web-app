@@ -97,6 +97,12 @@ export function useSelfAnalysis({ allProgress, allInteractiveProgress }: Generat
     }
   }, [allProgress, episodes, saveCache, totalDialogues]);
 
+  // Auto-generate on first visit if data exists and未生成
+  useEffect(() => {
+    if (result || isGenerating || totalDialogues === 0) return;
+    generate();
+  }, [generate, isGenerating, result, totalDialogues]);
+
   const clearCache = useCallback(() => {
     if (typeof window === 'undefined') return;
     localStorage.removeItem(CACHE_KEY);
@@ -110,6 +116,5 @@ export function useSelfAnalysis({ allProgress, allInteractiveProgress }: Generat
     generate,
     clearCache,
     totalDialogues,
-    completedEpisodes: episodes.filter(ep => ep.isCompleted || (ep.messageCount ?? 0) > 0).length,
   };
 }

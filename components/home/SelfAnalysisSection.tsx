@@ -14,7 +14,6 @@ export default function SelfAnalysisSection({ allProgress, allInteractiveProgres
     error,
     generate,
     totalDialogues,
-    completedEpisodes,
   } = useSelfAnalysis({ allProgress, allInteractiveProgress });
 
   const hasData = !!result;
@@ -25,23 +24,20 @@ export default function SelfAnalysisSection({ allProgress, allInteractiveProgres
   return (
     <section className="mt-6 space-y-6">
       <div className="rounded-[28px] border border-white/70 bg-gradient-to-br from-white via-white to-slate-50 px-6 py-7 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.4em] text-gray-400">Self portrait</p>
-            <h2 className="text-2xl font-semibold text-gray-900">あなたの自己分析結果</h2>
-            <p className="text-sm text-gray-600 mt-2">
-              対話とエピソードから、価値観と強みを抽出しました。
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.4em] text-gray-400">Self portrait</p>
+              <h2 className="text-2xl font-semibold text-gray-900">あなたの自己分析結果</h2>
+              <p className="text-sm text-gray-600 mt-2">
+                対話とエピソードから、価値観と強みを抽出しました。
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="rounded-full bg-gray-900 text-white px-3 py-1 text-xs font-semibold shadow-sm">
+                対話 {totalDialogues} 件
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-gray-900 text-white px-3 py-1 text-xs font-semibold shadow-sm">
-              対話 {totalDialogues} 件
-            </span>
-            <span className="rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700">
-              完了エピソード {completedEpisodes} 件
-            </span>
-          </div>
-        </div>
 
         <div className="mt-5 flex flex-wrap gap-3">
           <button
@@ -58,10 +54,8 @@ export default function SelfAnalysisSection({ allProgress, allInteractiveProgres
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent" />
                 分析を実行中...
               </>
-            ) : hasData ? (
-              <>結果を更新する</>
             ) : (
-              <>分析結果を見る</>
+              <>結果を更新する</>
             )}
           </button>
           <Link
