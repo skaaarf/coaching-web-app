@@ -253,3 +253,19 @@ export interface ValueChange {
   current: number;
   change: number;
 }
+
+// Self analysis result (values & strengths) generated from conversations
+export interface SelfAnalysisItem {
+  title: string;
+  description: string;
+  evidences: string[];
+}
+
+export interface SelfAnalysisResult {
+  summary: string;
+  values: SelfAnalysisItem[];
+  strengths: SelfAnalysisItem[];
+  completedEpisodeCount: number;
+  totalDialogueCount: number;
+  generatedAt: string;
+}

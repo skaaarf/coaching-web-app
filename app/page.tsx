@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import UserMenu from '@/components/UserMenu';
-import AnalysisSection from '@/components/home/AnalysisSection';
+import SelfAnalysisSection from '@/components/home/SelfAnalysisSection';
 import ModulesSection from '@/components/home/ModulesSection';
 import HistorySection from '@/components/home/HistorySection';
 import ModuleSelectionDialog from '@/components/home/ModuleSelectionDialog';
@@ -15,15 +15,6 @@ export default function Home() {
   const {
     allProgress,
     allInteractiveProgress,
-    insights,
-    isLoadingInsights,
-    insightsError,
-    currentValues,
-    previousValues,
-    loadingValues,
-    valuesError,
-    activeTab,
-    setActiveTab,
     activeSection,
     setActiveSection,
     selectedModule,
@@ -82,17 +73,9 @@ export default function Home() {
 
       <main className="relative z-20 mx-auto w-full max-w-3xl px-5 pb-32">
         {activeSection === 'analysis' && (
-          <AnalysisSection
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            loadingValues={loadingValues}
-            valuesError={valuesError}
-            currentValues={currentValues}
-            previousValues={previousValues}
-            hasAnyProgress={hasAnyProgress}
-            insights={insights}
-            isLoadingInsights={isLoadingInsights}
-            insightsError={insightsError}
+          <SelfAnalysisSection
+            allProgress={allProgress}
+            allInteractiveProgress={allInteractiveProgress}
           />
         )}
 
