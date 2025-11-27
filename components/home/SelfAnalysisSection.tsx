@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { InteractiveModuleProgress, ModuleProgress } from '@/types';
 import { useSelfAnalysis } from '@/hooks/useSelfAnalysis';
 
@@ -58,12 +57,6 @@ export default function SelfAnalysisSection({ allProgress, allInteractiveProgres
               <>結果を更新する</>
             )}
           </button>
-          <Link
-            href="/interactive/life-reflection"
-            className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition"
-          >
-            エピソード一覧に戻る
-          </Link>
         </div>
 
         {error && (
