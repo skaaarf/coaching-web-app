@@ -36,7 +36,7 @@ const SELF_ANALYSIS_PROMPT = `あなたは世界最高クラスのキャリア�
 
 # 出力フォーマット（JSONのみ。説明文は禁止）
 {
-  "summary": "全体像の短い一文（完了エピソード数には触れない）",
+  "summary": "全体像の短い一文（主語は「あなた」）",
   "values": [
     { "title": "価値観A", "description": "簡潔な説明", "evidences": ["• 具体例1", "• 具体例2"] },
     { "title": "価値観B", "description": "簡潔な説明", "evidences": ["• 具体例1"] },
