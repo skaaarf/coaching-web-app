@@ -1,17 +1,36 @@
-import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
+import { getApp, getApps, initializeApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth, browserLocalPersistence, setPersistence, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+const requiredFirebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
 };
 
-export const isFirebaseConfigured = Object.values(firebaseConfig).every(Boolean);
+const optionalFirebaseConfig = {
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
+};
+
+const missingRequiredFirebaseEnv = Object.entries(requiredFirebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+
+export const isFirebaseConfigured = missingRequiredFirebaseEnv.length === 0;
+
+if (missingRequiredFirebaseEnv.length) {
+  console.warn(
+    `Firebase client is missing required env vars: ${missingRequiredFirebaseEnv.join(', ')}. Auth will be disabled until these are set.`,
+  );
+}
+
+const firebaseConfig: FirebaseOptions = {
+  ...requiredFirebaseConfig,
+  ...(optionalFirebaseConfig.storageBucket ? { storageBucket: optionalFirebaseConfig.storageBucket } : {}),
+  ...(optionalFirebaseConfig.messagingSenderId ? { messagingSenderId: optionalFirebaseConfig.messagingSenderId } : {}),
+};
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
@@ -19,20 +38,10 @@ let db: Firestore | null = null;
 
 function initApp() {
   if (app) return app;
-  const configToUse = isFirebaseConfigured
-    ? firebaseConfig
-    : {
-        apiKey: 'demo',
-        authDomain: 'demo.firebaseapp.com',
-        projectId: 'demo',
-        storageBucket: 'demo.appspot.com',
-        messagingSenderId: '0',
-        appId: 'demo:app',
-      };
   if (!isFirebaseConfigured) {
-    console.warn('Firebase client is not fully configured. Falling back to demo config for local-only storage.');
+    throw new Error('Firebase client is not configured. Check Firebase env vars.');
   }
-  app = getApps().length ? getApp() : initializeApp(configToUse);
+  app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   return app;
 }
 
