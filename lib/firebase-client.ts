@@ -42,7 +42,8 @@ function initApp() {
   if (app) return app;
   if (!isBrowser) return null;
   if (!isFirebaseConfigured) {
-    throw new Error('Firebase client is not configured. Check Firebase env vars.');
+    console.warn('Firebase client is not configured. Check Firebase env vars.');
+    return null;
   }
   app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   return app;
