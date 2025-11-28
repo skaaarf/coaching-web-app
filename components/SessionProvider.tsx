@@ -37,7 +37,14 @@ export default function SessionProvider({
       sessionStorage.setItem(visitCountedKey, 'true');
     }
 
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (authUser) => {
+    const auth = firebaseAuth;
+    if (!auth) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (authUser) => {
       setUser(authUser);
       setLoading(false);
     });

@@ -21,7 +21,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (sessionUser) => {
+    const auth = firebaseAuth;
+    if (!auth) {
+      router.push('/login');
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (sessionUser) => {
       if (!sessionUser) {
         router.push('/login');
         return;

@@ -9,6 +9,7 @@ import {
   query,
   setDoc,
   where,
+  type Firestore,
 } from 'firebase/firestore';
 import { firebaseDb } from './firebase-client';
 import type { ModuleProgress, UserInsights, InteractiveModuleProgress, Message, InteractiveState } from '@/types';
@@ -98,10 +99,18 @@ const mapInteractiveProgress = (item: FirestoreInteractiveProgress): Interactive
 const getOwnerType = (userIdOrAnonymous: string) =>
   userIdOrAnonymous.startsWith('anon_') ? 'anonymous' : 'user';
 
+const getDbOrThrow = (): Firestore => {
+  if (!firebaseDb) {
+    throw new Error('Firebase client is not initialized. Check Firebase env vars.');
+  }
+  return firebaseDb;
+};
+
 // Module progress
 export async function getModuleProgress(userIdOrAnonymous: string, moduleId: string): Promise<ModuleProgress | null> {
+  const db = getDbOrThrow();
   const baseQuery = query(
-    collection(firebaseDb, MODULE_PROGRESS_COLLECTION),
+    collection(db, MODULE_PROGRESS_COLLECTION),
     where('owner_id', '==', userIdOrAnonymous),
     where('module_id', '==', moduleId),
     where('is_latest', '==', true),
@@ -115,6 +124,7 @@ export async function getModuleProgress(userIdOrAnonymous: string, moduleId: str
 }
 
 export async function saveModuleProgress(userIdOrAnonymous: string, moduleId: string, progress: ModuleProgress): Promise<void> {
+  const db = getDbOrThrow();
   const createdAtIso = progress.createdAt ? new Date(progress.createdAt).toISOString() : new Date().toISOString();
   const lastUpdatedIso = progress.lastUpdated ? new Date(progress.lastUpdated).toISOString() : new Date().toISOString();
   const sessionId = progress.sessionId || `session-${Date.now()}`;
@@ -137,7 +147,7 @@ export async function saveModuleProgress(userIdOrAnonymous: string, moduleId: st
   };
 
   // Latest snapshot for the module
-  const latestDocRef = doc(firebaseDb, MODULE_PROGRESS_COLLECTION, `latest_${userIdOrAnonymous}_${moduleId}`);
+  const latestDocRef = doc(db, MODULE_PROGRESS_COLLECTION, `latest_${userIdOrAnonymous}_${moduleId}`);
   await setDoc(latestDocRef, baseData);
 
   // Session history
@@ -146,14 +156,15 @@ export async function saveModuleProgress(userIdOrAnonymous: string, moduleId: st
     is_latest: false,
     is_session: true,
   };
-  const historyDocRef = doc(firebaseDb, MODULE_PROGRESS_COLLECTION, `session_${userIdOrAnonymous}_${moduleId}_${sessionId}`);
+  const historyDocRef = doc(db, MODULE_PROGRESS_COLLECTION, `session_${userIdOrAnonymous}_${moduleId}_${sessionId}`);
   await setDoc(historyDocRef, historyData);
 }
 
 export async function getAllModuleProgress(userIdOrAnonymous: string): Promise<Record<string, ModuleProgress>> {
+  const db = getDbOrThrow();
   const results: Record<string, ModuleProgress> = {};
   const qLatest = query(
-    collection(firebaseDb, MODULE_PROGRESS_COLLECTION),
+    collection(db, MODULE_PROGRESS_COLLECTION),
     where('owner_id', '==', userIdOrAnonymous),
     where('is_latest', '==', true)
   );
@@ -168,12 +179,13 @@ export async function getAllModuleProgress(userIdOrAnonymous: string): Promise<R
 }
 
 export async function getModuleSessions(userIdOrAnonymous: string, moduleId: string, limitCount = DEFAULT_SESSION_LIMIT): Promise<ModuleProgress[]> {
+  const db = getDbOrThrow();
   // Latest entry
   const latestPromise = getModuleProgress(userIdOrAnonymous, moduleId);
 
   // Session history entries
   const sessionQuery = query(
-    collection(firebaseDb, MODULE_PROGRESS_COLLECTION),
+    collection(db, MODULE_PROGRESS_COLLECTION),
     where('owner_id', '==', userIdOrAnonymous),
     where('module_id', '==', moduleId),
     where('is_session', '==', true),
@@ -195,7 +207,8 @@ export async function getModuleSessions(userIdOrAnonymous: string, moduleId: str
 }
 
 export async function getModuleSession(userIdOrAnonymous: string, moduleId: string, sessionId: string): Promise<ModuleProgress | null> {
-  const sessionRef = doc(firebaseDb, MODULE_PROGRESS_COLLECTION, `session_${userIdOrAnonymous}_${moduleId}_${sessionId}`);
+  const db = getDbOrThrow();
+  const sessionRef = doc(db, MODULE_PROGRESS_COLLECTION, `session_${userIdOrAnonymous}_${moduleId}_${sessionId}`);
   const sessionSnap = await getDoc(sessionRef);
   if (sessionSnap.exists()) {
     return mapModuleProgress(sessionSnap.data() as FirestoreModuleProgress);
@@ -205,8 +218,9 @@ export async function getModuleSession(userIdOrAnonymous: string, moduleId: stri
 
 // Interactive module progress
 export async function getInteractiveModuleProgress(userIdOrAnonymous: string, moduleId: string): Promise<InteractiveModuleProgress | null> {
+  const db = getDbOrThrow();
   const baseQuery = query(
-    collection(firebaseDb, INTERACTIVE_PROGRESS_COLLECTION),
+    collection(db, INTERACTIVE_PROGRESS_COLLECTION),
     where('owner_id', '==', userIdOrAnonymous),
     where('module_id', '==', moduleId),
     where('is_latest', '==', true),
@@ -220,6 +234,7 @@ export async function getInteractiveModuleProgress(userIdOrAnonymous: string, mo
 }
 
 export async function saveInteractiveModuleProgress(userIdOrAnonymous: string, moduleId: string, progress: InteractiveModuleProgress): Promise<void> {
+  const db = getDbOrThrow();
   const createdAtIso = progress.createdAt ? new Date(progress.createdAt).toISOString() : new Date().toISOString();
   const lastUpdatedIso = progress.lastUpdated ? new Date(progress.lastUpdated).toISOString() : new Date().toISOString();
   const sessionId = progress.sessionId || `session-${Date.now()}`;
@@ -240,18 +255,19 @@ export async function saveInteractiveModuleProgress(userIdOrAnonymous: string, m
     visit_count: visitCount,
   };
 
-  const latestDocRef = doc(firebaseDb, INTERACTIVE_PROGRESS_COLLECTION, `latest_${userIdOrAnonymous}_${moduleId}`);
+  const latestDocRef = doc(db, INTERACTIVE_PROGRESS_COLLECTION, `latest_${userIdOrAnonymous}_${moduleId}`);
   await setDoc(latestDocRef, baseData);
 
-  const historyDocRef = doc(firebaseDb, INTERACTIVE_PROGRESS_COLLECTION, `session_${userIdOrAnonymous}_${moduleId}_${sessionId}`);
+  const historyDocRef = doc(db, INTERACTIVE_PROGRESS_COLLECTION, `session_${userIdOrAnonymous}_${moduleId}_${sessionId}`);
   const historyData: FirestoreInteractiveProgress = { ...baseData, is_latest: false, is_session: true };
   await setDoc(historyDocRef, historyData);
 }
 
 export async function getAllInteractiveModuleProgress(userIdOrAnonymous: string): Promise<Record<string, InteractiveModuleProgress>> {
+  const db = getDbOrThrow();
   const results: Record<string, InteractiveModuleProgress> = {};
   const qLatest = query(
-    collection(firebaseDb, INTERACTIVE_PROGRESS_COLLECTION),
+    collection(db, INTERACTIVE_PROGRESS_COLLECTION),
     where('owner_id', '==', userIdOrAnonymous),
     where('is_latest', '==', true)
   );
@@ -266,10 +282,11 @@ export async function getAllInteractiveModuleProgress(userIdOrAnonymous: string)
 }
 
 export async function getInteractiveModuleSessions(userIdOrAnonymous: string, moduleId: string, limitCount = DEFAULT_SESSION_LIMIT): Promise<InteractiveModuleProgress[]> {
+  const db = getDbOrThrow();
   const latestPromise = getInteractiveModuleProgress(userIdOrAnonymous, moduleId);
 
   const sessionQuery = query(
-    collection(firebaseDb, INTERACTIVE_PROGRESS_COLLECTION),
+    collection(db, INTERACTIVE_PROGRESS_COLLECTION),
     where('owner_id', '==', userIdOrAnonymous),
     where('module_id', '==', moduleId),
     where('is_session', '==', true),
@@ -291,7 +308,8 @@ export async function getInteractiveModuleSessions(userIdOrAnonymous: string, mo
 }
 
 export async function getInteractiveModuleSession(userIdOrAnonymous: string, moduleId: string, sessionId: string): Promise<InteractiveModuleProgress | null> {
-  const sessionRef = doc(firebaseDb, INTERACTIVE_PROGRESS_COLLECTION, `session_${userIdOrAnonymous}_${moduleId}_${sessionId}`);
+  const db = getDbOrThrow();
+  const sessionRef = doc(db, INTERACTIVE_PROGRESS_COLLECTION, `session_${userIdOrAnonymous}_${moduleId}_${sessionId}`);
   const sessionSnap = await getDoc(sessionRef);
   if (sessionSnap.exists()) {
     return mapInteractiveProgress(sessionSnap.data() as FirestoreInteractiveProgress);
@@ -301,7 +319,8 @@ export async function getInteractiveModuleSession(userIdOrAnonymous: string, mod
 
 // User insights
 export async function getUserInsights(userIdOrAnonymous: string): Promise<UserInsights | null> {
-  const ref = doc(firebaseDb, USER_INSIGHTS_COLLECTION, userIdOrAnonymous);
+  const db = getDbOrThrow();
+  const ref = doc(db, USER_INSIGHTS_COLLECTION, userIdOrAnonymous);
   const snapshot = await getDoc(ref);
   if (!snapshot.exists()) return null;
 
@@ -313,7 +332,8 @@ export async function getUserInsights(userIdOrAnonymous: string): Promise<UserIn
 }
 
 export async function saveUserInsights(userIdOrAnonymous: string, insights: UserInsights): Promise<void> {
-  const ref = doc(firebaseDb, USER_INSIGHTS_COLLECTION, userIdOrAnonymous);
+  const db = getDbOrThrow();
+  const ref = doc(db, USER_INSIGHTS_COLLECTION, userIdOrAnonymous);
   await setDoc(ref, {
     ...insights,
     lastAnalyzed: insights.lastAnalyzed ? new Date(insights.lastAnalyzed).toISOString() : new Date().toISOString(),
@@ -322,8 +342,9 @@ export async function saveUserInsights(userIdOrAnonymous: string, insights: User
 
 // Clear all remote data for a user or anonymous session
 export async function clearAllData(userIdOrAnonymous: string): Promise<void> {
-  const moduleQuery = query(collection(firebaseDb, MODULE_PROGRESS_COLLECTION), where('owner_id', '==', userIdOrAnonymous));
-  const interactiveQuery = query(collection(firebaseDb, INTERACTIVE_PROGRESS_COLLECTION), where('owner_id', '==', userIdOrAnonymous));
+  const db = getDbOrThrow();
+  const moduleQuery = query(collection(db, MODULE_PROGRESS_COLLECTION), where('owner_id', '==', userIdOrAnonymous));
+  const interactiveQuery = query(collection(db, INTERACTIVE_PROGRESS_COLLECTION), where('owner_id', '==', userIdOrAnonymous));
 
   const [moduleSnap, interactiveSnap] = await Promise.all([getDocs(moduleQuery), getDocs(interactiveQuery)]);
 
@@ -332,7 +353,7 @@ export async function clearAllData(userIdOrAnonymous: string): Promise<void> {
   interactiveSnap.forEach((docSnap) => deletions.push(deleteDoc(docSnap.ref)));
 
   // Insights
-  deletions.push(deleteDoc(doc(firebaseDb, USER_INSIGHTS_COLLECTION, userIdOrAnonymous)));
+  deletions.push(deleteDoc(doc(db, USER_INSIGHTS_COLLECTION, userIdOrAnonymous)));
 
   await Promise.all(deletions);
 }

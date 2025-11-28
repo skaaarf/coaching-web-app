@@ -14,7 +14,10 @@ export default function UserMenu() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (sessionUser) => {
+    const auth = firebaseAuth
+    if (!auth) return
+
+    const unsubscribe = onAuthStateChanged(auth, (sessionUser) => {
       setUser(sessionUser ?? null)
     })
 
@@ -33,7 +36,12 @@ export default function UserMenu() {
   }, [])
 
   const handleSignOut = async () => {
-    await signOut(firebaseAuth)
+    const auth = firebaseAuth
+    if (!auth) {
+      router.push('/login')
+      return
+    }
+    await signOut(auth)
     router.push('/login')
   }
 

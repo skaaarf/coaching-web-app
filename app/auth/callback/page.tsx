@@ -12,7 +12,14 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        if (typeof window !== 'undefined' && isSignInWithEmailLink(firebaseAuth, window.location.href)) {
+        const auth = firebaseAuth;
+        if (!auth) {
+          setError('Firebase auth が初期化されていません');
+          setTimeout(() => router.push('/login'), 1500);
+          return;
+        }
+
+        if (typeof window !== 'undefined' && isSignInWithEmailLink(auth, window.location.href)) {
           let email = window.localStorage.getItem('emailForSignIn') || '';
           if (!email) {
             email = window.prompt('ログインに使用したメールアドレスを入力してください') || '';
@@ -24,7 +31,7 @@ export default function AuthCallbackPage() {
             return;
           }
 
-          const result = await signInWithEmailLink(firebaseAuth, email, window.location.href);
+          const result = await signInWithEmailLink(auth, email, window.location.href);
           window.localStorage.removeItem('emailForSignIn');
 
           if (result.user) {
@@ -35,7 +42,7 @@ export default function AuthCallbackPage() {
 
         // トークンがない、または認証タイプが不明な場合
         console.log('⚠️ No valid auth params, checking existing session');
-        const currentUser = firebaseAuth.currentUser;
+        const currentUser = auth.currentUser;
         if (currentUser) {
           router.push('/');
           return;

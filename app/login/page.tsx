@@ -21,12 +21,19 @@ export default function LoginPage() {
     setMessage(null);
     setLoading(true);
 
+    const auth = firebaseAuth;
+    if (!auth) {
+      setError('Firebase auth が初期化されていません');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isLoginMode) {
-        await signInWithEmailAndPassword(firebaseAuth, email, password);
+        await signInWithEmailAndPassword(auth, email, password);
         setMessage('ログインしました');
       } else {
-        await createUserWithEmailAndPassword(firebaseAuth, email, password);
+        await createUserWithEmailAndPassword(auth, email, password);
         setMessage('アカウントを作成しました');
       }
       router.push('/');

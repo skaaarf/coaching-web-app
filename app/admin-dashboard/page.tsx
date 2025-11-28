@@ -78,11 +78,18 @@ export default function AdminDashboardPage() {
   const loadAllData = async () => {
     try {
       setLoading(true);
+      const db = firebaseDb;
+
+      if (!db) {
+        console.error('Firebase not initialized. Check Firebase env vars.');
+        setAllSessions([]);
+        return;
+      }
 
       const sessionList: SessionData[] = [];
 
       // 1. チャット履歴を取得
-      const chatSnapshot = await getDocs(collection(firebaseDb, 'module_progress'));
+      const chatSnapshot = await getDocs(collection(db, 'module_progress'));
       chatSnapshot.forEach((docSnap) => {
         const progress = docSnap.data() as ChatProgressRow;
         const moduleDefinition = CAREER_MODULES.find(m => m.id === progress.module_id);
@@ -115,7 +122,7 @@ export default function AdminDashboardPage() {
       });
 
       // 2. インタラクティブモジュールを取得
-      const interactiveSnapshot = await getDocs(collection(firebaseDb, 'interactive_module_progress'));
+      const interactiveSnapshot = await getDocs(collection(db, 'interactive_module_progress'));
       interactiveSnapshot.forEach((docSnap) => {
         const progress = docSnap.data() as InteractiveProgressRow;
         const moduleDefinition = CAREER_MODULES.find(m => m.id === progress.module_id);
