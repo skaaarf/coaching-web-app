@@ -142,14 +142,14 @@ export default function ChatInterface({
             <div className="w-10 h-10 relative rounded-full overflow-hidden border border-blue-100 bg-blue-50 shadow-inner">
               <Image
                 src="/mascot/coach-standing.png"
-                alt="みかたくん"
+                alt="AI進路くん"
                 fill
                 sizes="40px"
                 className="object-cover"
                 priority={false}
               />
             </div>
-            <span className="text-gray-900 font-semibold text-sm">みかたくん</span>
+            <span className="text-gray-900 font-semibold text-sm">AI進路くん</span>
             <span>{timeLabel}</span>
           </div>
           <div className="border border-gray-200 bg-white rounded-2xl px-4 py-3 shadow-sm max-w-full">
@@ -246,7 +246,7 @@ export default function ChatInterface({
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '120ms' }} />
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '240ms' }} />
               </div>
-              <div className="flex-1 text-sm font-semibold min-w-0 truncate">みかたくんが考え中です…</div>
+              <div className="flex-1 text-sm font-semibold min-w-0 truncate">AI進路くんが考え中です…</div>
             </div>
             <p className="text-xs text-gray-500 mt-2">少し待っててね</p>
           </div>

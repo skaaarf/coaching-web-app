@@ -57,7 +57,7 @@ Enable Custom SMTP: ON
 Sender email: noreply@yourdomain.com
 （開発環境では onboarding@resend.dev でもOK）
 
-Sender name: みかたくん
+Sender name: AI進路くん
 
 Host: smtp.resend.com
 Port: 465

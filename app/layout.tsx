@@ -6,7 +6,7 @@ import AnalyticsInit from "@/components/AnalyticsInit";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.career-counseller.jp"),
-  title: "みかたくん",
+  title: "AI進路くん",
   description: "対話とゲームでキャリアを考えるアプリ",
   icons: {
     icon: "/mikatakun-icon.png",
@@ -14,16 +14,16 @@ export const metadata: Metadata = {
     apple: "/mikatakun-icon.png",
   },
   openGraph: {
-    title: "みかたくん",
+    title: "AI進路くん",
     description: "対話とゲームでキャリアを考えるアプリ",
     url: "https://app.career-counseller.jp",
-    siteName: "みかたくん",
+    siteName: "AI進路くん",
     images: [
       {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "みかたくんのイラスト",
+        alt: "AI進路くんのイラスト",
       },
     ],
     locale: "ja_JP",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "みかたくん",
+    title: "AI進路くん",
     description: "対話とゲームでキャリアを考えるアプリ",
     images: ["/og.png"],
   },

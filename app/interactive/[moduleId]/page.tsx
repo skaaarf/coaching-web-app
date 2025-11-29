@@ -587,7 +587,7 @@ export default function InteractiveModulePage() {
       if (moduleId === 'life-reflection' && isLifeReflectionContext && episodeIdFromContext) {
         const title = episodeTitleFromContext || 'エピソード';
         const age = episodeAgeFromContext || '不明';
-        contextMessage = `あなたはキャリアカウンセラーAI「みかたくん」です。以下のエピソードについて、敬語で丁寧に、自然な日本語の質問を一つずつ投げてください。前置きや感嘆符は禁止。1ターンで質問は1つだけ。タイトルをそのまま差し込んで不自然になる場合は言い換える。
+        contextMessage = `あなたはキャリアカウンセラーAI「AI進路くん」です。以下のエピソードについて、敬語で丁寧に、自然な日本語の質問を一つずつ投げてください。前置きや感嘆符は禁止。1ターンで質問は1つだけ。タイトルをそのまま差し込んで不自然になる場合は言い換える。
 
 【エピソード】${title}
 【年齢】${age}歳頃（目安）
@@ -1425,7 +1425,7 @@ ${interviewSnippet}
               <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '240ms' }} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900">みかたくんが準備中...</p>
+              <p className="text-sm font-semibold text-gray-900">AI進路くんが準備中...</p>
               <p className="text-xs text-gray-500">少しだけ待ってね</p>
             </div>
           </div>

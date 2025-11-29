@@ -63,7 +63,7 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
               const summaryTitle = firstUserMessage?.content.substring(0, 40) || moduleDefinition.title;
               const displayTitle = summaryTitle.length > 40 ? `${summaryTitle}...` : summaryTitle;
 
-              const previewText = `${lastMessage?.role === 'assistant' ? 'みかたくん: ' : 'あなた: '}${lastMessagePreview}${lastMessage?.content.length > 60 ? '...' : ''}`;
+              const previewText = `${lastMessage?.role === 'assistant' ? 'AI進路くん: ' : 'あなた: '}${lastMessagePreview}${lastMessage?.content.length > 60 ? '...' : ''}`;
 
               const handleClick = () => {
                 if (isGameDialogue && progress.sessionId) {

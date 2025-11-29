@@ -61,7 +61,7 @@ export default function ValuesPage() {
             価値観がまだ抽出されていません
           </h2>
           <p className="text-gray-600 mb-6">
-            {error || 'みかたくんと対話して、あなたの価値観を見つけましょう!'}
+            {error || 'AI進路くんと対話して、あなたの価値観を見つけましょう!'}
           </p>
           <button
             onClick={() => router.push('/')}

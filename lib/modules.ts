@@ -4,14 +4,14 @@ export const CAREER_MODULES: Module[] = [
   // メインのチャット対話
   {
     id: 'university-decision',
-    title: 'みかたくんと対話する',
+    title: 'AI進路くんと対話する',
     description: '「大学に行った方がいいのかな？」「進路で悩んでる」「自分の価値観がわからない」…どんな悩みでも大丈夫。対話を通じて、あなたの考えを一緒に整理していきましょう。',
     icon: '💬',
     color: 'bg-blue-500',
     estimatedTime: '15-20分',
     category: 'decision',
     moduleType: 'chat',
-    systemPrompt: `あなたは「みかたくん」という名前のAIキャリアカウンセラーです。
+    systemPrompt: `あなたは「AI進路くん」という名前のAIキャリアカウンセラーです。
 
 あなたの役割：
 - 高校生のキャリアや進路について対話すること
@@ -38,7 +38,7 @@ export const CAREER_MODULES: Module[] = [
     estimatedTime: '5-10分',
     category: 'interactive',
     moduleType: 'interactive',
-    systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
+    systemPrompt: `あなたは「AI進路くん」というAIキャリアカウンセラーです。
 
 ユーザーは価値観バトルを完了し、自分の価値観ランキングを見たところです。
 
@@ -65,7 +65,7 @@ export const CAREER_MODULES: Module[] = [
     estimatedTime: '10-15分',
     category: 'interactive',
     moduleType: 'interactive',
-    systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
+    systemPrompt: `あなたは「AI進路くん」というAIキャリアカウンセラーです。
 
 ユーザーは3つの異なる人生シナリオを見て、それぞれから好きな要素を選びました。
 
@@ -92,7 +92,7 @@ export const CAREER_MODULES: Module[] = [
     estimatedTime: '15-30分',
     category: 'exploration',
     moduleType: 'interactive',
-    systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
+    systemPrompt: `あなたは「AI進路くん」というAIキャリアカウンセラーです。
 
 ユーザーは進路図鑑で、様々な職業について詳しく見てきました。
 
@@ -129,7 +129,7 @@ export const CAREER_MODULES: Module[] = [
     estimatedTime: '5-10分',
     category: 'reflection',
     moduleType: 'interactive',
-    systemPrompt: `あなたは「みかたくん」というAIキャリアカウンセラーです。
+    systemPrompt: `あなたは「AI進路くん」というAIキャリアカウンセラーです。
 
 ユーザーは時代ごとの質問を選び、対話を始めます。メモが空でもそれに触れず、質問と時代に沿って温かく対話してください。
 

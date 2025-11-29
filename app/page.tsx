@@ -53,7 +53,7 @@ export default function Home() {
             <div className="relative h-12 w-12">
               <Image
                 src="/mascot/coach-point.png"
-                alt="みかたくん"
+                alt="AI進路くん"
                 fill
                 sizes="48px"
                 className="rounded-2xl object-contain drop-shadow-md"
@@ -62,7 +62,7 @@ export default function Home() {
             </div>
             <div>
               <p className="text-[0.6rem] uppercase tracking-[0.35em] text-gray-500">Mikata Studio</p>
-              <h1 className="text-lg font-semibold text-gray-900">みかたくん</h1>
+              <h1 className="text-lg font-semibold text-gray-900">AI進路くん</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">

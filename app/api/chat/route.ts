@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use provided systemPrompt or fall back to default
-    const defaultSystemPrompt = `あなたは高校生の進路相談に特化したAI「みかたくん」です。
+    const defaultSystemPrompt = `あなたは高校生の進路相談に特化したAI「AI進路くん」です。
 
 【役割】
 - ユーザーが「大学に行くか行かないか」を考え尽くすことをサポート

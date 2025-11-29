@@ -60,13 +60,13 @@ export default function ModulesSection({
                         <p className="text-xs uppercase tracking-[0.4em] text-white/60">Mikata signal</p>
                         <h3 className="text-2xl font-semibold">気になることを見つけたら、いつでも声をかけてね</h3>
                         <p className="text-sm text-white/70">
-                            モジュールの途中でも質問があれば「ヒントがほしい」と送ってみよう。みかたくんが次の一歩を一緒に考えます。
+                            モジュールの途中でも質問があれば「ヒントがほしい」と送ってみよう。AI進路くんが次の一歩を一緒に考えます。
                         </p>
                     </div>
                     <div className="relative h-32 w-32 flex-shrink-0">
                         <Image
                             src="/mascot/coach-standing.png"
-                            alt="みかたくん"
+                            alt="AI進路くん"
                             fill
                             sizes="128px"
                             className="object-contain drop-shadow-[0_20px_40px_rgba(32,32,32,0.45)]"

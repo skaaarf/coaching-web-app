@@ -195,22 +195,22 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
 
     // Check for contradictions
     if (allChoices.includes('年収900万・月の残業60時間') &&
-        allChoices.includes('年収600万・月の残業10時間')) {
+      allChoices.includes('年収600万・月の残業10時間')) {
       questions.push('「高収入だけど残業多い」と「収入低めだけど残業少ない」の両方を選んでいます。あなたにとって、お金と時間のどちらが本当に大切なのでしょうか？');
     }
 
     if (allChoices.includes('総合職（転勤あり・昇進早い・年収高い）') &&
-        allChoices.includes('地域限定職（転勤なし・昇進遅い・年収普通）')) {
+      allChoices.includes('地域限定職（転勤なし・昇進遅い・年収普通）')) {
       questions.push('「転勤ありの総合職」と「転勤なしの地域限定職」の両方に魅力を感じています。キャリアアップと生活の安定、どちらを優先したいのでしょうか？');
     }
 
     if (allChoices.includes('上場企業（ネームバリュー有・手続き多い）') &&
-        allChoices.includes('中小企業（知名度低・意思決定早い）')) {
+      allChoices.includes('中小企業（知名度低・意思決定早い）')) {
       questions.push('大企業の安定感と中小企業のスピード感、両方を選んでいます。組織規模についてどう考えていますか？');
     }
 
     if (allChoices.includes('ハイレベルな環境（優秀な人材・高い目標）') &&
-        allChoices.includes('マイペースな環境（和気あいあい・目標緩め）')) {
+      allChoices.includes('マイペースな環境（和気あいあい・目標緩め）')) {
       questions.push('「ハイレベルな環境」と「マイペースな環境」の両方を選択しています。今のあなたにとって、成長とストレス管理のバランスをどう取りたいですか？');
     }
 
@@ -244,7 +244,7 @@ export default function ValueBattleResultView({ results, onStartDialogue }: Prop
   const handleShare = async () => {
     const shareText = `価値観バトルの結果！\n\n${sortedResults
       .map(([value, count], i) => `${i + 1}位: ${value} (${count}回選択)`)
-      .join('\n')}\n\nみかたくんで自分の価値観を発見しよう`;
+      .join('\n')}\n\nAI進路くんで自分の価値観を発見しよう`;
 
     if (navigator.share) {
       try {
