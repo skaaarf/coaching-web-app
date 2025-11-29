@@ -83,14 +83,14 @@ const getLifeDataFromState = (
   const localFallback =
     typeof window !== 'undefined'
       ? (() => {
-          try {
-            const raw = localStorage.getItem('mikata-life-reflection');
-            if (raw) return JSON.parse(raw) as LifeReflectionData;
-          } catch {
-            /* ignore */
-          }
-          return null;
-        })()
+        try {
+          const raw = localStorage.getItem('mikata-life-reflection');
+          if (raw) return JSON.parse(raw) as LifeReflectionData;
+        } catch {
+          /* ignore */
+        }
+        return null;
+      })()
       : null;
   return localFallback || emptyLifeData;
 };
@@ -216,13 +216,13 @@ export default function InteractiveModulePage() {
           progress = null;
         }
 
-        if (!progress && moduleId === 'life-reflection') {
-          const fallback = readLocalLifeReflection();
-          if (fallback) {
-            console.log('Using local fallback for life-reflection (sessionId path)');
+        if (!progress && (moduleId === 'life-reflection' || moduleId === 'career-dictionary')) {
+          const fallback = moduleId === 'life-reflection' ? readLocalLifeReflection() : null;
+          if (fallback || moduleId === 'career-dictionary') {
+            console.log(`Using local fallback/default for ${moduleId} (sessionId path)`);
             setState({
               phase: 'activity',
-              activityData: fallback,
+              activityData: fallback || undefined,
             });
             setIsLoading(false);
             return;
@@ -234,10 +234,10 @@ export default function InteractiveModulePage() {
           const savedState = progress.data as InteractiveState;
           console.log('Saved state phase:', savedState.phase);
 
-          // Special handling for life-reflection: ALWAYS start in activity phase (stage selection)
+          // Special handling for life-reflection AND career-dictionary: ALWAYS start in activity phase
           // This ensures we behave like a game save (Mario world map), not resuming mid-dialogue
-          if (moduleId === 'life-reflection') {
-            console.log('Forcing activity phase for life-reflection');
+          if (moduleId === 'life-reflection' || moduleId === 'career-dictionary') {
+            console.log(`Forcing activity phase for ${moduleId}`);
             console.log('Saved state full object:', savedState);
 
             // Extract data correctly based on the saved phase
@@ -252,7 +252,7 @@ export default function InteractiveModulePage() {
               console.log('Found data in data:', savedData);
             }
 
-            if (!savedData) {
+            if (!savedData && moduleId === 'life-reflection') {
               const fallback = readLocalLifeReflection();
               if (fallback) {
                 console.log('Loaded fallback life reflection from local storage (sessionId path)');
@@ -265,7 +265,7 @@ export default function InteractiveModulePage() {
             setState({
               phase: 'activity',
               // Use saved data if available, otherwise initialize empty
-              activityData: savedData || emptyLifeData
+              activityData: savedData || (moduleId === 'life-reflection' ? emptyLifeData : undefined)
             });
           }
           // Normal handling for other modules
@@ -299,6 +299,10 @@ export default function InteractiveModulePage() {
               phase: 'activity',
               activityData: emptyLifeData
             });
+          } else if (moduleId === 'career-dictionary') {
+            setState({
+              phase: 'activity'
+            });
           } else {
             setState({ phase: 'activity' });
           }
@@ -320,9 +324,9 @@ export default function InteractiveModulePage() {
           if (progress.data) {
             const savedState = progress.data as InteractiveState;
 
-            // Force activity for life-reflection
-            if (moduleId === 'life-reflection') {
-              console.log('Forcing activity phase for life-reflection (latest session)');
+            // Force activity for life-reflection AND career-dictionary
+            if (moduleId === 'life-reflection' || moduleId === 'career-dictionary') {
+              console.log(`Forcing activity phase for ${moduleId} (latest session)`);
               console.log('Saved state full object:', savedState);
 
               // Extract data correctly based on the saved phase
@@ -336,7 +340,7 @@ export default function InteractiveModulePage() {
                 console.log('Found data in data:', savedData);
               }
 
-              if (!savedData) {
+              if (!savedData && moduleId === 'life-reflection') {
                 const fallback = readLocalLifeReflection();
                 if (fallback) {
                   console.log('Loaded fallback life reflection from local storage (latest session)');
@@ -348,18 +352,22 @@ export default function InteractiveModulePage() {
 
               setState({
                 phase: 'activity',
-                activityData: savedData || emptyLifeData
+                activityData: savedData || (moduleId === 'life-reflection' ? emptyLifeData : undefined)
               });
             } else {
               setState(savedState);
             }
-            } else if (moduleId === 'life-reflection') {
-              // Session exists but no data
-              setState({
-                phase: 'activity',
-                activityData: emptyLifeData
-              });
-            }
+          } else if (moduleId === 'life-reflection') {
+            // Session exists but no data
+            setState({
+              phase: 'activity',
+              activityData: emptyLifeData
+            });
+          } else if (moduleId === 'career-dictionary') {
+            setState({
+              phase: 'activity'
+            });
+          }
         } else {
           if (moduleId === 'life-reflection') {
             const fallback = readLocalLifeReflection();
@@ -372,6 +380,13 @@ export default function InteractiveModulePage() {
               setIsLoading(false);
               return;
             }
+          } else if (moduleId === 'career-dictionary') {
+            // Career dictionary always starts in activity
+            setState({
+              phase: 'activity'
+            });
+            setIsLoading(false);
+            return;
           }
 
           // No existing progress
@@ -382,6 +397,10 @@ export default function InteractiveModulePage() {
             setState({
               phase: 'activity',
               activityData: { eras: {}, graphPoints: [], turningPoints: [] }
+            });
+          } else if (moduleId === 'career-dictionary') {
+            setState({
+              phase: 'activity'
             });
           } else {
             setState({ phase: 'activity' });
@@ -459,7 +478,7 @@ export default function InteractiveModulePage() {
     const initialQuestion = typeof dataOrQuestion === 'string'
       ? dataOrQuestion
       : isLifeReflectionContext
-        ? `【質問】${questionTextFromContext}\n\nメモ: ${(ctx?.answer || '未入力')}` 
+        ? `【質問】${questionTextFromContext}\n\nメモ: ${(ctx?.answer || '未入力')}`
         : undefined;
     const lifeQuestionIdToUse = questionIdFromContext || lifeQuestionId;
     const lifeQuestionTextToUse = questionTextFromContext || lifeQuestionText;
@@ -716,14 +735,14 @@ ${interviewSnippet}
           (dialogueData as LifeReflectionData) || currentLifeData || emptyLifeData;
         const updatedEpisodes = episodeIdFromContext && existingLifeData.episodes
           ? existingLifeData.episodes.map(ep =>
-              ep.id === episodeIdFromContext
-                ? {
-                    ...ep,
-                    conversationHistory: [assistantMessage],
-                    messageCount: 1,
-                  }
-                : ep
-            )
+            ep.id === episodeIdFromContext
+              ? {
+                ...ep,
+                conversationHistory: [assistantMessage],
+                messageCount: 1,
+              }
+              : ep
+          )
           : existingLifeData.episodes || [];
         const updatedLifeData: LifeReflectionData = {
           ...existingLifeData,
@@ -867,11 +886,11 @@ ${interviewSnippet}
         const updatedEpisodes = (lifeData.episodes || []).map(ep =>
           ep.id === targetEpisodeId
             ? {
-                ...ep,
-                conversationHistory: finalMessages,
-                messageCount: finalMessages.length,
-                isCompleted: finalMessages.length >= 7,
-              }
+              ...ep,
+              conversationHistory: finalMessages,
+              messageCount: finalMessages.length,
+              isCompleted: finalMessages.length >= 7,
+            }
             : ep
         );
         const updatedLifeData: LifeReflectionData = {
@@ -1064,12 +1083,12 @@ ${interviewSnippet}
     const updatedEpisodes = episodes.map((ep: Episode) =>
       ep.id === lifeQuestionId
         ? {
-            ...ep,
-            conversationHistory: state.messages,
-            messageCount: state.messages.length,
-            isCompleted: true,
-            discoveries: deriveDiscoveries(ep.title || '', state.messages),
-          }
+          ...ep,
+          conversationHistory: state.messages,
+          messageCount: state.messages.length,
+          isCompleted: true,
+          discoveries: deriveDiscoveries(ep.title || '', state.messages),
+        }
         : ep
     );
     const updatedLifeData: LifeReflectionData = {
@@ -1102,6 +1121,7 @@ ${interviewSnippet}
   }
 
   const handleHeaderBack = async () => {
+    const instantModules = new Set(['persona-dictionary', 'career-dictionary', 'life-reflection']);
     if (moduleId === 'career-dictionary' && careerDictionaryRef.current?.canGoBack()) {
       careerDictionaryRef.current.goBack();
       return;

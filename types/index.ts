@@ -100,6 +100,8 @@ export interface CareerTimelineEntry {
   label: string;
   description: string;
   reason: string;
+  episode?: string;
+  learnings?: string;
 }
 
 export interface CareerInterview {

@@ -124,7 +124,7 @@ const CareerDictionary = forwardRef<CareerDictionaryHandle, Props>(({ onSelectCa
           </div>
 
           {/* Grid Layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-2 gap-4 sm:gap-8">
             {filteredProfiles.map((profile) => (
               <button
                 key={profile.id}
@@ -137,7 +137,7 @@ const CareerDictionary = forwardRef<CareerDictionaryHandle, Props>(({ onSelectCa
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
                   <div className="absolute bottom-4 left-4 text-white">
                     <p className="text-xs font-medium opacity-80 mb-1">{profile.kana}</p>
-                    <h3 className="text-xl font-bold leading-tight">{profile.name}</h3>
+                    <h3 className="text-xl font-bold leading-tight whitespace-nowrap">{profile.name}</h3>
                   </div>
                   <div className="absolute bottom-4 right-4 text-5xl transform translate-y-1/2 group-hover:scale-110 transition-transform duration-300 filter drop-shadow-lg">
                     {profile.avatar}
@@ -153,7 +153,7 @@ const CareerDictionary = forwardRef<CareerDictionaryHandle, Props>(({ onSelectCa
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {profile.tags.slice(0, 3).map((tag) => (
                       <span key={tag} className="text-[10px] font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
-                        #{tag}
+                        {tag}
                       </span>
                     ))}
                   </div>
@@ -163,10 +163,11 @@ const CareerDictionary = forwardRef<CareerDictionaryHandle, Props>(({ onSelectCa
                   </p>
 
                   <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                    <span className="text-xs font-medium text-gray-400">自己採点</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-gray-900">{profile.score}</span>
-                      <span className="text-xs font-bold text-gray-400">点</span>
+                    <span className="text-xs font-medium text-gray-400">詳細を見る</span>
+                    <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
                     </div>
                   </div>
                 </div>
@@ -187,7 +188,7 @@ const CareerDictionary = forwardRef<CareerDictionaryHandle, Props>(({ onSelectCa
       )}
 
       {viewMode === "detail" && selectedProfile && (
-        <article className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-md mx-auto sm:max-w-4xl">
+        <article className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto sm:max-w-5xl">
           {/* Navigation */}
           <button
             onClick={() => {
@@ -219,34 +220,23 @@ const CareerDictionary = forwardRef<CareerDictionaryHandle, Props>(({ onSelectCa
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 inline-block">
-                    <p className="text-[10px] sm:text-xs font-medium opacity-80 mb-0.5">現在の自己採点</p>
-                    <div className="flex items-baseline justify-end gap-1">
-                      <span className="text-4xl sm:text-5xl font-black">{selectedProfile.score}</span>
-                      <span className="text-sm font-bold opacity-80">点</span>
-                    </div>
-                    <p className="text-[10px] opacity-60 mt-1 text-right">
-                      {new Date(selectedProfile.updatedAt).toLocaleDateString("ja-JP")} 更新
-                    </p>
-                  </div>
+                  {/* Date removed */}
                 </div>
               </div>
 
-              {/* Middle Section: Vertical Text */}
-              <div className="relative z-10 flex-1 flex items-center justify-center py-8">
-                <div className="flex flex-row-reverse gap-6 sm:gap-12 h-full max-h-[400px] items-center justify-center">
-                  {/* Name (Vertical) */}
-                  <div className="writing-vertical-rl text-4xl sm:text-6xl font-black tracking-widest leading-tight drop-shadow-lg" style={{ writingMode: 'vertical-rl' }}>
+              {/* Middle Section: Horizontal Text */}
+              <div className="relative z-10 flex-1 flex flex-col items-center justify-center py-12 px-4 text-center">
+                {/* Headline */}
+                <div className="text-lg sm:text-2xl font-bold tracking-wider text-blue-100/90 leading-relaxed mb-6 max-w-2xl">
+                  {selectedProfile.headline}
+                </div>
+
+                {/* Name Group */}
+                <div className="flex flex-col items-center gap-2">
+                  <div className="text-4xl sm:text-6xl font-black tracking-widest leading-tight drop-shadow-lg text-white whitespace-nowrap">
                     {selectedProfile.name}
                   </div>
-
-                  {/* Headline (Vertical) */}
-                  <div className="writing-vertical-rl text-lg sm:text-2xl font-bold tracking-wider text-blue-100/90 leading-relaxed border-l-2 border-white/30 pl-4 py-2" style={{ writingMode: 'vertical-rl' }}>
-                    {selectedProfile.headline}
-                  </div>
-
-                  {/* Kana (Vertical small) */}
-                  <div className="writing-vertical-rl text-xs sm:text-sm font-medium tracking-[0.2em] opacity-70" style={{ writingMode: 'vertical-rl' }}>
+                  <div className="text-sm sm:text-base font-medium tracking-[0.2em] opacity-80 text-blue-100">
                     {selectedProfile.kana}
                   </div>
                 </div>
@@ -257,7 +247,7 @@ const CareerDictionary = forwardRef<CareerDictionaryHandle, Props>(({ onSelectCa
                 <div className="flex flex-wrap justify-center gap-2">
                   {selectedProfile.tags.map((tag) => (
                     <span key={tag} className="px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-medium shadow-sm">
-                      #{tag}
+                      {tag}
                     </span>
                   ))}
                 </div>
@@ -291,17 +281,63 @@ const CareerDictionary = forwardRef<CareerDictionaryHandle, Props>(({ onSelectCa
                 <div className="relative pl-4 space-y-8">
                   <div className="absolute left-[27px] top-2 bottom-2 w-0.5 bg-gray-100" />
                   {selectedProfile.timeline.map((entry, idx) => (
-                    <div key={idx} className="relative flex gap-6 group">
-                      <div className="flex-shrink-0 w-14 pt-1 relative z-10">
-                        <div className="w-3 h-3 bg-purple-500 rounded-full ring-4 ring-white shadow-sm mx-auto mb-2 group-hover:scale-125 transition-transform" />
-                        <p className="text-xs font-bold text-center text-gray-400 uppercase tracking-wider">Step {idx + 1}</p>
+                    <div key={idx} className="relative flex gap-4 sm:gap-6 group">
+                      {/* Timeline Connector */}
+                      <div className="flex-col items-center flex flex-shrink-0 w-12 sm:w-14 pt-1 relative z-10">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white border-4 border-blue-100 flex items-center justify-center shadow-sm z-10 group-hover:scale-110 transition-transform duration-300">
+                          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded-full" />
+                        </div>
+                        <div className="text-[10px] font-bold text-blue-300 mt-1 tracking-widest">STEP</div>
+                        <div className="text-lg sm:text-xl font-black text-blue-500/20 leading-none">{String(idx + 1).padStart(2, '0')}</div>
                       </div>
-                      <div className="flex-1 bg-gray-50 rounded-2xl p-5 border border-gray-100">
-                        <h4 className="text-base font-bold text-gray-900 mb-2">{entry.label}</h4>
-                        <p className="text-sm text-gray-700 leading-relaxed mb-3">{entry.description}</p>
-                        <div className="flex items-start gap-2 text-xs text-gray-500 bg-white/50 p-3 rounded-xl">
-                          <span className="flex-shrink-0 mt-0.5">💡</span>
-                          <span><span className="font-bold">選んだ理由：</span>{entry.reason}</span>
+
+                      {/* Content Card */}
+                      <div className="flex-1 bg-white rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 mb-4 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-bl-full -mr-10 -mt-10 opacity-50" />
+
+                        <div className="relative z-10">
+                          <div className="inline-block px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] sm:text-xs font-bold rounded-full mb-2">
+                            {entry.label}
+                          </div>
+                          <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-2 leading-snug">{entry.description}</h4>
+
+                          <div className="space-y-3 mt-4">
+                            {entry.reason && (
+                              <div className="bg-gray-50/80 rounded-lg p-3 border border-gray-100/50">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className="text-xs">💡</span>
+                                  <span className="text-[10px] sm:text-xs font-bold text-gray-500">選んだ理由</span>
+                                </div>
+                                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                                  {entry.reason}
+                                </p>
+                              </div>
+                            )}
+
+                            {entry.episode && (
+                              <div className="bg-blue-50/30 rounded-lg p-3 border border-blue-100/30">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className="text-xs">📖</span>
+                                  <span className="text-[10px] sm:text-xs font-bold text-blue-600/80">エピソード</span>
+                                </div>
+                                <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
+                                  {entry.episode}
+                                </p>
+                              </div>
+                            )}
+
+                            {entry.learnings && (
+                              <div className="bg-amber-50/50 rounded-lg p-3 border border-amber-100/50">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className="text-xs">✨</span>
+                                  <span className="text-[10px] sm:text-xs font-bold text-amber-600/80">気づき</span>
+                                </div>
+                                <p className="text-xs sm:text-sm text-gray-700 leading-relaxed font-medium">
+                                  {entry.learnings}
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -315,23 +351,37 @@ const CareerDictionary = forwardRef<CareerDictionaryHandle, Props>(({ onSelectCa
                   <span className="w-1 h-6 bg-green-500 rounded-full" />
                   インタビュー
                 </h3>
-                <div className="space-y-6">
+                <div className="grid gap-6 sm:gap-8">
                   {selectedProfile.interview.map((item, idx) => (
-                    <div key={idx} className="flex flex-col gap-3">
-                      <div className="flex gap-3 items-end">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-base flex-shrink-0">
-                          🤖
-                        </div>
-                        <div className="bg-gray-100 rounded-2xl rounded-bl-none p-3 text-sm font-bold text-gray-800 max-w-[85%]">
-                          {item.question}
-                        </div>
+                    <div key={idx} className="bg-gray-50 rounded-3xl p-6 sm:p-8 border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                      {/* Decorative Background Number */}
+                      <div className="absolute top-0 right-0 text-[100px] sm:text-[120px] leading-none font-black text-gray-100 select-none pointer-events-none -mr-4 -mt-8 opacity-60 group-hover:text-blue-50/80 group-hover:scale-110 transition-all duration-500">
+                        {idx + 1}
                       </div>
-                      <div className="flex gap-3 items-end flex-row-reverse">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-base flex-shrink-0">
-                          {selectedProfile.avatar}
+
+                      {/* Question */}
+                      <div className="relative z-10 mb-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="text-[10px] font-bold text-blue-600 bg-blue-100/50 px-2 py-1 rounded-md uppercase tracking-wider">
+                            QUESTION {String(idx + 1).padStart(2, '0')}
+                          </span>
                         </div>
-                        <div className="bg-blue-50 rounded-2xl rounded-br-none p-3 text-sm text-gray-800 leading-relaxed max-w-[85%] border border-blue-100">
-                          {item.answer}
+                        <h4 className="text-lg sm:text-xl font-bold text-gray-900 leading-snug">
+                          {item.question}
+                        </h4>
+                      </div>
+
+                      {/* Answer */}
+                      <div className="relative z-10 flex gap-4 sm:gap-5 pt-5 border-t border-gray-200/60">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-xl sm:text-2xl border border-gray-100 group-hover:scale-110 transition-transform duration-300">
+                            {selectedProfile.avatar}
+                          </div>
+                        </div>
+                        <div className="flex-1 pt-1">
+                          <p className="text-sm sm:text-base text-gray-700 leading-loose font-medium">
+                            {item.answer}
+                          </p>
                         </div>
                       </div>
                     </div>
