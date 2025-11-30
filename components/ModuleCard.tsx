@@ -13,9 +13,9 @@ export default function ModuleCard({ module, progress, interactiveProgress, onCl
   const messageCount = progress?.messages.length || 0;
   const lastUpdatedLabel = interactiveProgress?.lastUpdated
     ? `${new Date(interactiveProgress.lastUpdated).toLocaleDateString('ja-JP', {
-        month: 'numeric',
-        day: 'numeric'
-      })} 更新`
+      month: 'numeric',
+      day: 'numeric'
+    })} 更新`
     : null;
   const dialogueMeta = !isInteractive && messageCount > 0 ? `${messageCount}件の対話` : null;
 
@@ -32,13 +32,7 @@ export default function ModuleCard({ module, progress, interactiveProgress, onCl
               {module.title}
             </h3>
             <p
-              className="text-sm text-gray-600 leading-snug min-h-[2.6rem]"
-              style={{
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}
+              className="text-sm text-gray-600 leading-snug min-h-[2.6rem] line-clamp-2"
             >
               {module.description}
             </p>

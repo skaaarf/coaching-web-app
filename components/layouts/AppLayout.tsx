@@ -56,8 +56,8 @@ export default function AppLayout({
                                     key={item.id}
                                     onClick={() => onSectionChange?.(item.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${isActive
-                                            ? 'bg-gray-900 text-white shadow-lg'
-                                            : 'text-gray-600 hover:bg-gray-100'
+                                        ? 'bg-gray-900 text-white shadow-lg'
+                                        : 'text-gray-600 hover:bg-gray-100'
                                         }`}
                                 >
                                     <div className="relative w-6 h-6">
@@ -78,7 +78,7 @@ export default function AppLayout({
             )}
 
             {/* メインコンテンツ */}
-            <main className={showNavigation ? 'lg:pl-64' : ''}>
+            <main className={`relative ${showNavigation ? 'lg:pl-64' : ''}`}>
                 {children}
             </main>
 

@@ -81,7 +81,7 @@ export default function Home() {
         </div>
       </div>
 
-      <main className="relative z-10 mx-auto w-full max-w-3xl lg:max-w-6xl px-5 py-6 pb-20 lg:pb-8">
+      <div className="relative z-10 mx-auto w-full max-w-3xl lg:max-w-6xl px-5 py-6 pb-20 lg:pb-8">
         {activeSection === 'analysis' && (
           <SelfAnalysisSection
             allProgress={allProgress}
@@ -104,7 +104,7 @@ export default function Home() {
             onSessionClick={(moduleId, sessionId) => handleContinue(sessionId)}
           />
         )}
-      </main>
+      </div>
 
       <ModuleSelectionDialog
         isOpen={showModuleDialog}
