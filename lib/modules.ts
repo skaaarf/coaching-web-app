@@ -5,7 +5,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'university-decision',
     title: 'AI進路くんと対話する',
-    description: '「大学に行った方がいいのかな？」「進路で悩んでる」「自分の価値観がわからない」…どんな悩みでも大丈夫。対話を通じて、あなたの考えを一緒に整理していきましょう。',
+    description: '進路の悩みや迷いを、対話を通じて一緒に整理していきます。',
     icon: '💬',
     color: 'bg-blue-500',
     estimatedTime: '15-20分',
@@ -86,7 +86,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'career-dictionary',
     title: '進路図鑑',
-    description: '30種類以上の職業を徹底解説。仕事内容、年収、メリット・デメリット、現場の声、1日のスケジュール、将来性まで。気になる職業について、詳しく知って、AIコーチと対話できます。',
+    description: '30種類以上の職業を徹底解説。仕事内容、年収、メリット・デメリット、現場の声など詳しく知れます。',
     icon: '🗂️',
     color: 'bg-teal-500',
     estimatedTime: '15-30分',

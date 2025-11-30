@@ -29,10 +29,10 @@ export default function Home() {
     hasAnyProgress,
   } = useHomeData();
 
-  const sectionTabs: Array<{ id: 'analysis' | 'modules' | 'history'; label: string; icon: string }> = [
-    { id: 'analysis', label: '分析', icon: '📊' },
-    { id: 'modules', label: 'モジュール', icon: '🎮' },
-    { id: 'history', label: '履歴', icon: '🕘' },
+  const sectionTabs: Array<{ id: 'analysis' | 'modules' | 'history'; label: string; iconPath: string }> = [
+    { id: 'analysis', label: '分析', iconPath: '/icons/analysis.svg' },
+    { id: 'modules', label: 'モジュール', iconPath: '/icons/modules.svg' },
+    { id: 'history', label: '履歴', iconPath: '/icons/history.svg' },
   ];
 
   useEffect(() => {
@@ -96,18 +96,26 @@ export default function Home() {
         )}
       </main>
 
-      <nav className="fixed bottom-6 inset-x-0 z-30 px-4">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between rounded-3xl border border-white/70 bg-white/90 px-4 py-3 shadow-xl shadow-gray-900/10 backdrop-blur">
+      <nav className="fixed bottom-0 inset-x-0 z-30">
+        <div className="flex w-full items-center justify-around border-t border-gray-200/70 bg-white/95 py-3 shadow-lg backdrop-blur">
           {sectionTabs.map(tab => {
             const isActive = activeSection === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveSection(tab.id)}
-                className={`flex flex-col items-center text-xs font-semibold transition ${isActive ? 'text-gray-900' : 'text-gray-400'
+                className={`flex flex-col items-center gap-1 text-xs font-semibold transition ${isActive ? 'text-gray-900' : 'text-gray-400'
                   }`}
               >
-                <span className="text-lg">{tab.icon}</span>
+                <div className="relative w-6 h-6">
+                  <Image
+                    src={tab.iconPath}
+                    alt={tab.label}
+                    fill
+                    sizes="24px"
+                    className={`object-contain transition ${isActive ? 'opacity-100' : 'opacity-40'}`}
+                  />
+                </div>
                 <span>{tab.label}</span>
               </button>
             );
