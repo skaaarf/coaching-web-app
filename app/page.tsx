@@ -45,70 +45,76 @@ export default function Home() {
       onSectionChange={setActiveSection}
       showNavigation={true}
     >
-      <div className="relative min-h-screen overflow-hidden">
-        <div className="pointer-events-none absolute inset-x-0 top-[-280px] h-[420px] bg-gradient-to-b from-sky-200/60 via-transparent to-transparent blur-3xl" />
-        <div className="pointer-events-none absolute right-[-200px] top-32 h-[280px] w-[280px] rounded-full bg-indigo-300/40 blur-[140px]" />
+      {/* 装飾背景 */}
+      <div className="pointer-events-none absolute inset-x-0 top-[-280px] h-[420px] bg-gradient-to-b from-sky-200/60 via-transparent to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute right-[-200px] top-32 h-[280px] w-[280px] rounded-full bg-indigo-300/40 blur-[140px]" />
 
-        <header className="relative z-20 border-b border-white/70 bg-white/85 backdrop-blur-xl">
-          <div className="mx-auto flex w-full max-w-3xl lg:max-w-6xl items-center justify-between px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="relative h-12 w-12">
-                <Image
-                  src="/mascot/coach-point.png"
-                  alt="AI進路くん"
-                  fill
-                  sizes="48px"
-                  className="rounded-2xl object-contain drop-shadow-md"
-                  priority
-                />
-              </div>
-              <div>
-                <p className="text-[0.6rem] uppercase tracking-[0.35em] text-gray-500">Mikata Studio</p>
-                <h1 className="text-lg font-semibold text-gray-900">AI進路くん</h1>
-              </div>
+      {/* トップバー（デスクトップではUserMenuのみ、モバイルでは完全なヘッダー） */}
+      <header className="lg:hidden relative z-20 border-b border-white/70 bg-white/85 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="relative h-12 w-12">
+              <Image
+                src="/mascot/coach-point.png"
+                alt="AI進路くん"
+                fill
+                sizes="48px"
+                className="rounded-2xl object-contain drop-shadow-md"
+                priority
+              />
             </div>
-            <div className="flex items-center gap-2">
-              <UserMenu />
+            <div>
+              <p className="text-[0.6rem] uppercase tracking-[0.35em] text-gray-500">Mikata Studio</p>
+              <h1 className="text-lg font-semibold text-gray-900">AI進路くん</h1>
             </div>
           </div>
-        </header>
+          <div className="flex items-center gap-2">
+            <UserMenu />
+          </div>
+        </div>
+      </header>
 
-        <main className="relative z-20 mx-auto w-full max-w-3xl lg:max-w-6xl px-5 pb-20 lg:pb-8">
-          {activeSection === 'analysis' && (
-            <SelfAnalysisSection
-              allProgress={allProgress}
-              allInteractiveProgress={allInteractiveProgress}
-            />
-          )}
-
-          {activeSection === 'modules' && (
-            <ModulesSection
-              modulesSectionRef={modulesSectionRef}
-              allProgress={allProgress}
-              allInteractiveProgress={allInteractiveProgress}
-              onModuleClick={handleModuleClick}
-            />
-          )}
-
-          {activeSection === 'history' && (
-            <HistorySection
-              allProgress={allProgress}
-              onSessionClick={(moduleId, sessionId) => handleContinue(sessionId)}
-            />
-          )}
-        </main>
-
-        <ModuleSelectionDialog
-          isOpen={showModuleDialog}
-          onClose={() => setShowModuleDialog(false)}
-          selectedModuleId={selectedModule}
-          moduleSessions={moduleSessions}
-          interactiveModuleSessions={interactiveModuleSessions}
-          onStartNew={handleStartNew}
-          onContinue={handleContinue}
-        />
-
+      {/* デスクトップ用のUserMenuバー */}
+      <div className="hidden lg:block sticky top-0 z-20 border-b border-white/70 bg-white/85 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-end px-5 py-3">
+          <UserMenu />
+        </div>
       </div>
+
+      <main className="relative z-10 mx-auto w-full max-w-3xl lg:max-w-6xl px-5 py-6 pb-20 lg:pb-8">
+        {activeSection === 'analysis' && (
+          <SelfAnalysisSection
+            allProgress={allProgress}
+            allInteractiveProgress={allInteractiveProgress}
+          />
+        )}
+
+        {activeSection === 'modules' && (
+          <ModulesSection
+            modulesSectionRef={modulesSectionRef}
+            allProgress={allProgress}
+            allInteractiveProgress={allInteractiveProgress}
+            onModuleClick={handleModuleClick}
+          />
+        )}
+
+        {activeSection === 'history' && (
+          <HistorySection
+            allProgress={allProgress}
+            onSessionClick={(moduleId, sessionId) => handleContinue(sessionId)}
+          />
+        )}
+      </main>
+
+      <ModuleSelectionDialog
+        isOpen={showModuleDialog}
+        onClose={() => setShowModuleDialog(false)}
+        selectedModuleId={selectedModule}
+        moduleSessions={moduleSessions}
+        interactiveModuleSessions={interactiveModuleSessions}
+        onStartNew={handleStartNew}
+        onContinue={handleContinue}
+      />
     </AppLayout>
   );
 }
