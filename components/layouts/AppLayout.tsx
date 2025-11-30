@@ -19,11 +19,10 @@ export default function AppLayout({
     const navItems = [
         { id: 'analysis' as const, label: '分析', icon: '/icons/analysis.svg' },
         { id: 'modules' as const, label: 'モジュール', icon: '/icons/modules.svg' },
-        { id: 'history' as const, label: '履歴', icon: '/icons/history.svg' },
     ];
 
     return (
-        <div className="min-h-screen bg-[#f5f5f7]">
+        <div className="min-h-screen bg-[#f5f5f7] overflow-x-hidden">
             {/* デスクトップ: 左サイドバー */}
             {showNavigation && (
                 <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-64 z-50 border-r border-gray-200/70 bg-white/95 backdrop-blur-xl shadow-sm">

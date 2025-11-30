@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
@@ -124,6 +125,11 @@ export default function ModulePage() {
 
       setHasInitialized(true);
     };
+
+    // Reset state when sessionId changes
+    setMessages([]);
+    setHasInitialized(false);
+    setIsLoading(true);
 
     loadProgress();
   }, [fetchInitialMessage, moduleDefinition, moduleId, router, sessionId, storage]);
@@ -249,7 +255,7 @@ export default function ModulePage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-dvh bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 flex-shrink-0">
         <div className="max-w-5xl mx-auto px-4 py-3">
@@ -267,10 +273,20 @@ export default function ModulePage() {
               </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl flex-shrink-0">{moduleDefinition.icon}</span>
+                  <span className="text-xl flex-shrink-0 w-6 h-6 relative flex items-center justify-center">
+                    {moduleDefinition.icon.startsWith('/') ? (
+                      <Image
+                        src={moduleDefinition.icon}
+                        alt=""
+                        fill
+                        className="object-contain"
+                      />
+                    ) : (
+                      moduleDefinition.icon
+                    )}
+                  </span>
                   <h1 className="text-base font-semibold text-gray-900 truncate">{moduleDefinition.title}</h1>
                 </div>
-                <p className="text-xs text-gray-500 truncate">{moduleDefinition.description}</p>
               </div>
             </div>
           </div>

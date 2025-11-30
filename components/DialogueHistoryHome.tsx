@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { ModuleProgress } from '@/types';
 import { CAREER_MODULES } from '@/lib/modules';
 
@@ -83,8 +84,17 @@ export default function DialogueHistoryHome({ chatProgress, onSessionClick }: Pr
                   className="w-full px-6 py-4 transition-colors text-left group hover:bg-gray-50"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-2xl">
-                      {moduleDefinition.icon}
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-2xl relative overflow-hidden">
+                      {moduleDefinition.icon.startsWith('/') ? (
+                        <Image
+                          src={moduleDefinition.icon}
+                          alt=""
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        moduleDefinition.icon
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">

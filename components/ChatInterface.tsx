@@ -189,7 +189,7 @@ export default function ChatInterface({
         {olderMessages.map((message, index) => renderMessage(message, index))}
 
         {/* Latest two messages in a min-height container */}
-        {latestMessages.length > 0 && (
+        {(latestMessages.length > 0 || isLoading) && (
           <div className="min-h-[50vh] space-y-4">
             {latestMessages.map((message, index) =>
               renderMessage(message, olderMessages.length + index)

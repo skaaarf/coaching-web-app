@@ -153,7 +153,7 @@ export default function ModuleSelectionDialog({
 
     return (
         <div
-            className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm"
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 backdrop-blur-sm"
             onClick={onClose}
             role="dialog"
             aria-modal="true"
@@ -161,10 +161,10 @@ export default function ModuleSelectionDialog({
         >
             <div
                 ref={dialogRef}
-                className="bg-white/95 rounded-3xl shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-fade-in border border-gray-200 backdrop-blur"
+                className="bg-white/95 rounded-3xl shadow-2xl w-[90vw] max-w-md max-h-[80vh] flex flex-col animate-fade-in border border-gray-200 backdrop-blur overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="p-6 border-b border-gray-200 flex-shrink-0">
+                <div className="p-5 md:p-6 border-b border-gray-200 flex-shrink-0">
                     <p className="text-xs uppercase tracking-[0.4em] text-gray-400">Session</p>
                     <h3 id="dialog-title" className="text-xl font-bold text-gray-900 mb-2">
                         {moduleDefinition?.title}
@@ -174,13 +174,13 @@ export default function ModuleSelectionDialog({
                     </p>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 space-y-3">
+                <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-3">
                     <div className="space-y-3">
                         <button
                             onClick={onStartNew}
                             className="w-full bg-blue-50 border border-blue-200 hover:border-blue-300 hover:bg-blue-100 text-left px-4 py-4 rounded-2xl transition group flex items-center gap-3 shadow-sm"
                         >
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-md group-hover:scale-110 transition-transform">
+                            <div className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-md group-hover:scale-110 transition-transform">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>

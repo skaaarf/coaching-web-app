@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useRef } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { getModuleById } from '@/lib/modules';
 import { useStorage } from '@/hooks/useStorage';
@@ -540,7 +541,8 @@ export default function InteractiveModulePage() {
     }
 
     // If a question is provided, always start a new dialogue
-    if (!initialQuestion) {
+    // Also for career-dictionary, always start a new dialogue based on the current profile
+    if (!initialQuestion && moduleId !== 'career-dictionary') {
       // Check if there's already a dialogue session for this game session
       const sessionIdToUse = resolveSessionId();
       const currentProgress = await storage.getInteractiveModuleSession(moduleId, sessionIdToUse);
@@ -686,6 +688,18 @@ ${interviewSnippet}
 
 このストーリーについて、一緒に振り返りましょう。`;
       }
+
+      // Switch to dialogue phase immediately to show loading state in chat interface
+      setIsLoading(true);
+      setError(null);
+
+      // Set temporary state for immediate transition
+      const tempState = {
+        phase: 'dialogue' as const,
+        data: activityData ?? (state.phase !== 'activity' && state.data ? state.data : ({} as InteractiveActivityData)),
+        messages: []
+      };
+      setState(tempState);
 
       // Call API for initial message
       const response = await fetch('/api/chat', {
@@ -1159,12 +1173,22 @@ ${interviewSnippet}
               </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl flex-shrink-0">{moduleDefinition.icon}</span>
+                  <span className="text-xl flex-shrink-0 w-6 h-6 relative flex items-center justify-center">
+                    {moduleDefinition.icon.startsWith('/') ? (
+                      <Image
+                        src={moduleDefinition.icon}
+                        alt=""
+                        fill
+                        className="object-contain"
+                      />
+                    ) : (
+                      moduleDefinition.icon
+                    )}
+                  </span>
                   <h1 className="text-base font-semibold text-gray-900 truncate">
                     {moduleDefinition.title}
                   </h1>
                 </div>
-                <p className="text-xs text-gray-500 block truncate">{moduleDefinition.description}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -1246,7 +1270,7 @@ ${interviewSnippet}
               {moduleId === 'career-dictionary' && (
                 <CareerDictionary
                   ref={careerDictionaryRef}
-                  onSelectCareer={(career) => handleActivityComplete(career)}
+                  onSelectCareer={(career) => handleStartDialogue(career)}
                 />
               )}
               {moduleId === 'life-reflection' && (
@@ -1343,7 +1367,7 @@ ${interviewSnippet}
           )}
 
           {state.phase === 'dialogue' && (
-            <div className="flex flex-col lg:flex-row h-[calc(100vh-120px)] relative">
+            <div className="flex flex-col lg:flex-row h-[calc(100dvh-70px)] relative">
               {/* History Sidebar - Left (Desktop only) */}
               {showHistorySidebar && (
                 <>

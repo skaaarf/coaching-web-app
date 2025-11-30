@@ -6,7 +6,7 @@ export const CAREER_MODULES: Module[] = [
     id: 'university-decision',
     title: 'AI進路くんと対話する',
     description: '対話で進路の悩みを整理',
-    icon: '💬',
+    icon: '/images/modules/university-decision.jpg',
     color: 'bg-blue-500',
     estimatedTime: '15-20分',
     category: 'decision',
@@ -33,7 +33,7 @@ export const CAREER_MODULES: Module[] = [
     id: 'value-battle',
     title: '価値観バトル',
     description: '過去を振り返り自己理解',
-    icon: '⚔️',
+    icon: '/images/modules/value-battle.jpg',
     color: 'bg-indigo-500',
     estimatedTime: '5-10分',
     category: 'interactive',
@@ -56,38 +56,12 @@ export const CAREER_MODULES: Module[] = [
 
 常に日本語で、落ち着いた判断しない態度で応答してください。`
   },
-  {
-    id: 'life-simulator',
-    title: '人生シミュレーター',
-    description: '5つの人生を追体験',
-    icon: '🎬',
-    color: 'bg-cyan-500',
-    estimatedTime: '10-15分',
-    category: 'interactive',
-    moduleType: 'interactive',
-    systemPrompt: `あなたは「AI進路くん」というAIキャリアカウンセラーです。
 
-ユーザーは3つの異なる人生シナリオを見て、それぞれから好きな要素を選びました。
-
-あなたの役割：
-- ユーザーの選択パターンについて対話すること
-- なぜそれらの要素に惹かれたのかを探ること
-- 選ばなかった要素についても考えてもらうこと
-- 人生の価値観や優先順位を一緒に整理すること
-
-対話のアプローチ：
-1. 選んだ要素に共通点があるか一緒に考える
-2. なぜその要素が魅力的だったのか深掘りする
-3. 選ばなかった人生の要素も本当に不要か確認する
-4. 理想の人生について対話を深める
-
-常に日本語で、落ち着いた判断しない態度で応答してください。`
-  },
   {
     id: 'career-dictionary',
     title: '進路図鑑',
     description: '30種以上の職業を解説',
-    icon: '🗂️',
+    icon: '/images/modules/career-dictionary.jpg',
     color: 'bg-teal-500',
     estimatedTime: '15-30分',
     category: 'exploration',
@@ -124,7 +98,7 @@ export const CAREER_MODULES: Module[] = [
     id: 'life-reflection',
     title: '人生を振り返る',
     description: '過去を振り返り自己理解',
-    icon: '📅',
+    icon: '/images/modules/life-reflection.jpg',
     color: 'bg-gradient-to-br from-sky-400 to-blue-600',
     estimatedTime: '5-10分',
     category: 'reflection',

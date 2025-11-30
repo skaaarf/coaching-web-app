@@ -32,7 +32,7 @@ export default function ModulesSection({
                     <p className="text-sm text-gray-500 mt-1">対話とゲームで、自分の意志を磨こう</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {CAREER_MODULES.filter(m => m.moduleType === 'chat').map(moduleDefinition => (
                         <ModuleCard
                             key={moduleDefinition.id}
