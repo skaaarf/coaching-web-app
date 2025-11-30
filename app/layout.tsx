@@ -3,6 +3,7 @@ import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import { DataMigration } from "@/components/DataMigration";
 import AnalyticsInit from "@/components/AnalyticsInit";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.career-counseller.jp"),
@@ -55,6 +56,7 @@ export default function RootLayout({
           <AnalyticsInit />
           <DataMigration />
           {children}
+          <Analytics />
         </SessionProvider>
       </body>
     </html>
