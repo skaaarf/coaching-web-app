@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import AppLayout from '@/components/layouts/AppLayout';
 import UserMenu from '@/components/UserMenu';
 import SelfAnalysisSection from '@/components/home/SelfAnalysisSection';
 import ModulesSection from '@/components/home/ModulesSection';
@@ -29,11 +30,7 @@ export default function Home() {
     hasAnyProgress,
   } = useHomeData();
 
-  const sectionTabs: Array<{ id: 'analysis' | 'modules' | 'history'; label: string; iconPath: string }> = [
-    { id: 'analysis', label: '分析', iconPath: '/icons/analysis.svg' },
-    { id: 'modules', label: 'モジュール', iconPath: '/icons/modules.svg' },
-    { id: 'history', label: '履歴', iconPath: '/icons/history.svg' },
-  ];
+
 
   useEffect(() => {
     const sectionParam = searchParams.get('section');
@@ -43,111 +40,75 @@ export default function Home() {
   }, [searchParams, setActiveSection]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f5f5f7]">
-      <div className="pointer-events-none absolute inset-x-0 top-[-280px] h-[420px] bg-gradient-to-b from-sky-200/60 via-transparent to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute right-[-200px] top-32 h-[280px] w-[280px] rounded-full bg-indigo-300/40 blur-[140px]" />
+    <AppLayout
+      currentSection={activeSection}
+      onSectionChange={setActiveSection}
+      showNavigation={true}
+    >
+      <div className="relative min-h-screen overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-[-280px] h-[420px] bg-gradient-to-b from-sky-200/60 via-transparent to-transparent blur-3xl" />
+        <div className="pointer-events-none absolute right-[-200px] top-32 h-[280px] w-[280px] rounded-full bg-indigo-300/40 blur-[140px]" />
 
-      <header className="relative z-20 border-b border-white/70 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="relative h-12 w-12">
-              <Image
-                src="/mascot/coach-point.png"
-                alt="AI進路くん"
-                fill
-                sizes="48px"
-                className="rounded-2xl object-contain drop-shadow-md"
-                priority
-              />
+        <header className="relative z-20 border-b border-white/70 bg-white/85 backdrop-blur-xl">
+          <div className="mx-auto flex w-full max-w-3xl lg:max-w-6xl items-center justify-between px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="relative h-12 w-12">
+                <Image
+                  src="/mascot/coach-point.png"
+                  alt="AI進路くん"
+                  fill
+                  sizes="48px"
+                  className="rounded-2xl object-contain drop-shadow-md"
+                  priority
+                />
+              </div>
+              <div>
+                <p className="text-[0.6rem] uppercase tracking-[0.35em] text-gray-500">Mikata Studio</p>
+                <h1 className="text-lg font-semibold text-gray-900">AI進路くん</h1>
+              </div>
             </div>
-            <div>
-              <p className="text-[0.6rem] uppercase tracking-[0.35em] text-gray-500">Mikata Studio</p>
-              <h1 className="text-lg font-semibold text-gray-900">AI進路くん</h1>
+            <div className="flex items-center gap-2">
+              <UserMenu />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <UserMenu />
-          </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="relative z-20 mx-auto w-full max-w-3xl px-5 pb-32">
-        {activeSection === 'analysis' && (
-          <SelfAnalysisSection
-            allProgress={allProgress}
-            allInteractiveProgress={allInteractiveProgress}
-          />
-        )}
+        <main className="relative z-20 mx-auto w-full max-w-3xl lg:max-w-6xl px-5 pb-20 lg:pb-8">
+          {activeSection === 'analysis' && (
+            <SelfAnalysisSection
+              allProgress={allProgress}
+              allInteractiveProgress={allInteractiveProgress}
+            />
+          )}
 
-        {activeSection === 'modules' && (
-          <ModulesSection
-            modulesSectionRef={modulesSectionRef}
-            allProgress={allProgress}
-            allInteractiveProgress={allInteractiveProgress}
-            onModuleClick={handleModuleClick}
-          />
-        )}
+          {activeSection === 'modules' && (
+            <ModulesSection
+              modulesSectionRef={modulesSectionRef}
+              allProgress={allProgress}
+              allInteractiveProgress={allInteractiveProgress}
+              onModuleClick={handleModuleClick}
+            />
+          )}
 
-        {activeSection === 'history' && (
-          <HistorySection
-            allProgress={allProgress}
-            onSessionClick={(moduleId, sessionId) => handleContinue(sessionId)}
-          />
-        )}
-      </main>
+          {activeSection === 'history' && (
+            <HistorySection
+              allProgress={allProgress}
+              onSessionClick={(moduleId, sessionId) => handleContinue(sessionId)}
+            />
+          )}
+        </main>
 
-      <nav className="fixed bottom-0 inset-x-0 z-30">
-        <div className="flex w-full items-center justify-around border-t border-gray-200/70 bg-white/95 py-3 shadow-lg backdrop-blur">
-          {sectionTabs.map(tab => {
-            const isActive = activeSection === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveSection(tab.id)}
-                className={`flex flex-col items-center gap-1 text-xs font-semibold transition ${isActive ? 'text-gray-900' : 'text-gray-400'
-                  }`}
-              >
-                <div className="relative w-6 h-6">
-                  <Image
-                    src={tab.iconPath}
-                    alt={tab.label}
-                    fill
-                    sizes="24px"
-                    className={`object-contain transition ${isActive ? 'opacity-100' : 'opacity-40'}`}
-                  />
-                </div>
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+        <ModuleSelectionDialog
+          isOpen={showModuleDialog}
+          onClose={() => setShowModuleDialog(false)}
+          selectedModuleId={selectedModule}
+          moduleSessions={moduleSessions}
+          interactiveModuleSessions={interactiveModuleSessions}
+          onStartNew={handleStartNew}
+          onContinue={handleContinue}
+        />
 
-      <ModuleSelectionDialog
-        isOpen={showModuleDialog}
-        onClose={() => setShowModuleDialog(false)}
-        selectedModuleId={selectedModule}
-        moduleSessions={moduleSessions}
-        interactiveModuleSessions={interactiveModuleSessions}
-        onStartNew={handleStartNew}
-        onContinue={handleContinue}
-      />
-
-      <style jsx global>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.4s ease-out;
-        }
-      `}</style>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

@@ -40,11 +40,10 @@ export default function SelfAnalysisSection({ allProgress, allInteractiveProgres
           <button
             onClick={generate}
             disabled={!canGenerate}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold shadow transition ${
-              canGenerate
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold shadow transition ${canGenerate
                 ? 'bg-gray-900 text-white hover:bg-black'
                 : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-            }`}
+              }`}
           >
             {isGenerating ? (
               <>
@@ -71,8 +70,9 @@ export default function SelfAnalysisSection({ allProgress, allInteractiveProgres
       </div>
 
       {hasData && result && (
-        <div className="space-y-5">
+        <div className="space-y-5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-5">
           <SummaryCard summary={result.summary} />
+          <div className="lg:col-span-2" />
           <ValuesCard items={values} />
           <StrengthsCard items={strengths} />
         </div>

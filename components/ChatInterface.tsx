@@ -182,7 +182,7 @@ export default function ChatInterface({
   };
 
   return (
-    <div className="flex flex-col h-full" style={{ fontSize: '80%' }}>
+    <div className="flex flex-col h-full max-w-4xl mx-auto" style={{ fontSize: '80%' }}>
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
         {/* Older messages (if any) */}
