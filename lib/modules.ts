@@ -6,7 +6,7 @@ export const CAREER_MODULES: Module[] = [
     id: 'university-decision',
     title: 'AI進路くんと対話する',
     description: '対話で進路の悩みを整理',
-    icon: '/images/modules/university-decision.jpg',
+    icon: '/images/modules/university-decision-v2.jpg',
     color: 'bg-blue-500',
     estimatedTime: '15-20分',
     category: 'decision',
