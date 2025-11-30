@@ -5,7 +5,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'university-decision',
     title: 'AI進路くんと対話する',
-    description: '進路の悩みや迷いを、対話を通じて一緒に整理していきます。',
+    description: '対話で進路の悩みを整理',
     icon: '💬',
     color: 'bg-blue-500',
     estimatedTime: '15-20分',
@@ -32,7 +32,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'value-battle',
     title: '価値観バトル',
-    description: '年収、やりがい、安定性、ワークライフバランス…20回の二択を通じて、あなたが本当に大切にしている価値観の優先順位を可視化します。',
+    description: '過去を振り返り自己理解',
     icon: '⚔️',
     color: 'bg-indigo-500',
     estimatedTime: '5-10分',
@@ -59,7 +59,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'life-simulator',
     title: '人生シミュレーター',
-    description: '大企業、ベンチャー、クリエイター、地元密着、専門職…5つの異なる人生を18歳から60歳まで追体験。各人生から「いいな」と思う要素を選ぶことで、あなたが惹かれる人生の要素が明確になります。',
+    description: '5つの人生を追体験',
     icon: '🎬',
     color: 'bg-cyan-500',
     estimatedTime: '10-15分',
@@ -86,7 +86,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'career-dictionary',
     title: '進路図鑑',
-    description: '30種類以上の職業を徹底解説。仕事内容、年収、メリット・デメリット、現場の声など詳しく知れます。',
+    description: '30種以上の職業を解説',
     icon: '🗂️',
     color: 'bg-teal-500',
     estimatedTime: '15-30分',
@@ -123,7 +123,7 @@ export const CAREER_MODULES: Module[] = [
   {
     id: 'life-reflection',
     title: '人生を振り返る',
-    description: '3つの短いメモと満足度だけ書く超シンプル版。まずざっくり振り返ってから、AIと一緒に深掘りします。',
+    description: '過去を振り返り自己理解',
     icon: '📅',
     color: 'bg-gradient-to-br from-sky-400 to-blue-600',
     estimatedTime: '5-10分',

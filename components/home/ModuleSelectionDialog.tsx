@@ -176,16 +176,25 @@ export default function ModuleSelectionDialog({
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-3">
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between mb-2">
+                        <button
+                            onClick={onStartNew}
+                            className="w-full bg-blue-50 border border-blue-200 hover:border-blue-300 hover:bg-blue-100 text-left px-4 py-4 rounded-2xl transition group flex items-center gap-3 shadow-sm"
+                        >
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-md group-hover:scale-110 transition-transform">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="font-bold text-blue-900 text-base">新しいセッションを開始</p>
+                                <p className="text-xs text-blue-700 mt-0.5">最初から対話を始める</p>
+                            </div>
+                        </button>
+
+                        <div className="flex items-center justify-between mt-6 mb-2 px-1">
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 履歴 ({sessions.length})
                             </p>
-                            <button
-                                onClick={onStartNew}
-                                className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                            >
-                                + 新規作成
-                            </button>
                         </div>
                         {sessions.map((session, index) => renderSessionButton(session, index))}
                     </div>
