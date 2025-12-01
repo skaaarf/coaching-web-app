@@ -1,120 +1,111 @@
 'use client';
 
-import Image from 'next/image';
-import { useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
-import UserMenu from '@/components/UserMenu';
-import SelfAnalysisSection from '@/components/home/SelfAnalysisSection';
-import ModulesSection from '@/components/home/ModulesSection';
-import HistorySection from '@/components/home/HistorySection';
-import ModuleSelectionDialog from '@/components/home/ModuleSelectionDialog';
-import { useHomeData } from '@/hooks/useHomeData';
+import WelcomeHeader from '@/components/home/WelcomeHeader';
+import Card from '@/components/ui/Card';
+import Badge from '@/components/ui/Badge';
+import { activities, modules } from '@/data/activities';
+import { useCareerData } from '@/hooks/useCareerData';
+import Link from 'next/link';
 
 export default function Home() {
-  const searchParams = useSearchParams();
-  const {
-    allProgress,
-    allInteractiveProgress,
-    activeSection,
-    setActiveSection,
-    selectedModule,
-    showModuleDialog,
-    setShowModuleDialog,
-    moduleSessions,
-    interactiveModuleSessions,
-    modulesSectionRef,
-    handleModuleClick,
-    handleContinue,
-    handleStartNew,
-    hasAnyProgress,
-  } = useHomeData();
-
-
-
-  useEffect(() => {
-    const sectionParam = searchParams.get('section');
-    if (sectionParam === 'analysis' || sectionParam === 'modules' || sectionParam === 'history') {
-      setActiveSection(sectionParam);
-    }
-  }, [searchParams, setActiveSection]);
+  const { lastActiveItem } = useCareerData();
 
   return (
-    <AppLayout
-      currentSection={activeSection}
-      onSectionChange={setActiveSection}
-      showNavigation={true}
-    >
-      {/* 装飾背景 */}
-      <div className="pointer-events-none absolute inset-x-0 top-[-280px] h-[420px] bg-gradient-to-b from-sky-200/60 via-transparent to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute right-[-200px] top-32 h-[280px] w-[280px] rounded-full bg-indigo-300/40 blur-[140px]" />
+    <AppLayout>
+      <WelcomeHeader />
 
-      {/* トップバー（デスクトップではUserMenuのみ、モバイルでは完全なヘッダー） */}
-      <header className="lg:hidden relative z-20 border-b border-white/70 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="relative h-12 w-12">
-              <Image
-                src="/mascot/coach-point.png"
-                alt="AI進路くん"
-                fill
-                sizes="48px"
-                className="rounded-2xl object-contain drop-shadow-md"
-                priority
+      {/* Pick up where you left off */}
+      {lastActiveItem && (
+        <section className="mb-10">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-gray-900">続きから</h2>
+            <Link href="/history" className="text-sm font-medium text-primary hover:text-primary/80">
+              すべて見る
+            </Link>
+          </div>
+          <Card
+            variant="horizontal"
+            title={lastActiveItem.title}
+            description={lastActiveItem.summary}
+            imageUrl={lastActiveItem.imageUrl}
+            emoji={lastActiveItem.emoji}
+            tags={
+              <div className="flex gap-2">
+                <Badge variant="accent">モジュール</Badge>
+                <Badge variant="secondary">{lastActiveItem.duration}</Badge>
+              </div>
+            }
+            footer={
+              <div className="w-full rounded-full bg-gray-200 h-1.5 mt-2">
+                <div
+                  className="bg-primary h-1.5 rounded-full"
+                  style={{ width: `${lastActiveItem.progress}%` }}
+                />
+              </div>
+            }
+            onClick={() => console.log('Resume module', lastActiveItem.id)}
+          />
+        </section>
+      )}
+
+      {/* Recommended Modules */}
+      <section className="mb-10">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-900">おすすめのモジュール</h2>
+          <Link href="/activities?tab=modules" className="text-sm font-medium text-primary hover:text-primary/80">
+            すべて見る
+          </Link>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+          {modules.map((module) => (
+            <div key={module.id} className="w-72 flex-shrink-0">
+              <Card
+                title={module.title}
+                description={module.summary}
+                imageUrl={module.imageUrl}
+                emoji={module.emoji}
+                tags={
+                  <div className="flex gap-2">
+                    <Badge variant="accent">モジュール</Badge>
+                    <Badge variant="secondary">{module.duration}</Badge>
+                  </div>
+                }
+                onClick={() => console.log('Open module', module.id)}
               />
             </div>
-            <div>
-              <p className="text-[0.6rem] uppercase tracking-[0.35em] text-gray-500">Mikata Studio</p>
-              <h1 className="text-lg font-semibold text-gray-900">AI進路くん</h1>
+          ))}
+        </div>
+      </section>
+
+      {/* Recommended Activities */}
+      <section className="mb-20 lg:mb-10">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-900">おすすめのアクティビティ</h2>
+          <Link href="/activities" className="text-sm font-medium text-primary hover:text-primary/80">
+            すべて見る
+          </Link>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+          {activities.map((activity) => (
+            <div key={activity.id} className="w-72 flex-shrink-0">
+              <Card
+                title={activity.title}
+                description={activity.summary}
+                imageUrl={activity.imageUrl}
+                emoji={activity.emoji}
+                tags={
+                  <div className="flex gap-2">
+                    <Badge variant="default">アクティビティ</Badge>
+                    <Badge variant="secondary">{activity.duration}</Badge>
+                  </div>
+                }
+                onClick={() => console.log('Open activity', activity.id)}
+              />
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <UserMenu />
-          </div>
+          ))}
         </div>
-      </header>
-
-      {/* デスクトップ用のUserMenuバー */}
-      <div className="hidden lg:block sticky top-0 z-20 border-b border-white/70 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-end px-5 py-3">
-          <UserMenu />
-        </div>
-      </div>
-
-      <div className="relative z-10 mx-auto w-full max-w-3xl lg:max-w-6xl px-5 py-6 pb-20 lg:pb-8">
-        {activeSection === 'analysis' && (
-          <SelfAnalysisSection
-            allProgress={allProgress}
-            allInteractiveProgress={allInteractiveProgress}
-          />
-        )}
-
-        {activeSection === 'modules' && (
-          <ModulesSection
-            modulesSectionRef={modulesSectionRef}
-            allProgress={allProgress}
-            allInteractiveProgress={allInteractiveProgress}
-            onModuleClick={handleModuleClick}
-          />
-        )}
-
-        {activeSection === 'history' && (
-          <HistorySection
-            allProgress={allProgress}
-            onSessionClick={(moduleId, sessionId) => handleContinue(sessionId)}
-          />
-        )}
-      </div>
-
-      <ModuleSelectionDialog
-        isOpen={showModuleDialog}
-        onClose={() => setShowModuleDialog(false)}
-        selectedModuleId={selectedModule}
-        moduleSessions={moduleSessions}
-        interactiveModuleSessions={interactiveModuleSessions}
-        onStartNew={handleStartNew}
-        onContinue={handleContinue}
-      />
+      </section>
     </AppLayout>
   );
 }
