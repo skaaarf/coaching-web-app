@@ -1,17 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
 import { activities, modules } from '@/data/activities';
 import { Search } from 'lucide-react';
 
-export default function ActivityLibrary() {
+export default function ActivitiesPage() {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<'activities' | 'modules'>('activities');
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredItems = activeTab === 'activities' ? activities : modules;
+    const filteredItems = activeTab === 'activities'
+        ? activities.filter(a => a.title.includes(searchQuery))
+        : modules.filter(m => m.title.includes(searchQuery));
 
     return (
         <AppLayout>
@@ -27,6 +31,8 @@ export default function ActivityLibrary() {
                     </div>
                     <input
                         type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="block w-full rounded-xl border-0 bg-white py-2.5 pl-10 pr-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
                         placeholder={`${activeTab === 'activities' ? 'アクティビティ' : 'モジュール'}を検索...`}
                     />
@@ -36,8 +42,8 @@ export default function ActivityLibrary() {
                     <button
                         onClick={() => setActiveTab('activities')}
                         className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all sm:flex-none ${activeTab === 'activities'
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-900'
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900'
                             }`}
                     >
                         アクティビティ
@@ -45,8 +51,8 @@ export default function ActivityLibrary() {
                     <button
                         onClick={() => setActiveTab('modules')}
                         className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all sm:flex-none ${activeTab === 'modules'
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-900'
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900'
                             }`}
                     >
                         モジュール
@@ -73,7 +79,13 @@ export default function ActivityLibrary() {
                                     <Badge variant="secondary">{item.duration}</Badge>
                                 </div>
                             }
-                            onClick={() => console.log('Open item', item.id)}
+                            onClick={() => {
+                                if (item.id === 'a4-holiday') {
+                                    router.push(`/activities/${item.id}`);
+                                } else {
+                                    console.log('Open item', item.id);
+                                }
+                            }}
                         />
                     ))}
                 </div>
@@ -98,7 +110,13 @@ export default function ActivityLibrary() {
                                     <Badge variant="secondary">{item.duration}</Badge>
                                 </div>
                             }
-                            onClick={() => console.log('Open item', item.id)}
+                            onClick={() => {
+                                if (item.id === 'a4-holiday') {
+                                    router.push(`/activities/${item.id}`);
+                                } else {
+                                    console.log('Open item', item.id);
+                                }
+                            }}
                         />
                     ))}
                 </div>

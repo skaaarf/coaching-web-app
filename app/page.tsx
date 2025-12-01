@@ -71,7 +71,7 @@ export default function Home() {
                     <Badge variant="secondary">{module.duration}</Badge>
                   </div>
                 }
-                onClick={() => console.log('Open module', module.id)}
+                onClick={() => router.push(`/modules/${module.id}`)}
               />
             </div>
           ))}
@@ -100,7 +100,7 @@ export default function Home() {
                     <Badge variant="secondary">{activity.duration}</Badge>
                   </div>
                 }
-                onClick={() => console.log('Open activity', activity.id)}
+                onClick={() => router.push(`/activities/${activity.id}`)}
               />
             </div>
           ))}
