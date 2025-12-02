@@ -1,412 +1,85 @@
-import { Activity, Module } from '@/types/activity';
+import { ActivityDefinition, Module } from '@/types/activity';
+import { a1_moyamoya } from './activities/a1_moyamoya';
+import { a2_recent_success } from './activities/a2_recent_success';
+import { a3_likes_dislikes } from './activities/a3_likes_dislikes';
+import { a4_holiday_diagnosis } from './activities/a4_holiday_diagnosis';
+import { a5_compass } from './activities/a5_compass';
+import { a6_options_overview } from './activities/a6_options_overview';
+import { a7_options_pro_con } from './activities/a7_options_pro_con';
+import { a8_fit_compass } from './activities/a8_fit_compass';
+import { a9_first_choice_next_step } from './activities/a9_first_choice_next_step';
+import { a10_role_models } from './activities/a10_role_models';
+import { a11_common_points } from './activities/a11_common_points';
+import { a12_day_story } from './activities/a12_day_story';
+import { a13_my_day } from './activities/a13_my_day';
+import { a14_interest_list } from './activities/a14_interest_list';
+import { a15_job_image } from './activities/a15_job_image';
+import { a16_work_env } from './activities/a16_work_env';
+import { a17_job_suggestions } from './activities/a17_job_suggestions';
+import { a18_prep_check } from './activities/a18_prep_check';
+import { a19_consult_memo } from './activities/a19_consult_memo';
+import { b1_gakuchika_list } from './activities/b1_gakuchika_list';
+import { b2_gakuchika_draft } from './activities/b2_gakuchika_draft';
+import { b3_reason_structure } from './activities/b3_reason_structure';
+import { b4_pr_draft } from './activities/b4_pr_draft';
+import { b5_feedback } from './activities/b5_feedback';
+import { c1_status_check } from './activities/c1_status_check';
+import { c2_axis } from './activities/c2_axis';
+import { c3_candidates } from './activities/c3_candidates';
+import { c4_focus } from './activities/c4_focus';
+import { c5_action_plan } from './activities/c5_action_plan';
+import { d1_goals } from './activities/d1_goals';
+import { d2_connect } from './activities/d2_connect';
+import { d3_type_fit } from './activities/d3_type_fit';
+import { d4_requirements } from './activities/d4_requirements';
+import { d5_apply_plan } from './activities/d5_apply_plan';
+import { e1_time_audit } from './activities/e1_time_audit';
+import { e2_small_steps } from './activities/e2_small_steps';
+import { e3_self_intro } from './activities/e3_self_intro';
+import { e4_contact_msg } from './activities/e4_contact_msg';
+import { e5_reflection } from './activities/e5_reflection';
 
-export const activities: Activity[] = [
-    // Module 1: 自分コンパスを作る
-    {
-        id: 'a1-moyamoya',
-        title: '今日のモヤモヤを整理する',
-        duration: '5-10 分',
-        summary: '不安や悩みを言語化して整理する。',
-        description: '今一番モヤモヤしていることを言語化し、悩みの種類と強さ、望む状態を整理する。',
-        emoji: '💭',
-        category: 'self-analysis',
-        tags: ['自己分析', 'メンタル'],
-    },
-    {
-        id: 'a2-recent-success',
-        title: '最近頑張ったことを一つ整理する',
-        duration: '10-15 分',
-        summary: '強みのタネになるエピソードを整理。',
-        description: 'この一年で頑張ったエピソードを一つ深掘りして、強みのタネを見つける。',
-        emoji: '🏆',
-        category: 'self-analysis',
-        tags: ['自己分析', '強み'],
-    },
-    {
-        id: 'a3-likes-dislikes',
-        title: '好き・嫌いリストを作る',
-        duration: '10-15 分',
-        summary: '価値観タグを抽出する。',
-        description: '「好きなこと」「嫌いなこと」を並べて、自分の価値観やこだわりの軸を抽出する。',
-        emoji: '❤️',
-        category: 'self-analysis',
-        tags: ['自己分析', '価値観'],
-    },
-    {
-        id: 'a4-holiday',
-        title: '働き方スタイル診断',
-        duration: '5-10 分',
-        summary: '働くスタイルの傾向を知る。',
-        description: '二択質問に答えながら、安定志向かチャレンジ志向か、ひとり作業かチーム作業かなどの傾向を知る。',
-        emoji: '⚖️',
-        category: 'self-analysis',
-        tags: ['自己分析', '働き方'],
-    },
-    {
-        id: 'a5-compass',
-        title: '自分コンパスを一行で作る',
-        duration: '10-15 分',
-        summary: '自己理解の総まとめ。',
-        description: 'これまでの回答をまとめて、「自分は何を大事にして、どんなときに力を発揮するか」を一行プロフィールにする。',
-        emoji: '🧭',
-        category: 'self-analysis',
-        tags: ['自己分析', 'まとめ'],
-    },
-
-    // Module 2: 進路の大きな方向を決める
-    {
-        id: 'a6-options',
-        title: '今迷っている選択肢を全部出す',
-        duration: '10-15 分',
-        summary: '進路候補を書き出して整理する。',
-        description: '進学・就職・転職など、頭に浮かんでいる進路候補をすべて書き出し、ざっくりグループ分けする。',
-        emoji: '📝',
-        category: 'job-research',
-        tags: ['進路探索', '選択肢'],
-    },
-    {
-        id: 'a7-pros-cons',
-        title: '各選択肢の良い点・不安な点を整理する',
-        duration: '15-20 分',
-        summary: '候補のメリットと不安を可視化。',
-        description: '候補ごとに「良さ」と「不安」を書き分けて、感情ベースのモヤモヤを見える化する。',
-        emoji: '⚖️',
-        category: 'job-research',
-        tags: ['進路探索', '比較'],
-    },
-    {
-        id: 'a8-fit-check',
-        title: '自分コンパスとのフィット度を評価する',
-        duration: '10-15 分',
-        summary: '自分軸との相性をチェック。',
-        description: '自分コンパスを見ながら、各選択肢とのフィット感を評価し、その理由を一言メモにする。',
-        emoji: '🔍',
-        category: 'job-research',
-        tags: ['進路探索', '評価'],
-    },
-    {
-        id: 'a9-decision',
-        title: '仮の第一候補と次の一歩を決める',
-        duration: '10-15 分',
-        summary: 'ネクストアクションを決める。',
-        description: '今の自分にとっての第一候補を一つ選び、その確かめ方や次の一〜三ステップを書き出す。',
-        emoji: '👣',
-        category: 'job-research',
-        tags: ['進路探索', '意思決定'],
-    },
-
-    // Module 3: 進路図鑑ツアー
-    {
-        id: 'a10-role-models',
-        title: '気になる先輩・ロールモデルを選ぶ',
-        duration: '10-15 分',
-        summary: '気になる人物を選んで理由を書く。',
-        description: '進路図鑑の中から気になる人物を数人選び、「なぜ気になるのか」を一言ずつ書く。',
-        emoji: '👥',
-        category: 'job-research',
-        tags: ['進路探索', 'ロールモデル'],
-    },
-    {
-        id: 'a11-common-points',
-        title: '選んだ人たちの共通点と違いを言葉にする',
-        duration: '10-15 分',
-        summary: '惹かれる要素を言語化する。',
-        description: 'ロールモデル同士の共通点と違いを整理して、自分が惹かれやすい要素を言語化する。',
-        emoji: '🔗',
-        category: 'job-research',
-        tags: ['進路探索', '分析'],
-    },
-    {
-        id: 'a12-day-story',
-        title: '仕事の一日ストーリーを読む',
-        duration: '10-15 分',
-        summary: '仕事のリアルな一日を知る。',
-        description: '特定の仕事の「ある一日」を読み、「楽しそうなポイント」と「大変そうなポイント」に印を付ける。',
-        emoji: '📖',
-        category: 'job-research',
-        tags: ['進路探索', '仕事理解'],
-    },
-    {
-        id: 'a13-my-day',
-        title: '自分がその仕事をした場合の一日を描いてみる',
-        duration: '15-20 分',
-        summary: '自分事としてシミュレーション。',
-        description: 'その仕事を自分がした場合の一日を想像して書き、自分との距離感を確認する。',
-        emoji: '💭',
-        category: 'job-research',
-        tags: ['進路探索', 'シミュレーション'],
-    },
-    {
-        id: 'a14-interest-list',
-        title: '気になる進路リストを作って保存する',
-        duration: '5-10 分',
-        summary: '興味のある進路をストック。',
-        description: '気になった仕事・学部・生き方を三〜五個選び、理由メモ付きの「気になる進路リスト」として保存する。',
-        emoji: '🔖',
-        category: 'job-research',
-        tags: ['進路探索', 'リスト化'],
-    },
-
-    // Module 4: 高卒就職スタートガイド
-    {
-        id: 'a15-job-image',
-        title: '興味のある仕事イメージをざっくり洗い出す',
-        duration: '5-10 分',
-        summary: '仕事のイメージを広げる。',
-        description: '「体を動かす仕事」「人と話す仕事」など大まかな仕事カテゴリから、ピンとくるものを選ぶ。',
-        emoji: '🤔',
-        category: 'job-research',
-        tags: ['高卒就職', '興味'],
-    },
-    {
-        id: 'a16-work-env',
-        title: '働く環境の好みを整理する',
-        duration: '5-10 分',
-        summary: '環境の好みをチェック。',
-        description: '屋内か屋外か、固定の職場か移動型か、など働く環境の好みを二択で整理する。',
-        emoji: '🏢',
-        category: 'job-research',
-        tags: ['高卒就職', '環境'],
-    },
-    {
-        id: 'a17-job-suggestions',
-        title: '自分に合いそうな職種の案をもらう',
-        duration: '5-10 分',
-        summary: '職種候補を仕分ける。',
-        description: '興味と環境の好みをもとに、いくつかの職種候補を提示し、「気になる」「微妙」で仕分ける。',
-        emoji: '💡',
-        category: 'job-research',
-        tags: ['高卒就職', '職種'],
-    },
-    {
-        id: 'a18-prep-check',
-        title: 'その職種に向けて今からできる準備を知る',
-        duration: '10-15 分',
-        summary: '必要な準備を確認する。',
-        description: '選んだ職種に必要そうな資格・スキル・成績を確認し、今の自分とのギャップを言葉にする。',
-        emoji: '✅',
-        category: 'job-research',
-        tags: ['高卒就職', '準備'],
-    },
-    {
-        id: 'a19-consult-memo',
-        title: '担任や先生に相談するためのメモを作る',
-        duration: '10-15 分',
-        summary: '相談用のメモを作成。',
-        description: '高卒就職について先生や保護者に話すときの「相談メモ」を一枚の文章としてまとめる。',
-        emoji: '📝',
-        category: 'job-research',
-        tags: ['高卒就職', '相談'],
-    },
-
-    // Module 5: ES・自己PRを作る
-    {
-        id: 'b1-gakuchika-list',
-        title: 'ガクチカ候補を三つ洗い出す',
-        duration: '10-15 分',
-        summary: 'エピソードの棚卸し。',
-        description: '学業・部活・バイトなどから「頑張った経験」を三つリストアップし、種類ごとに整理する。',
-        emoji: '✨',
-        category: 'application',
-        tags: ['ES', 'ガクチカ'],
-    },
-    {
-        id: 'b2-gakuchika-draft',
-        title: '一つのガクチカを四百文字にまとめる',
-        duration: '20-30 分',
-        summary: 'ガクチカの文章化。',
-        description: '一つの経験を結論、背景、課題、行動、結果、学びの流れで整理し、四百文字程度の文章にする。',
-        emoji: '✍️',
-        category: 'application',
-        tags: ['ES', 'ガクチカ'],
-    },
-    {
-        id: 'b3-reason-structure',
-        title: '志望理由の骨組みを作る',
-        duration: '15-20 分',
-        summary: '志望動機の構成案。',
-        description: '「なぜこの分野か」「なぜこの学校・会社か」「自分は何を提供できるか」の三本柱を作る。',
-        emoji: '🏗️',
-        category: 'application',
-        tags: ['ES', '志望理由'],
-    },
-    {
-        id: 'b4-pr-draft',
-        title: '自己PRを四百文字で書いてみる',
-        duration: '20-30 分',
-        summary: '自己PRの文章化。',
-        description: '自分の強みとエピソードを組み合わせて、選考で使える自己PR文のドラフトを作る。',
-        emoji: '📢',
-        category: 'application',
-        tags: ['ES', '自己PR'],
-    },
-    {
-        id: 'b5-feedback',
-        title: '進路くんからの改善フィードバックを受け取る',
-        duration: '5-10 分',
-        summary: 'AIによる文章添削。',
-        description: '作成した文章に対して、分かりやすさ・具体性・一貫性の観点からAIの改善ポイントをもらう。',
-        emoji: '🤖',
-        category: 'application',
-        tags: ['ES', 'フィードバック'],
-    },
-
-    // Module 6: 就活・転職戦略を立てる
-    {
-        id: 'c1-status-check',
-        title: '今の就活・転職の状況を整理する',
-        duration: '10-15 分',
-        summary: '現在地の把握。',
-        description: '志望業界数、エントリー状況、気持ちの状態などをざっくり棚卸しして、現在地を把握する。',
-        emoji: '📍',
-        category: 'strategy',
-        tags: ['戦略', '現状把握'],
-    },
-    {
-        id: 'c2-axis',
-        title: '就活・転職の軸を三つに絞る',
-        duration: '10-15 分',
-        summary: '優先順位の決定。',
-        description: '年収、成長、やりがい、安定、場所、人などの候補から、自分が最優先したい軸を三つ選ぶ。',
-        emoji: '⚖️',
-        category: 'strategy',
-        tags: ['戦略', '軸'],
-    },
-    {
-        id: 'c3-candidates',
-        title: '業界と職種の候補を整理する',
-        duration: '15-20 分',
-        summary: 'ターゲットの整理。',
-        description: '気になる業界と職種をリストアップし、自分コンパスとのフィット感をラフに評価する。',
-        emoji: '🎯',
-        category: 'strategy',
-        tags: ['戦略', '業界研究'],
-    },
-    {
-        id: 'c4-focus',
-        title: 'どこにどれくらい時間とエネルギーを使うか決める',
-        duration: '10-15 分',
-        summary: 'リソース配分。',
-        description: '第一志望群・第二志望群などに分けて、どこに集中して動くかを決める。',
-        emoji: '🔋',
-        category: 'strategy',
-        tags: ['戦略', '計画'],
-    },
-    {
-        id: 'c5-action-plan',
-        title: '直近二週間のアクションプランを作る',
-        duration: '10-15 分',
-        summary: '短期行動計画。',
-        description: 'ES作成、企業研究、OB訪問など、次の二週間でやることを三〜五個に絞ってタスクリストにする。',
-        emoji: '📅',
-        category: 'strategy',
-        tags: ['戦略', 'アクション'],
-    },
-
-    // Module 7: 大学生インターン・バイト設計
-    {
-        id: 'd1-goals',
-        title: 'インターンやバイトで得たいものを整理する',
-        duration: '10-15 分',
-        summary: '目的の明確化。',
-        description: 'お金、スキル、業界理解、人脈など、インターンやバイトで得たいものを選び、優先順位をつける。',
-        emoji: '🎯',
-        category: 'internship',
-        tags: ['インターン', '目的'],
-    },
-    {
-        id: 'd2-connect',
-        title: '今までの経験とのつながりを考える',
-        duration: '10-15 分',
-        summary: '経験の接続。',
-        description: 'これまでの部活やアルバイトから「もっと深掘りしたい経験」を見つけ、次の経験とつなげる。',
-        emoji: '🔗',
-        category: 'internship',
-        tags: ['インターン', '経験'],
-    },
-    {
-        id: 'd3-type-fit',
-        title: '自分に合うインターン・バイトのタイプを知る',
-        duration: '5-10 分',
-        summary: 'タイプ診断。',
-        description: '長期インターン、短期インターン、塾講師、飲食、スタートアップなどのタイプへのフィットをザクっと診断する。',
-        emoji: '🧩',
-        category: 'internship',
-        tags: ['インターン', '適性'],
-    },
-    {
-        id: 'd4-requirements',
-        title: '募集要項のどこを見るべきか整理する',
-        duration: '5-10 分',
-        summary: '見るべきポイントの整理。',
-        description: '仕事内容、勤務条件、学べることなど、自分にとって重要な項目をはっきりさせる。',
-        emoji: '📋',
-        category: 'internship',
-        tags: ['インターン', '条件'],
-    },
-    {
-        id: 'd5-apply-plan',
-        title: '最初の応募プランを三件決める',
-        duration: '10-15 分',
-        summary: '応募計画。',
-        description: '条件を踏まえ、「この一ヶ月でこういう募集に三件応募する」という行動計画を文章にする。',
-        emoji: '🚀',
-        category: 'internship',
-        tags: ['インターン', '応募'],
-    },
-
-    // Module 8: キャリア開発スキルを鍛える
-    {
-        id: 'e1-time-audit',
-        title: '時間の使い方を棚卸しする',
-        duration: '10-15 分',
-        summary: '時間管理の基礎。',
-        description: '一日の過ごし方を振り返り、「キャリアに効いている時間」と「そうでもない時間」をざっくり仕分けする。',
-        emoji: '⏰',
-        category: 'skill',
-        tags: ['スキル', '時間管理'],
-    },
-    {
-        id: 'e2-small-steps',
-        title: '一ヶ月の目標をスモールステップに分解する',
-        duration: '10-15 分',
-        summary: '目標達成スキル。',
-        description: '進路関連の目標を、週・日レベルの小さいタスクに分解していく。',
-        emoji: '🪜',
-        category: 'skill',
-        tags: ['スキル', '目標設定'],
-    },
-    {
-        id: 'e3-self-intro',
-        title: '伝わる自己紹介テンプレを作る',
-        duration: '15-20 分',
-        summary: '自己紹介スキル。',
-        description: 'オンライン面談やイベントで使える、三十秒〜一分の自己紹介テンプレを作る。',
-        emoji: '🗣️',
-        category: 'skill',
-        tags: ['スキル', 'コミュニケーション'],
-    },
-    {
-        id: 'e4-contact-msg',
-        title: '一人だけ話してみたい人を決める',
-        duration: '10-15 分',
-        summary: 'ネットワーキング。',
-        description: '先生や先輩、社会人など「一度話を聞いてみたい人」を一人決め、連絡メッセージ案を作る。',
-        emoji: '✉️',
-        category: 'skill',
-        tags: ['スキル', '人脈'],
-    },
-    {
-        id: 'e5-reflection',
-        title: '二週間後の振り返りの仕方を決める',
-        duration: '5-10 分',
-        summary: '振り返りスキル。',
-        description: '「二週間後に自分で振り返るための質問セット」を作り、セルフコーチングの型を用意する。',
-        emoji: '🔄',
-        category: 'skill',
-        tags: ['スキル', '振り返り'],
-    },
-];
+export const activities: Record<string, ActivityDefinition> = {
+    'a1-moyamoya': a1_moyamoya,
+    'a2-recent-success': a2_recent_success,
+    'a3-likes-dislikes': a3_likes_dislikes,
+    'a4-holiday-diagnosis': a4_holiday_diagnosis,
+    'a5-compass': a5_compass,
+    'a6-options-overview': a6_options_overview,
+    'a7-options-pro-con': a7_options_pro_con,
+    'a8-fit-compass': a8_fit_compass,
+    'a9-first-choice-next-step': a9_first_choice_next_step,
+    'a10-role-models': a10_role_models,
+    'a11-common-points': a11_common_points,
+    'a12-day-story': a12_day_story,
+    'a13-my-day': a13_my_day,
+    'a14-interest-list': a14_interest_list,
+    'a15-job-image': a15_job_image,
+    'a16-work-env': a16_work_env,
+    'a17-job-suggestions': a17_job_suggestions,
+    'a18-prep-check': a18_prep_check,
+    'a19-consult-memo': a19_consult_memo,
+    'b1-gakuchika-list': b1_gakuchika_list,
+    'b2-gakuchika-draft': b2_gakuchika_draft,
+    'b3-reason-structure': b3_reason_structure,
+    'b4-pr-draft': b4_pr_draft,
+    'b5-feedback': b5_feedback,
+    'c1-status-check': c1_status_check,
+    'c2-axis': c2_axis,
+    'c3-candidates': c3_candidates,
+    'c4-focus': c4_focus,
+    'c5-action-plan': c5_action_plan,
+    'd1-goals': d1_goals,
+    'd2-connect': d2_connect,
+    'd3-type-fit': d3_type_fit,
+    'd4-requirements': d4_requirements,
+    'd5-apply-plan': d5_apply_plan,
+    'e1-time-audit': e1_time_audit,
+    'e2-small-steps': e2_small_steps,
+    'e3-self-intro': e3_self_intro,
+    'e4-contact-msg': e4_contact_msg,
+    'e5-reflection': e5_reflection,
+};
 
 export const modules: Module[] = [
     {
@@ -416,7 +89,7 @@ export const modules: Module[] = [
         summary: '自己理解の土台を作る。',
         description: '悩み・強み・好き嫌い・働き方スタイルを整理して、「自分はどんな人か」を一行で言える状態にするコース。',
         emoji: '🧭',
-        activityIds: ['a1-moyamoya', 'a2-recent-success', 'a3-likes-dislikes', 'a4-holiday', 'a5-compass'],
+        activityIds: ['a1-moyamoya', 'a2-recent-success', 'a3-likes-dislikes', 'a4-holiday-diagnosis', 'a5-compass'],
         progress: 0,
     },
     {
@@ -426,7 +99,7 @@ export const modules: Module[] = [
         summary: '進路の方向性を定める。',
         description: 'いくつかの進路候補を並べ、良い点・不安・自分とのフィットを整理して、現時点の第一候補と「次の一歩」を決めるコース。',
         emoji: '🗺️',
-        activityIds: ['a6-options', 'a7-pros-cons', 'a8-fit-check', 'a9-decision'],
+        activityIds: ['a6-options-overview', 'a7-options-pro-con', 'a8-fit-compass', 'a9-first-choice-next-step'],
         progress: 0,
     },
     {

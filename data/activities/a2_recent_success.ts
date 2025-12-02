@@ -2,7 +2,7 @@ import { ActivityDefinition } from '@/types/activity';
 
 export const a2_recent_success: ActivityDefinition = {
     id: 'a2-recent-success',
-    title: '最近頑張ったことを整理する',
+    title: '最近頑張ったことを一つ整理する',
     style: 'chat',
     initialStepId: 'intro',
     steps: {
@@ -11,6 +11,12 @@ export const a2_recent_success: ActivityDefinition = {
             type: 'text',
             message: 'この一年くらいで\n『あの時はけっこう頑張ったな』と思える出来事を一つ教えてください。\n学校・仕事・部活・アルバイト・サークルなど、どこでも大丈夫です。',
             placeholder: '例：文化祭のクラス企画',
+            options: [
+                { label: '文化祭のクラス企画', value: '文化祭のクラス企画' },
+                { label: '部活動の大会', value: '部活動の大会' },
+                { label: 'アルバイトでの接客', value: 'アルバイトでの接客' },
+                { label: '資格試験の勉強', value: '資格試験の勉強' },
+            ],
             nextStepId: 'situation',
         },
         situation: {
@@ -19,6 +25,11 @@ export const a2_recent_success: ActivityDefinition = {
             message: 'その時の状況を、簡単に教えてください。\nどんな場面で、誰と、何をしていましたか。',
             placeholder: '例：クラス全員で映画を作ることになり、監督を任された',
             multiline: true,
+            options: [
+                { label: 'クラス全員で映画を作ることになり、監督を任された', value: 'クラス全員で映画を作ることになり、監督を任された' },
+                { label: '大会前に怪我をしてしまい、サポート役に回った', value: '大会前に怪我をしてしまい、サポート役に回った' },
+                { label: '忙しい時間帯に少人数で店を回した', value: '忙しい時間帯に少人数で店を回した' },
+            ],
             nextStepId: 'goal',
         },
         goal: {

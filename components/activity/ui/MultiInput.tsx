@@ -4,9 +4,10 @@ import { Send, Plus, X } from 'lucide-react';
 interface MultiInputProps {
     inputs: { label: string; placeholder: string }[];
     onSubmit: (values: string[]) => void;
+    disabled?: boolean;
 }
 
-export default function MultiInput({ inputs, onSubmit }: MultiInputProps) {
+export default function MultiInput({ inputs, onSubmit, disabled }: MultiInputProps) {
     const [values, setValues] = useState<string[]>(new Array(inputs.length).fill(''));
 
     const handleChange = (index: number, value: string) => {
@@ -33,14 +34,15 @@ export default function MultiInput({ inputs, onSubmit }: MultiInputProps) {
                         value={values[index]}
                         onChange={(e) => handleChange(index, e.target.value)}
                         placeholder={input.placeholder}
-                        className="flex-1 rounded-lg border-0 bg-gray-50 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                        disabled={disabled}
+                        className="flex-1 rounded-lg border-0 bg-gray-50 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 disabled:text-gray-400 disabled:bg-gray-100"
                     />
                 </div>
             ))}
             <div className="pt-2">
                 <button
                     onClick={handleSubmit}
-                    disabled={!values[0].trim()}
+                    disabled={!values[0].trim() || disabled}
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-bold text-white transition-all hover:bg-primary/90 disabled:bg-gray-200 disabled:cursor-not-allowed"
                 >
                     <span>決定</span>

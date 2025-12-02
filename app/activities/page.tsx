@@ -14,7 +14,7 @@ export default function ActivitiesPage() {
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredItems = activeTab === 'activities'
-        ? activities.filter(a => a.title.includes(searchQuery))
+        ? Object.values(activities).filter(a => a.title.includes(searchQuery))
         : modules.filter(m => m.title.includes(searchQuery));
 
     return (
@@ -42,8 +42,8 @@ export default function ActivitiesPage() {
                     <button
                         onClick={() => setActiveTab('activities')}
                         className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all sm:flex-none ${activeTab === 'activities'
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-900'
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-900'
                             }`}
                     >
                         アクティビティ
@@ -51,8 +51,8 @@ export default function ActivitiesPage() {
                     <button
                         onClick={() => setActiveTab('modules')}
                         className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all sm:flex-none ${activeTab === 'modules'
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-900'
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-900'
                             }`}
                     >
                         モジュール
@@ -68,7 +68,7 @@ export default function ActivitiesPage() {
                         <Card
                             key={item.id}
                             title={item.title}
-                            description={item.summary}
+                            description={item.summary || item.description} // Fallback to description if summary is missing
                             imageUrl={item.imageUrl}
                             emoji={item.emoji}
                             tags={
@@ -80,10 +80,11 @@ export default function ActivitiesPage() {
                                 </div>
                             }
                             onClick={() => {
-                                if (item.id === 'a4-holiday') {
+                                if (activeTab === 'activities') {
                                     router.push(`/activities/${item.id}`);
                                 } else {
-                                    console.log('Open item', item.id);
+                                    // For modules, we might want to go to a module detail page or the first activity
+                                    console.log('Open module', item.id);
                                 }
                             }}
                         />
@@ -99,7 +100,7 @@ export default function ActivitiesPage() {
                         <Card
                             key={item.id}
                             title={item.title}
-                            description={item.summary}
+                            description={item.summary || item.description}
                             imageUrl={item.imageUrl}
                             emoji={item.emoji}
                             tags={
@@ -111,10 +112,10 @@ export default function ActivitiesPage() {
                                 </div>
                             }
                             onClick={() => {
-                                if (item.id === 'a4-holiday') {
+                                if (activeTab === 'activities') {
                                     router.push(`/activities/${item.id}`);
                                 } else {
-                                    console.log('Open item', item.id);
+                                    console.log('Open module', item.id);
                                 }
                             }}
                         />

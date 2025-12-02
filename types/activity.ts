@@ -26,7 +26,28 @@ export interface ActivityStep {
 export interface ActivityDefinition {
     id: string;
     title: string;
-    style: 'chat' | 'selection'; // New field to define the interaction style
+    style: 'chat' | 'selection';
     initialStepId: string;
     steps: Record<string, ActivityStep>;
+    // Optional display properties
+    summary?: string;
+    description?: string;
+    emoji?: string;
+    duration?: string;
+    imageUrl?: string;
+    category?: string;
+    tags?: string[];
+}
+
+export interface Module {
+    id: string;
+    title: string;
+    duration: string;
+    summary: string;
+    description: string;
+    emoji: string;
+    activityIds: string[];
+    progress: number;
+    level?: string;
+    imageUrl?: string;
 }

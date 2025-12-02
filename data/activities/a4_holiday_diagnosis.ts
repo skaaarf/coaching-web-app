@@ -1,10 +1,10 @@
 import { ActivityDefinition } from '@/types/activity';
 
 export const a4_holiday_diagnosis: ActivityDefinition = {
-    id: 'a4-holiday',
-    title: '休日の過ごし方診断',
+    id: 'a4-holiday-diagnosis',
+    title: '働き方スタイル診断',
     style: 'selection',
-    initialStepId: 'intro',
+    initialStepId: 'q1',
     steps: {
         intro: {
             id: 'intro',

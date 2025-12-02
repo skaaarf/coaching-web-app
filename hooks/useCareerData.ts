@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { activities, modules, Activity, Module } from '@/data/activities';
+import { activities, modules } from '@/data/activities';
+import { ActivityDefinition, Module } from '@/types/activity';
 
 interface CareerDataState {
     completedActivityIds: string[];
@@ -20,7 +21,7 @@ export function useCareerData() {
     });
 
     const getModule = (id: string) => modules.find((m) => m.id === id);
-    const getActivity = (id: string) => activities.find((a) => a.id === id);
+    const getActivity = (id: string) => activities[id];
 
     const startModule = (moduleId: string) => {
         if (!state.inProgressModuleIds.includes(moduleId)) {
@@ -64,7 +65,7 @@ export function useCareerData() {
 
     const completedActivities = state.completedActivityIds
         .map((id) => getActivity(id))
-        .filter((a): a is Activity => a !== null);
+        .filter((a): a is ActivityDefinition => a !== undefined);
 
     const lastActiveItem = inProgressModules.length > 0 ? inProgressModules[0] : null;
 

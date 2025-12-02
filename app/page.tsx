@@ -7,8 +7,10 @@ import Badge from '@/components/ui/Badge';
 import { activities, modules } from '@/data/activities';
 import { useCareerData } from '@/hooks/useCareerData';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
   const { lastActiveItem } = useCareerData();
 
   return (
@@ -87,7 +89,7 @@ export default function Home() {
           </Link>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-          {activities.map((activity) => (
+          {Object.values(activities).map((activity) => (
             <div key={activity.id} className="w-72 flex-shrink-0">
               <Card
                 title={activity.title}

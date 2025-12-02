@@ -25,7 +25,7 @@ export default function ModuleDetailPage() {
 
     // Get related activities
     const moduleActivities = module.activityIds.map((actId) =>
-        activities.find((a) => a.id === actId)
+        activities[actId]
     ).filter(Boolean);
 
     // Mock similar modules (excluding current one)

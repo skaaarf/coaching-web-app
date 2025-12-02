@@ -2,23 +2,11 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import ActivityRunner from '@/components/activity/ActivityRunner';
-import { a4_holiday_diagnosis } from '@/data/activities/a4_holiday_diagnosis';
-import { a1_moyamoya } from '@/data/activities/a1_moyamoya';
-import { a2_recent_success } from '@/data/activities/a2_recent_success';
-import { a3_likes_dislikes } from '@/data/activities/a3_likes_dislikes';
-import { a5_compass } from '@/data/activities/a5_compass';
+import { activities } from '@/data/activities';
 import { ActivityDefinition } from '@/types/activity';
 import { useState } from 'react';
 import AppLayout from '@/components/layouts/AppLayout';
 import Button from '@/components/ui/Button';
-
-const activities: Record<string, ActivityDefinition> = {
-    'a4-holiday': a4_holiday_diagnosis,
-    'a1-moyamoya': a1_moyamoya,
-    'a2-recent-success': a2_recent_success,
-    'a3-likes-dislikes': a3_likes_dislikes,
-    'a5-compass': a5_compass,
-};
 
 export default function ActivityPage() {
     const params = useParams();

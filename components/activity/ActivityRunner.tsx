@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ActivityDefinition, ActivityStep } from '@/types/activity';
 import ChatBubble from './ui/ChatBubble';
-import ButtonOptions from './ui/ButtonOptions';
+import InlineOptions from './ui/InlineOptions';
 import TextInput from './ui/TextInput';
 import MultiInput from './ui/MultiInput';
 import SummaryCard from './ui/SummaryCard';
@@ -25,13 +25,19 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
     const [currentStepId, setCurrentStepId] = useState(activity.initialStepId);
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [answers, setAnswers] = useState<Record<string, any>>({});
+    const [isProcessing, setIsProcessing] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
 
     const currentStep = activity.steps[currentStepId];
 
+    const lastProcessedStepId = useRef<string | null>(null);
+
     // Add initial message to history when step changes
     useEffect(() => {
-        if (currentStep) {
+        if (currentStep && lastProcessedStepId.current !== currentStepId) {
+            lastProcessedStepId.current = currentStepId;
+            setIsProcessing(false); // Re-enable input when new step loads
+
             setHistory((prev) => [
                 ...prev,
                 { type: 'mikata', content: currentStep.message },
@@ -56,14 +62,6 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                     },
                 ]);
 
-                // Auto-advance after showing summary? Or wait for user?
-                // Usually summary is followed by a question like "Is this correct?"
-                // So we just show it and let the next step (which might be the same step's nextStepId) handle flow.
-                // But wait, if type is 'summary', does it have input?
-                // In our definition, 'summary' type has a nextStepId. 
-                // We should probably auto-advance to the next step if there's no input required.
-                // But if the next step is a separate question, we need to trigger it.
-
                 if (currentStep.nextStepId) {
                     setTimeout(() => setCurrentStepId(currentStep.nextStepId!), 1500);
                 }
@@ -73,7 +71,7 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                 }
             }
         }
-    }, [currentStepId, currentStep, answers]); // Added answers to dependency for summary processing
+    }, [currentStepId, currentStep, answers]);
 
     // Auto-scroll to bottom
     useEffect(() => {
@@ -91,6 +89,8 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
     }, [currentStep, answers, onComplete]);
 
     const handleInputSubmit = (value: any, label?: string) => {
+        setIsProcessing(true); // Disable input immediately
+
         // Add user's answer to history (if it's not a silent update)
         if (label) {
             setHistory((prev) => [...prev, { type: 'user', content: label }]);
@@ -144,7 +144,7 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
 
             {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-4">
-                <div className="space-y-6 pb-48">
+                <div className="mx-auto max-w-3xl space-y-8 pb-48">
                     {history.map((item, index) => (
                         <div
                             key={index}
@@ -154,21 +154,29 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                             {item.type === 'mikata' ? (
                                 <ChatBubble message={item.content} />
                             ) : item.type === 'summary' ? (
-                                <div className="w-full max-w-md pl-14">
+                                <div className="w-full pl-12">
                                     <SummaryCard title={item.content.title} items={item.content.items} />
                                 </div>
                             ) : (
-                                <div className="flex flex-row-reverse items-start gap-3 max-w-[90%]">
-                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600">
-                                        凌
-                                    </div>
-                                    <div className="rounded-2xl bg-gray-100 px-5 py-3 text-gray-900 whitespace-pre-wrap leading-relaxed">
-                                        {item.content}
-                                    </div>
+                                <div className="max-w-[80%] rounded-2xl bg-white px-5 py-3 text-gray-900 shadow-sm ring-1 ring-gray-100 whitespace-pre-wrap leading-relaxed">
+                                    {item.content}
                                 </div>
                             )}
                         </div>
                     ))}
+                    {/* Current Step Options (Inline) */}
+                    {currentStep.options && currentStep.options.length > 0 && (
+                        <div className="flex w-full justify-start pl-12">
+                            <InlineOptions
+                                options={currentStep.options}
+                                onSelect={(value) => {
+                                    const label = currentStep.options?.find(o => o.value === value)?.label || value;
+                                    handleOptionSelect(value, label);
+                                }}
+                                disabled={isProcessing}
+                            />
+                        </div>
+                    )}
                     <div ref={bottomRef} />
                 </div>
             </div>
@@ -176,26 +184,19 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
             {/* Input Area (Fixed Bottom) */}
             <div className="fixed bottom-0 left-0 z-50 w-full bg-white/90 backdrop-blur-md pb-safe pt-4 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
                 <div className="mx-auto max-w-3xl px-4 pb-6 pointer-events-auto">
-                    {currentStep.type === 'button' && currentStep.options && (
-                        <ButtonOptions
-                            options={currentStep.options}
-                            onSelect={(value) => {
-                                const label = currentStep.options?.find(o => o.value === value)?.label || value;
-                                handleOptionSelect(value, label);
-                            }}
-                        />
-                    )}
                     {currentStep.type === 'text' && (
                         <TextInput
                             placeholder={currentStep.placeholder}
                             multiline={currentStep.multiline}
                             onSubmit={(value) => handleInputSubmit(value)}
+                            disabled={isProcessing}
                         />
                     )}
                     {currentStep.type === 'multi-input' && currentStep.inputs && (
                         <MultiInput
                             inputs={currentStep.inputs}
                             onSubmit={(values) => handleInputSubmit(values)}
+                            disabled={isProcessing}
                         />
                     )}
                 </div>

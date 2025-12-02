@@ -51,7 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className="antialiased font-sans">
+      <body className="antialiased font-sans" suppressHydrationWarning>
         <SessionProvider>
           <AnalyticsInit />
           <DataMigration />

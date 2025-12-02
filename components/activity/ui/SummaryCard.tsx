@@ -15,11 +15,23 @@ export default function SummaryCard({ title, items }: SummaryCardProps) {
                     {title}
                 </h3>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="p-4 space-y-6">
                 {items.map((item, index) => (
-                    <div key={index} className="flex flex-col gap-1 p-4 sm:flex-row sm:gap-4">
-                        <dt className="min-w-[5rem] text-sm font-bold text-gray-500">{item.label}</dt>
-                        <dd className="text-sm text-gray-900 whitespace-pre-wrap">{item.value}</dd>
+                    <div key={index} className="flex gap-3">
+                        {/* Number Badge */}
+                        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                            {index + 1}
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            {/* Title */}
+                            <dt className="font-bold text-gray-900">{item.label}</dt>
+
+                            {/* Content */}
+                            <dd className="text-sm leading-relaxed text-gray-600 whitespace-pre-wrap">
+                                {item.value}
+                            </dd>
+                        </div>
                     </div>
                 ))}
             </div>
