@@ -27,6 +27,11 @@ export default function TextInput({ placeholder, multiline, onSubmit, disabled }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            handleSubmit();
+            return;
+        }
         if (e.key === 'Enter' && !e.shiftKey && !multiline) {
             e.preventDefault();
             handleSubmit();
@@ -35,7 +40,7 @@ export default function TextInput({ placeholder, multiline, onSubmit, disabled }
 
     return (
         <div className="w-full">
-            <div className="group relative flex w-full flex-col gap-2 rounded-3xl border border-gray-200 bg-white p-2 shadow-lg transition-all focus-within:border-purple-400 focus-within:ring-1 focus-within:ring-purple-400">
+            <div className="group relative flex w-full flex-col gap-2 rounded-3xl border border-gray-200 bg-white p-2 shadow-lg transition-all focus-within:border-gray-300 focus-within:shadow-xl">
 
                 {/* Input Area */}
                 <div className="relative flex items-end gap-2">
@@ -65,7 +70,7 @@ export default function TextInput({ placeholder, multiline, onSubmit, disabled }
                     <button
                         onClick={handleSubmit}
                         disabled={!value.trim() || disabled}
-                        className="mb-1 mr-1 flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-white transition-all hover:bg-purple-700 disabled:bg-gray-200 disabled:cursor-not-allowed"
+                        className="mb-1 mr-1 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900 text-white transition-all hover:bg-black disabled:bg-gray-200 disabled:cursor-not-allowed"
                     >
                         <ArrowUp className="h-5 w-5" />
                     </button>

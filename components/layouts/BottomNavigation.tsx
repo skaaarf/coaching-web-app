@@ -12,7 +12,7 @@ export default function BottomNavigation() {
         { name: '探す', href: '/activities', icon: Search },
         { name: '履歴', href: '/history', icon: Clock },
         { name: 'マイページ', href: '/profile', icon: User },
-        { name: 'コーチ', href: '/coach', icon: MessageCircle },
+
     ];
 
     return (

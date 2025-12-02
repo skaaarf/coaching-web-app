@@ -189,7 +189,8 @@ export type InteractiveModuleId =
   | 'branch-map'
   | 'persona-dictionary'
   | 'career-dictionary'
-  | 'life-reflection';
+  | 'life-reflection'
+  | 'es-builder';
 
 export type InteractiveModuleDataMap = {
   'value-battle': ValueBattleResult;
@@ -200,7 +201,61 @@ export type InteractiveModuleDataMap = {
   'persona-dictionary': PersonaProfile;
   'career-dictionary': CareerProfile;
   'life-reflection': LifeReflectionData;
+  'es-builder': EsBuilderData;
 };
+
+// ES Builder Types
+export type EsStatus = 'not_started' | 'drafting' | 'needs_review' | 'done';
+
+export interface EsAnswer {
+  id: string;
+  questionId: string;
+  text: string;
+  status: EsStatus;
+  updatedAt: string;
+}
+
+export interface EsChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  draftContent?: string;
+  suggestedShortcuts?: string[];
+  timestamp: number;
+}
+
+export interface EsChatSession {
+  id: string;
+  questionId: string;
+  messages: EsChatMessage[];
+}
+
+export interface EsQuestionTemplate {
+  id: string;
+  title: string;
+  description: string;
+  recommendedLength?: number;
+}
+
+export interface EsBuilderData {
+  answers: Record<string, EsAnswer>;
+  chatSessions: Record<string, EsChatSession>;
+  customQuestions?: EsQuestionTemplate[];
+}
+
+export interface EsScoreResult {
+  totalScore: number;
+  criteriaScores: {
+    structure: number;   // 構成
+    specificity: number; // 具体性
+    logic: number;       // 論理性
+    uniqueness: number;  // 独自性
+    readability: number; // 読みやすさ
+  };
+  goodPoints: string[];
+  improvementPoints: string[];
+  feedback: string;
+}
 
 export type InteractiveActivityData =
   | InteractiveModuleDataMap[keyof InteractiveModuleDataMap]

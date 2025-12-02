@@ -3,6 +3,7 @@
 import AppLayout from '@/components/layouts/AppLayout';
 import Badge from '@/components/ui/Badge';
 import { User, Award, Zap, BookOpen } from 'lucide-react';
+import AIAptitudeResults from '@/components/profile/AIAptitudeResults';
 
 export default function ProfilePage() {
     return (
@@ -60,7 +61,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Career Candidates */}
-            <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm mb-20 lg:mb-10">
+            <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm mb-8">
                 <div className="mb-4 flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-gray-700" />
                     <h3 className="font-bold text-gray-900">キャリア候補</h3>
@@ -80,6 +81,59 @@ export default function ProfilePage() {
                     </li>
                 </ul>
             </div>
+
+            {/* AI Aptitude Results */}
+            <div className="mb-20 lg:mb-10">
+                <AIAptitudeResults data={mockAIAptitudeData} />
+            </div>
         </AppLayout>
     );
 }
+
+const mockAIAptitudeData = {
+    suitableOccupations: ['プロジェクトマネージャー', '経営企画職', '組織開発コンサルタント'],
+    suitableCulture: '成果主義と自律性を重視し、チームワークと継続的改善を推奨する組織文化',
+    overallEvaluation: [
+        { label: '前に踏み出す力（アクション）', value: 20, fullMark: 20 },
+        { label: '考え抜く力（シンキング）', value: 18, fullMark: 18 },
+        { label: 'チームで働く力（チームワーク）', value: 25, fullMark: 25 },
+        { label: '自己マネジメント力（セルフコントロール）', value: 19, fullMark: 20 },
+        { label: 'キャリア志向・価値観', value: 18, fullMark: 18 },
+    ],
+    competencyRadar: [
+        { label: '主体性', value: 5, fullMark: 5 },
+        { label: '働きかけ力', value: 5, fullMark: 5 },
+        { label: '実行力', value: 5, fullMark: 5 },
+        { label: '課題発見力', value: 5, fullMark: 5 },
+        { label: '計画力', value: 4, fullMark: 5 },
+        { label: '創造力', value: 3, fullMark: 5 },
+        { label: '発信力', value: 5, fullMark: 5 },
+        { label: '傾聴力', value: 5, fullMark: 5 },
+        { label: '柔軟性', value: 5, fullMark: 5 },
+        { label: '情況把握力', value: 5, fullMark: 5 },
+        { label: '規律性', value: 5, fullMark: 5 },
+        { label: 'ストレスコントロール力', value: 4, fullMark: 5 },
+    ],
+    valuesRadar: [
+        { label: 'ストレスコントロール力', value: 4, fullMark: 5 },
+        { label: '自己管理力', value: 5, fullMark: 5 },
+        { label: '情緒安定性', value: 5, fullMark: 5 },
+        { label: 'ワークライフバランス志向', value: 3, fullMark: 5 },
+        { label: '社会貢献志向', value: 4, fullMark: 5 },
+    ],
+    detailedAptitude: {
+        strengths: {
+            title: 'チーム全体を巻き込みながら目標達成に向けて主体的に行動すること',
+            description: '自ら課題を発見し改善提案を実行できる。困難な状況でも冷静さを保ち、周囲を巻き込んで協力体制を構築し、粘り強く目標を達成する能力に優れている。',
+        },
+        weaknesses: {
+            title: '専門的な技術知識やデータ分析への深い関心',
+            description: '技術的スキルやデータドリブンな分析への取り組みをさらに強化することで、より説得力のある意思決定が可能になります。',
+        },
+        suitableJobs: 'プロジェクトマネージャー 事業開発職',
+        suitableWorkStyle: '裁量権が大きく、複数のステークホルダーと協働しながら戦略的に推進できる環境',
+        unsuitableJobs: 'データサイエンティスト システムエンジニア',
+        unsuitableWorkStyle: '専門的な技術知識やデータ分析への深い関心',
+    },
+    aiComment: 'あなたは社会人基礎コンピテンシーにおいて、特にチームワーク領域で満点の評価を獲得しており、発信力・傾聴力・柔軟性・情況把握力・規律性のすべてで高い適性を示しています。これは、組織内で信頼される協働者として機能できることを意味します。加えて、主体性と実行力も高く、自ら課題を発見して改善を推進する姿勢が強いことが特徴です。 自己基盤においても、情緒安定性と自己管理力が優れており、プレッシャー下でも冷静に判断できる適性があります。キャリア成長志向も高く、長期的な目標を持って一貫して行動する傾向が見られます。一方、職業適性の技術志向やクリエイティブ力の項目では、特定の強い指向性が見られないため、これらの領域を必須とする職種よりも、人間関係構築と戦略的思考を活かせる職種が適合します。 推奨職種としては、プロジェクトマネージャーや経営企画職、組織開発コンサルタントなど、複数の関係者を調整しながら目標達成を推進する職種が最適です。これらの職種では、あなたの主体性、チームワーク能力、冷静な判断力が大きな強みとなります。今後は、データ分析やシステム思考をさらに磨くことで、より戦略的な意思決定ができるようになり、キャリアの幅が広がるでしょう。',
+};
