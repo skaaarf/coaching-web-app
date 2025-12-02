@@ -162,4 +162,15 @@ export const modules: Module[] = [
         activityIds: ['e1-time-audit', 'e2-small-steps', 'e3-self-intro', 'e4-contact-msg', 'e5-reflection'],
         progress: 0,
     },
+    {
+        id: 'mod-es-builder',
+        title: 'ES質問リスト（AIコーチ）',
+        duration: '自由',
+        summary: 'AIと対話してESを作成。',
+        description: 'AIコーチからの質問に答えるだけで、自己PRやガクチカなどのES回答が完成するインタラクティブツール。',
+        emoji: '🤖',
+        activityIds: [],
+        progress: 0,
+        link: '/interactive/es-builder',
+    },
 ];

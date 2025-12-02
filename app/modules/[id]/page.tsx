@@ -114,7 +114,7 @@ export default function ModuleDetailPage() {
                                 {similarModules.map((simModule) => (
                                     <div
                                         key={simModule.id}
-                                        onClick={() => router.push(`/modules/${simModule.id}`)}
+                                        onClick={() => router.push(simModule.link || `/modules/${simModule.id}`)}
                                         className="group cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm transition-all hover:shadow-md"
                                     >
                                         <div className="relative h-32 w-full bg-gray-100">

@@ -277,6 +277,9 @@ ${answers[activeQuestionId].text}
         setTypingStatus(prev => ({ ...prev, [currentQuestionId]: true }));
 
         // Call real API
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s client timeout
+
         try {
             const response = await fetch('/api/es-builder', {
                 method: 'POST',
@@ -293,33 +296,27 @@ ${answers[activeQuestionId].text}
                         description: activeQuestion?.description || '',
                     }
                 }),
+                signal: controller.signal,
             });
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('API Error Response:', errorText);
-                let errorData;
-                try {
-                    errorData = JSON.parse(errorText);
-                } catch (e) {
-                    errorData = { error: `API request failed: ${response.status} ${response.statusText}`, details: errorText };
-                }
-                throw new Error(errorData.error || `API request failed: ${response.status}`);
+                throw new Error(`API request failed: ${response.status}`);
             }
 
-            const data = await response.json();
-
-            // Handle draft reflection
-            if (data.draftContent) {
-                handleUpdateAnswer(data.draftContent);
+            if (!response.body) {
+                throw new Error('No response body');
             }
 
+            // Create placeholder message
+            const aiMsgId = crypto.randomUUID();
             const aiMsg: ChatMessage = {
-                id: crypto.randomUUID(),
+                id: aiMsgId,
                 role: 'assistant',
-                content: data.message,
-                draftContent: data.draftContent || undefined,
-                suggestedShortcuts: data.suggestedShortcuts,
+                content: '',
                 timestamp: Date.now(),
             };
 
@@ -331,13 +328,57 @@ ${answers[activeQuestionId].text}
                 }
             }));
 
-        } catch (error) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulatedContent = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                accumulatedContent += chunk;
+
+                // Parse for draft content separator
+                const separator = '---DRAFT_START---';
+                const parts = accumulatedContent.split(separator);
+                const messageContent = parts[0].trim();
+                const draftContent = parts.length > 1 ? parts[1].trim() : undefined;
+
+                setChatSessions(prev => {
+                    const session = prev[currentQuestionId];
+                    const messages = session.messages.map(m =>
+                        m.id === aiMsgId
+                            ? { ...m, content: messageContent, draftContent: draftContent }
+                            : m
+                    );
+                    return {
+                        ...prev,
+                        [currentQuestionId]: {
+                            ...session,
+                            messages,
+                        }
+                    };
+                });
+            }
+
+            // Final update to ensure everything is clean
+            // Check for shortcuts (simple heuristic or just omit for now since we stream text)
+            // If we really want shortcuts, we can ask AI to output them in a specific format too, but let's skip for now to ensure speed.
+
+        } catch (error: any) {
             console.error('Failed to get AI response:', error);
+
+            let errorMessage = '申し訳ありません。エラーが発生しました。もう一度お試しください。';
+            if (error.name === 'AbortError') {
+                errorMessage = '通信がタイムアウトしました。しばらく待ってからもう一度お試しください。';
+            }
+
             // Fallback error message
             const errorMsg: ChatMessage = {
                 id: crypto.randomUUID(),
                 role: 'assistant',
-                content: '申し訳ありません。エラーが発生しました。もう一度お試しください。',
+                content: errorMessage,
                 timestamp: Date.now(),
             };
             setChatSessions(prev => ({

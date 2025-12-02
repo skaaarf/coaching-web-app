@@ -13,7 +13,9 @@
     "vercel-build": "next build --webpack"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.76",
     "@vercel/analytics": "^1.5.0",
+    "ai": "^5.0.106",
     "firebase": "^12.6.0",
     "firebase-admin": "^12.6.0",
     "lucide-react": "^0.555.0",

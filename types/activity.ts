@@ -50,4 +50,5 @@ export interface Module {
     progress: number;
     level?: string;
     imageUrl?: string;
+    link?: string;
 }

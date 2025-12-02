@@ -73,7 +73,7 @@ export default function Home() {
                     <Badge variant="secondary">{module.duration}</Badge>
                   </div>
                 }
-                onClick={() => router.push(`/modules/${module.id}`)}
+                onClick={() => router.push(module.link || `/modules/${module.id}`)}
               />
             </div>
           ))}
