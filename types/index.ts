@@ -241,6 +241,7 @@ export interface EsBuilderData {
   answers: Record<string, EsAnswer>;
   chatSessions: Record<string, EsChatSession>;
   customQuestions?: EsQuestionTemplate[];
+  scoreResults?: Record<string, EsScoreResult>;
 }
 
 export interface EsScoreResult {

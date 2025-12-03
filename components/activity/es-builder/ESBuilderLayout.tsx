@@ -114,9 +114,78 @@ export default function ESBuilderLayout() {
     const [isScoring, setIsScoring] = useState<Record<string, boolean>>({});
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // ... (Load/Save effects remain same)
+    // Load data on mount
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const savedProgress = await getInteractiveModuleProgress('es-builder');
+                if (savedProgress && savedProgress.data) {
+                    // Extract EsBuilderData from InteractiveState
+                    // The data might be in 'activityData' (if phase is activity) or just 'data' depending on how it was saved
+                    // We will standardize on saving as { phase: 'activity', activityData: ... }
 
-    // ...
+                    const state = savedProgress.data as any; // Use any to safely check properties
+                    const data = (state.activityData || state.data) as EsBuilderData;
+
+                    if (data) {
+                        if (data.answers) setAnswers(data.answers);
+                        if (data.chatSessions) setChatSessions(data.chatSessions);
+                        if (data.scoreResults) setScoreResults(data.scoreResults);
+
+                        if (data.customQuestions && Array.isArray(data.customQuestions)) {
+                            // Merge custom questions with initial questions, avoiding duplicates
+                            const initialIds = new Set(INITIAL_QUESTIONS.map(q => q.id));
+                            const uniqueCustomQuestions = data.customQuestions.filter(q => !initialIds.has(q.id));
+                            setQuestions([...INITIAL_QUESTIONS, ...uniqueCustomQuestions]);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load ES Builder data:', error);
+            } finally {
+                setIsLoaded(true);
+            }
+        };
+        loadData();
+    }, []);
+
+    // Save data on change
+    useEffect(() => {
+        if (!isLoaded) return;
+
+        const saveData = async () => {
+            const customQuestions = questions.filter(q => !INITIAL_QUESTIONS.some(iq => iq.id === q.id));
+
+            const esData: EsBuilderData = {
+                answers,
+                chatSessions,
+                customQuestions,
+                scoreResults,
+            };
+
+            // Wrap in InteractiveModuleProgress structure
+            const progress: any = { // Use any to avoid strict type checking issues with InteractiveModuleProgress vs EsBuilderData mismatch if types aren't perfectly aligned
+                moduleId: 'es-builder',
+                sessionId: 'default-session',
+                data: {
+                    phase: 'activity',
+                    activityData: esData
+                },
+                createdAt: new Date(),
+                lastUpdated: new Date(),
+                completed: false,
+            };
+
+            try {
+                await saveInteractiveModuleProgress('es-builder', progress);
+            } catch (error) {
+                console.error('Failed to save ES Builder data:', error);
+            }
+        };
+
+        const timeoutId = setTimeout(saveData, 1000); // Debounce save
+        return () => clearTimeout(timeoutId);
+    }, [answers, chatSessions, questions, scoreResults, isLoaded]);
 
     const activeQuestion = questions.find(q => q.id === activeQuestionId) || questions[0];
     const activeAnswer = answers[activeQuestionId] || {
@@ -340,10 +409,18 @@ ${answers[activeQuestionId].text}
                 accumulatedContent += chunk;
 
                 // Parse for draft content separator
-                const separator = '---DRAFT_START---';
-                const parts = accumulatedContent.split(separator);
+                const startSeparator = '[[DRAFT_START]]';
+                const endSeparator = '[[DRAFT_END]]';
+
+                const parts = accumulatedContent.split(startSeparator);
                 const messageContent = parts[0].trim();
-                const draftContent = parts.length > 1 ? parts[1].trim() : undefined;
+
+                let draftContent: string | undefined = undefined;
+                if (parts.length > 1) {
+                    const draftPart = parts[1];
+                    const endParts = draftPart.split(endSeparator);
+                    draftContent = endParts[0].trim();
+                }
 
                 setChatSessions(prev => {
                     const session = prev[currentQuestionId];
@@ -360,6 +437,18 @@ ${answers[activeQuestionId].text}
                         }
                     };
                 });
+
+                if (draftContent) {
+                    setAnswers(prev => ({
+                        ...prev,
+                        [currentQuestionId]: {
+                            ...prev[currentQuestionId],
+                            text: draftContent,
+                            status: prev[currentQuestionId].status === 'not_started' ? 'drafting' : prev[currentQuestionId].status,
+                            updatedAt: new Date().toISOString(),
+                        }
+                    }));
+                }
             }
 
             // Final update to ensure everything is clean

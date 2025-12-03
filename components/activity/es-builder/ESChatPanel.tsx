@@ -87,7 +87,7 @@ export default function ESChatPanel({
                         </div>
                     )}
 
-                    {isTyping && (
+                    {isTyping && (!messages.length || messages[messages.length - 1].role !== 'assistant' || !messages[messages.length - 1].content) && (
                         <div className="flex justify-start">
                             <div className="rounded-lg bg-white p-3 shadow-sm ring-1 ring-gray-200">
                                 <div className="flex gap-1">

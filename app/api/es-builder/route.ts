@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
 
 【出力について】
 自然な会話形式で返答してください。
-ドラフトを作成する場合は、返答の後に「---DRAFT_START---」という区切り線を入れ、その後にドラフト文章を出力してください。
+ドラフトを作成する場合は、返答の後に「[[DRAFT_START]]」という区切り線を入れ、その後にドラフト文章を出力してください。
+ドラフト文章の最後には必ず「[[DRAFT_END]]」という区切り線を入れてください。
 `;
 
         console.log("Sending request to OpenAI...");
