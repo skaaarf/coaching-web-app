@@ -9,10 +9,12 @@ interface InlineOptionsProps {
 
 export default function InlineOptions({ options, onSelect, disabled }: InlineOptionsProps) {
     return (
-        <div className="w-full max-w-[90%]">
-            <div className="flex items-center gap-2 mb-3 text-gray-700">
-                <ListPlus className="w-5 h-5" />
-                <span className="font-bold text-lg">関連</span>
+        <div className="w-full max-w-[90%] animate-fade-in">
+            <div className="flex items-center gap-2 mb-4 text-gray-700">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <ListPlus className="w-4 h-4 text-blue-600" />
+                </div>
+                <span className="font-semibold text-base">選択してください</span>
             </div>
             <div className="flex flex-col gap-3 items-start">
                 {options.map((option) => (
@@ -20,7 +22,7 @@ export default function InlineOptions({ options, onSelect, disabled }: InlineOpt
                         key={option.value}
                         onClick={() => onSelect(option.value)}
                         disabled={disabled}
-                        className="w-fit max-w-full text-left px-6 py-3 rounded-full bg-white border border-gray-200 text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-pre-wrap"
+                        className="w-fit max-w-full text-left px-6 py-4 rounded-2xl bg-white border-2 border-blue-200 text-gray-900 hover:bg-blue-50 hover:border-blue-400 transition-all shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-pre-wrap font-medium text-base"
                     >
                         {option.label}
                     </button>

@@ -40,18 +40,18 @@ export default function TextInput({ placeholder, multiline, onSubmit, disabled }
 
     return (
         <div className="w-full">
-            <div className="group relative flex w-full flex-col gap-2 rounded-3xl border border-gray-200 bg-white p-2 shadow-lg transition-all focus-within:border-gray-300 focus-within:shadow-xl">
+            <div className="group relative flex w-full flex-col gap-2 rounded-2xl border-2 border-gray-300 bg-gray-50 p-3 shadow-md transition-all focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-lg">
 
                 {/* Input Area */}
-                <div className="relative flex items-end gap-2">
+                <div className="relative flex items-end gap-3">
                     {multiline ? (
                         <textarea
                             ref={textareaRef}
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder={placeholder || "質問してみましょう..."}
-                            className="max-h-40 min-h-[3rem] flex-1 resize-none border-0 bg-transparent py-3 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 disabled:text-gray-400"
+                            placeholder={placeholder || "メッセージを入力..."}
+                            className="max-h-40 min-h-[3rem] flex-1 resize-none border-0 bg-transparent py-3 px-2 text-gray-900 placeholder:text-gray-500 focus:ring-0 text-base leading-relaxed disabled:text-gray-400"
                             rows={1}
                             disabled={disabled}
                         />
@@ -61,8 +61,8 @@ export default function TextInput({ placeholder, multiline, onSubmit, disabled }
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder={placeholder || "質問してみましょう..."}
-                            className="flex-1 border-0 bg-transparent py-3 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 disabled:text-gray-400"
+                            placeholder={placeholder || "メッセージを入力..."}
+                            className="flex-1 border-0 bg-transparent py-3 px-2 text-gray-900 placeholder:text-gray-500 focus:ring-0 text-base disabled:text-gray-400"
                             disabled={disabled}
                         />
                     )}
@@ -70,7 +70,7 @@ export default function TextInput({ placeholder, multiline, onSubmit, disabled }
                     <button
                         onClick={handleSubmit}
                         disabled={!value.trim() || disabled}
-                        className="mb-1 mr-1 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900 text-white transition-all hover:bg-black disabled:bg-gray-200 disabled:cursor-not-allowed"
+                        className="mb-1 mr-1 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white transition-all hover:bg-blue-700 active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md"
                     >
                         <ArrowUp className="h-5 w-5" />
                     </button>

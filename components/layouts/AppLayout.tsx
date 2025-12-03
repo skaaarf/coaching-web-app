@@ -18,7 +18,7 @@ export default function AppLayout({
     chatContent,
 }: AppLayoutProps) {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen gradient-bg">
             {/* Desktop Sidebar */}
             {showNavigation && (
                 <div className="hidden lg:block">
@@ -35,7 +35,7 @@ export default function AppLayout({
 
             {/* Desktop Chat Sidebar (Right) */}
             {showChat && chatContent && (
-                <div className="hidden lg:block fixed right-0 top-0 z-40 h-screen w-96 border-l border-gray-200 bg-white shadow-lg">
+                <div className="hidden lg:block fixed right-0 top-0 z-40 h-screen w-96 bg-white border-l border-gray-200 shadow-lg">
                     {chatContent}
                 </div>
             )}

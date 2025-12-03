@@ -130,21 +130,24 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
     if (!currentStep) return <div>Loading...</div>;
 
     return (
-        <div className="flex h-screen flex-col bg-gray-50">
+        <div className="flex h-screen flex-col bg-gradient-to-b from-gray-50 to-blue-50/30">
             {/* Header */}
-            <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-4 border-b border-gray-200 bg-white/95 backdrop-blur-sm px-6 py-4 shadow-sm">
                 <button
                     onClick={() => router.back()}
-                    className="rounded-lg p-2 hover:bg-gray-100"
+                    className="rounded-xl p-2 hover:bg-gray-100 transition-colors"
                 >
                     <ArrowLeft className="h-5 w-5 text-gray-600" />
                 </button>
-                <h1 className="text-lg font-bold text-gray-900">{activity.title}</h1>
+                <div>
+                    <h1 className="text-xl font-bold text-gray-900">{activity.title}</h1>
+                    <p className="text-sm text-gray-600">{activity.emoji} {activity.duration}</p>
+                </div>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4">
-                <div className="mx-auto max-w-3xl space-y-8 pb-48">
+            <div className="flex-1 overflow-y-auto p-6">
+                <div className="mx-auto max-w-3xl space-y-6 pb-48">
                     {history.map((item, index) => (
                         <div
                             key={index}
@@ -154,19 +157,20 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                             {item.type === 'mikata' ? (
                                 <ChatBubble message={item.content} />
                             ) : item.type === 'summary' ? (
-                                <div className="w-full pl-12">
+                                <div className="w-full pl-16">
                                     <SummaryCard title={item.content.title} items={item.content.items} />
                                 </div>
                             ) : (
-                                <div className="max-w-[80%] rounded-2xl bg-white px-5 py-3 text-gray-900 shadow-sm ring-1 ring-gray-100 whitespace-pre-wrap leading-relaxed">
+                                <div className="max-w-[75%] rounded-2xl rounded-tr-md bg-gray-100 border border-gray-200 px-5 py-4 text-gray-900 shadow-sm whitespace-pre-wrap leading-relaxed text-base animate-fade-in">
                                     {item.content}
                                 </div>
                             )}
                         </div>
                     ))}
+
                     {/* Current Step Options (Inline) */}
                     {currentStep.options && currentStep.options.length > 0 && (
-                        <div className="flex w-full justify-start pl-12">
+                        <div className="flex w-full justify-start pl-16">
                             <InlineOptions
                                 options={currentStep.options}
                                 onSelect={(value) => {
@@ -177,30 +181,45 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                             />
                         </div>
                     )}
+
                     <div ref={bottomRef} />
                 </div>
             </div>
 
             {/* Input Area (Fixed Bottom) */}
-            <div className="fixed bottom-0 left-0 z-50 w-full bg-white/90 backdrop-blur-md pb-safe pt-4 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
-                <div className="mx-auto max-w-3xl px-4 pb-6 pointer-events-auto">
-                    {currentStep.type === 'text' && (
-                        <TextInput
-                            placeholder={currentStep.placeholder}
-                            multiline={currentStep.multiline}
-                            onSubmit={(value) => handleInputSubmit(value)}
-                            disabled={isProcessing}
-                        />
-                    )}
-                    {currentStep.type === 'multi-input' && currentStep.inputs && (
-                        <MultiInput
-                            inputs={currentStep.inputs}
-                            onSubmit={(values) => handleInputSubmit(values)}
-                            disabled={isProcessing}
-                        />
-                    )}
+            {!currentStep.options && (
+                <div className="fixed bottom-0 left-0 z-50 w-full bg-white/95 backdrop-blur-lg border-t border-gray-200 pb-safe pt-5 shadow-xl">
+                    <div className="mx-auto max-w-3xl px-6 pb-6 pointer-events-auto">
+                        {isProcessing && (
+                            <div className="mb-4 text-center text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-xl py-3 px-4">
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="flex space-x-1">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                    </div>
+                                    <span className="font-medium">AI進路くんが考えています...</span>
+                                </div>
+                            </div>
+                        )}
+                        {currentStep.type === 'text' && (
+                            <TextInput
+                                placeholder={currentStep.placeholder}
+                                multiline={currentStep.multiline}
+                                onSubmit={(value) => handleInputSubmit(value)}
+                                disabled={isProcessing}
+                            />
+                        )}
+                        {currentStep.type === 'multi-input' && currentStep.inputs && (
+                            <MultiInput
+                                inputs={currentStep.inputs}
+                                onSubmit={(values) => handleInputSubmit(values)}
+                                disabled={isProcessing}
+                            />
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

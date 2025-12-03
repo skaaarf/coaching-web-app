@@ -33,113 +33,131 @@ export default function ModuleDetailPage() {
 
     return (
         <AppLayout>
-            <div className="mx-auto max-w-6xl">
+            <div className="mx-auto max-w-7xl">
                 {/* Back Button */}
                 <button
                     onClick={() => router.back()}
-                    className="mb-6 flex items-center text-sm font-medium text-gray-500 hover:text-gray-900"
+                    className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                    <ArrowLeft className="mr-1 h-4 w-4" />
-                    Back
+                    <ArrowLeft className="h-4 w-4" />
+                    戻る
                 </button>
 
-                <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2">
-                        {/* Hero Section */}
-                        <div className="mb-8">
-                            <div className="relative mb-6 h-64 w-full overflow-hidden rounded-3xl bg-gray-100 sm:h-80">
-                                {module.imageUrl ? (
-                                    <Image
-                                        src={module.imageUrl}
-                                        alt={module.title}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <div className="flex h-full w-full items-center justify-center text-6xl">
-                                        {module.emoji || '📦'}
-                                    </div>
-                                )}
+                {/* Hero Section with Image */}
+                <div className="mb-10 overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-lg">
+                    <div className="relative h-72 w-full overflow-hidden bg-gradient-to-br from-blue-100 via-teal-50 to-blue-50 sm:h-96">
+                        {module.imageUrl ? (
+                            <Image
+                                src={module.imageUrl}
+                                alt={module.title}
+                                fill
+                                className="object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-full w-full items-center justify-center text-8xl">
+                                {module.emoji || '📦'}
                             </div>
-                            <h1 className="mb-4 text-3xl font-bold text-gray-900">{module.title}</h1>
-                            <p className="text-lg leading-relaxed text-gray-600">{module.description}</p>
+                        )}
+                    </div>
+                    <div className="p-8">
+                        <div className="mb-4 flex gap-3">
+                            <Badge variant="default">モジュール</Badge>
+                            <Badge variant="outline">
+                                <Clock className="mr-1 h-3 w-3 inline" />
+                                {module.duration}
+                            </Badge>
+                        </div>
+                        <h1 className="mb-4 text-4xl font-bold text-gray-900">{module.title}</h1>
+                        <p className="text-lg leading-relaxed text-gray-600 max-w-3xl">{module.description}</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
+                    {/* Main Content - Activities List */}
+                    <div className="lg:col-span-2">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">このモジュールのアクティビティ</h2>
+                                <p className="text-sm text-gray-600 mt-1">{moduleActivities.length}個のアクティビティ</p>
+                            </div>
                         </div>
 
-                        {/* Activities List */}
-                        <div>
-                            <h2 className="mb-6 text-xl font-bold text-gray-900">Activities in this Module</h2>
-                            <div className="space-y-4">
-                                {moduleActivities.map((activity, index) => (
-                                    <div
-                                        key={activity!.id}
-                                        id={`activity-card-${activity!.id}`}
-                                        onClick={() => router.push(`/activities/${activity!.id}`)}
-                                        className="group flex cursor-pointer gap-4 rounded-2xl bg-gray-50 p-5 transition-all hover:bg-white hover:shadow-md"
-                                    >
-                                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-white text-2xl shadow-sm group-hover:bg-primary/10">
-                                            {activity!.emoji || '📝'}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="mb-1 flex items-center gap-2">
-                                                <h3 className="font-bold text-gray-900 group-hover:text-primary">
+                        <div className="space-y-4">
+                            {moduleActivities.map((activity, index) => (
+                                <div
+                                    key={activity!.id}
+                                    id={`activity-card-${activity!.id}`}
+                                    onClick={() => router.push(`/activities/${activity!.id}`)}
+                                    className="group flex cursor-pointer gap-5 rounded-2xl bg-white border border-gray-200 p-6 transition-all hover:border-blue-300 hover:shadow-lg hover:-translate-y-1"
+                                >
+                                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 text-3xl group-hover:scale-110 transition-transform">
+                                        {activity!.emoji || '📝'}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="mb-2 flex items-start justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                                                    {index + 1}
+                                                </span>
+                                                <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
                                                     {activity!.title}
                                                 </h3>
                                             </div>
-                                            <div className="mb-2 flex items-center gap-2">
-                                                <Badge variant="secondary" className="text-xs">
-                                                    {activity!.duration}
-                                                </Badge>
-                                            </div>
-                                            <p className="text-sm text-gray-600 line-clamp-2">
-                                                {activity!.description}
-                                            </p>
                                         </div>
-                                        <div className="flex items-center self-center">
-                                            <div className="rounded-full bg-white p-2 text-gray-400 shadow-sm group-hover:text-primary">
-                                                <PlayCircle className="h-5 w-5" />
-                                            </div>
+                                        <div className="mb-3 flex items-center gap-2">
+                                            <Badge variant="secondary" className="text-xs">
+                                                <Clock className="mr-1 h-3 w-3 inline" />
+                                                {activity!.duration}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                                            {activity!.description}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center self-center">
+                                        <div className="rounded-full bg-blue-50 p-3 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                            <PlayCircle className="h-6 w-6" />
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="space-y-8">
+                    {/* Sidebar - Similar Modules */}
+                    <div className="space-y-6">
                         <div>
-                            <h3 className="mb-4 text-lg font-bold text-orange-500">Similar modules</h3>
+                            <h3 className="mb-4 text-xl font-bold text-gray-900">関連モジュール</h3>
                             <div className="space-y-4">
                                 {similarModules.map((simModule) => (
                                     <div
                                         key={simModule.id}
                                         onClick={() => router.push(simModule.link || `/modules/${simModule.id}`)}
-                                        className="group cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm transition-all hover:shadow-md"
+                                        className="group cursor-pointer overflow-hidden rounded-2xl bg-white border border-gray-200 transition-all hover:border-blue-300 hover:shadow-lg"
                                     >
-                                        <div className="relative h-32 w-full bg-gray-100">
+                                        <div className="relative h-40 w-full bg-gradient-to-br from-blue-50 to-teal-50">
                                             {simModule.imageUrl ? (
                                                 <Image
                                                     src={simModule.imageUrl}
                                                     alt={simModule.title}
                                                     fill
-                                                    className="object-cover"
+                                                    className="object-cover group-hover:scale-105 transition-transform"
                                                 />
                                             ) : (
-                                                <div className="flex h-full w-full items-center justify-center text-4xl">
+                                                <div className="flex h-full w-full items-center justify-center text-5xl">
                                                     {simModule.emoji}
                                                 </div>
                                             )}
                                         </div>
                                         <div className="p-4">
                                             <div className="mb-2 flex gap-2">
-                                                <Badge variant="accent" className="text-xs">Module</Badge>
-                                                <Badge variant="secondary" className="text-xs">{simModule.duration}</Badge>
+                                                <Badge variant="default" className="text-xs">モジュール</Badge>
+                                                <Badge variant="outline" className="text-xs">{simModule.duration}</Badge>
                                             </div>
-                                            <h4 className="mb-1 font-bold text-gray-900 line-clamp-2 group-hover:text-primary">
+                                            <h4 className="mb-2 font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
                                                 {simModule.title}
                                             </h4>
-                                            <p className="text-xs text-gray-500 line-clamp-3">
+                                            <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
                                                 {simModule.description}
                                             </p>
                                         </div>
