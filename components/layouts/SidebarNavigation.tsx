@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Clock, User, Settings, HelpCircle } from 'lucide-react';
+import { Home, Search, Clock, User, Settings, HelpCircle, ListChecks } from 'lucide-react';
 import Image from 'next/image';
 
 export default function SidebarNavigation() {
@@ -10,10 +10,9 @@ export default function SidebarNavigation() {
 
     const navItems = [
         { name: 'ホーム', href: '/', icon: Home },
-        { name: '探す', href: '/activities', icon: Search },
-        { name: '履歴', href: '/history', icon: Clock },
+        { name: 'アクティビティ', href: '/activities', icon: ListChecks },
+        { name: 'ES質問ビルダー', href: '/interactive/es-builder', icon: Search },
         { name: 'マイページ', href: '/profile', icon: User },
-        { name: 'ES質問ビルダー', href: '/interactive/es-builder', icon: Search }, // Added ES Builder
     ];
 
     const bottomItems = [

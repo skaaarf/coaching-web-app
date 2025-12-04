@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -40,10 +41,14 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-surface: var(--surface);
 
-  --font-sans: "Inter", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+  --font-sans: "Noto Sans JP", "Inter", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
     "Helvetica Neue", Arial, sans-serif;
   --font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
+}
+
+body {
+  font-family: var(--font-sans);
 }
 
 /* 親しみやすいカードスタイル */
