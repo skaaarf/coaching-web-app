@@ -6,114 +6,60 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import { activities, modules } from '@/data/activities';
 import { useCareerData } from '@/hooks/useCareerData';
-import Link from 'next/link';
+
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
   const { lastActiveItem } = useCareerData();
 
+  // MVP: Only show the single module and its activities
+  const mainModule = modules[0];
+  const moduleActivities = mainModule.activityIds.map(id => activities[id]).filter(Boolean);
+
   return (
     <AppLayout>
       <WelcomeHeader />
 
-      {/* Pick up where you left off */}
-      {lastActiveItem && (
-        <section className="mb-12">
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">続きから</h2>
-            <Link href="/history" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1">
-              すべて見る
-              <span className="text-lg">→</span>
-            </Link>
-          </div>
+      {/* Main Module Section */}
+      <section className="mb-12">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">自分を知る</h2>
+          <p className="text-sm text-gray-600 mt-1">就活に必要な自己分析はこれだけでOK</p>
+        </div>
+
+        <div className="mb-8">
           <Card
             variant="horizontal"
-            title={lastActiveItem.title}
-            description={lastActiveItem.summary}
-            imageUrl={lastActiveItem.imageUrl}
-            emoji={lastActiveItem.emoji}
+            title={mainModule.title}
+            description={mainModule.description}
+            imageUrl={mainModule.imageUrl}
+            emoji={mainModule.emoji}
             tags={
               <div className="flex gap-2">
                 <Badge variant="accent">モジュール</Badge>
-                <Badge variant="secondary">{lastActiveItem.duration}</Badge>
+                <Badge variant="secondary">{mainModule.duration}</Badge>
               </div>
             }
-            footer={
-              <div className="w-full rounded-full bg-gray-200 h-2 mt-3">
-                <div
-                  className="bg-gradient-to-r from-blue-600 to-teal-500 h-2 rounded-full transition-all"
-                  style={{ width: `${lastActiveItem.progress}%` }}
-                />
-              </div>
-            }
-            onClick={() => console.log('Resume module', lastActiveItem.id)}
+            onClick={() => { }} // No specific action for module card itself in this view, or maybe scroll to activities
           />
-        </section>
-      )}
+        </div>
 
-      {/* Recommended Modules */}
-      <section className="mb-12">
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">おすすめのモジュール</h2>
-            <p className="text-sm text-gray-600 mt-1">体系的に学べるコース</p>
-          </div>
-          <Link href="/activities?tab=modules" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1">
-            すべて見る
-            <span className="text-lg">→</span>
-          </Link>
-        </div>
-        <div className="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-          {modules.map((module) => (
-            <div key={module.id} className="w-80 flex-shrink-0">
-              <Card
-                title={module.title}
-                description={module.summary}
-                imageUrl={module.imageUrl}
-                emoji={module.emoji}
-                tags={
-                  <div className="flex gap-2">
-                    <Badge variant="default">モジュール</Badge>
-                    <Badge variant="outline">{module.duration}</Badge>
-                  </div>
-                }
-                onClick={() => router.push(module.link || `/modules/${module.id}`)}
-              />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Recommended Activities */}
-      <section className="mb-20 lg:mb-10">
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">おすすめのアクティビティ</h2>
-            <p className="text-sm text-gray-600 mt-1">すぐに始められる短時間学習</p>
-          </div>
-          <Link href="/activities" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1">
-            すべて見る
-            <span className="text-lg">→</span>
-          </Link>
-        </div>
-        <div className="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-          {Object.values(activities).map((activity) => (
-            <div key={activity.id} className="w-80 flex-shrink-0">
-              <Card
-                title={activity.title}
-                description={activity.summary}
-                imageUrl={activity.imageUrl}
-                emoji={activity.emoji}
-                tags={
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">アクティビティ</Badge>
-                    <Badge variant="outline">{activity.duration}</Badge>
-                  </div>
-                }
-                onClick={() => router.push(`/activities/${activity.id}`)}
-              />
-            </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {moduleActivities.map((activity, index) => (
+            <Card
+              key={activity.id}
+              title={activity.title}
+              description={activity.summary || 'チャットで深掘り'}
+              emoji={activity.emoji}
+              tags={
+                <div className="flex gap-2">
+                  <Badge variant="default">STEP {index + 1}</Badge>
+                  <Badge variant="outline">{activity.duration || '5-10分'}</Badge>
+                </div>
+              }
+              onClick={() => router.push(`/activities/${activity.id}`)}
+            />
           ))}
         </div>
       </section>

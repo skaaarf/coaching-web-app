@@ -1,12 +1,8 @@
 import { ProfileAnalysisData } from '@/types/profile';
 import { BarChart3 } from 'lucide-react';
-import CareerTypeCard from './CareerTypeCard';
 import StrengthsList from './StrengthsList';
 import ValuesCompatibility from './ValuesCompatibility';
-import CareerVision from './CareerVision';
 import IndustryMatch from './IndustryMatch';
-import AIComment from './AIComment';
-import UpdateHistory from './UpdateHistory';
 
 interface AnalysisResultsProps {
   data: ProfileAnalysisData;
@@ -29,26 +25,14 @@ export default function AnalysisResults({ data }: AnalysisResultsProps) {
         </p>
       </div>
 
-      {/* 1. キャリアタイプカード */}
-      <CareerTypeCard data={data.careerType} />
-
-      {/* 2. 強み（詳細版） */}
+      {/* 1. 強み（詳細版） */}
       <StrengthsList data={data.strengths} />
 
-      {/* 4. 価値観+働き方の相性 */}
+      {/* 2. 価値観 */}
       <ValuesCompatibility data={data.valuesCompatibility} />
 
-      {/* 5. キャリアビジョン */}
-      <CareerVision data={data.careerVision} />
-
-      {/* 6. 向いている業界・職種 */}
+      {/* 3. 向いている業界・職種 */}
       <IndustryMatch data={data.industryMatch} />
-
-      {/* 7. AI総合コメント */}
-      <AIComment data={data.aiComment} />
-
-      {/* 8. 更新履歴 */}
-      <UpdateHistory data={data.updateHistory} />
     </div>
   );
 }

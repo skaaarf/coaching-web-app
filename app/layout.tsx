@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import SessionProvider from "@/components/SessionProvider";
-import { DataMigration } from "@/components/DataMigration";
+
 import AnalyticsInit from "@/components/AnalyticsInit";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -52,12 +51,9 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <body className="antialiased font-sans" suppressHydrationWarning>
-        <SessionProvider>
-          <AnalyticsInit />
-          <DataMigration />
-          {children}
-          <Analytics />
-        </SessionProvider>
+        <AnalyticsInit />
+        {children}
+        <Analytics />
       </body>
     </html>
   );

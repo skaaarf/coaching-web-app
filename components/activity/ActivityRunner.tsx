@@ -7,6 +7,7 @@ import InlineOptions from './ui/InlineOptions';
 import TextInput from './ui/TextInput';
 import MultiInput from './ui/MultiInput';
 import SummaryCard from './ui/SummaryCard';
+import RealTimeAnalysisPanel from './ui/RealTimeAnalysisPanel';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -93,6 +94,7 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
 
     const handleInputSubmit = async (value: any, label?: string) => {
         setIsProcessing(true); // Disable input immediately
+        setDynamicOptions(null); // Clear options immediately
 
         // Add user's answer to history (if it's not a silent update)
         if (label) {
@@ -121,6 +123,9 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                     content: typeof value === 'string' ? value : JSON.stringify(value),
                 });
 
+                // Add placeholder for AI response
+                setHistory((prev) => [...prev, { type: 'mikata', content: '' }]);
+
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -131,26 +136,59 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                 });
 
                 if (!response.ok) throw new Error('API request failed');
+                if (!response.body) throw new Error('No response body');
 
-                const data = await response.json();
-                const aiMessage = data.message;
-                const suggestions = data.suggested_replies;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let done = false;
+                let accumulatedText = '';
 
-                if (aiMessage && typeof aiMessage === 'string' && aiMessage.trim().length > 0) {
-                    setHistory((prev) => [...prev, { type: 'mikata', content: aiMessage }]);
-                } else {
-                    // Fallback client-side if API returns empty for some reason
-                    setHistory((prev) => [...prev, { type: 'mikata', content: '（考え中...）' }]);
+                while (!done) {
+                    const { value, done: doneReading } = await reader.read();
+                    done = doneReading;
+                    const chunkValue = decoder.decode(value, { stream: !done });
+                    accumulatedText += chunkValue;
+
+                    // Update the last message (AI's message) with accumulated text
+                    // We need to filter out the suggestions block for display
+                    const displayText = accumulatedText.replace(/\[\[SUGGESTIONS:.*?\]\]/s, '').trim();
+
+                    setHistory((prev) => {
+                        const newHistory = [...prev];
+                        const lastIndex = newHistory.length - 1;
+                        if (newHistory[lastIndex].type === 'mikata') {
+                            newHistory[lastIndex] = { ...newHistory[lastIndex], content: displayText };
+                        }
+                        return newHistory;
+                    });
                 }
 
-                if (suggestions && Array.isArray(suggestions)) {
-                    setDynamicOptions(suggestions);
+                // Parse suggestions from the full text
+                const suggestionsMatch = accumulatedText.match(/\[\[SUGGESTIONS:\s*(.*?)\]\]/s);
+                if (suggestionsMatch && suggestionsMatch[1]) {
+                    try {
+                        const suggestionsArray = JSON.parse(suggestionsMatch[1]);
+                        if (Array.isArray(suggestionsArray)) {
+                            setDynamicOptions(suggestionsArray.map(s => ({ label: s, value: s })));
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse suggestions:', e);
+                        setDynamicOptions([]);
+                    }
                 } else {
-                    setDynamicOptions([]); // Clear options if none returned
+                    setDynamicOptions([]);
                 }
+
             } catch (error) {
                 console.error('Chat API Error:', error);
-                setHistory((prev) => [...prev, { type: 'mikata', content: 'すみません、少し調子が悪いようです。もう一度試してみてください。' }]);
+                setHistory((prev) => {
+                    // Remove the empty placeholder if error occurred immediately, or append error message
+                    const newHistory = [...prev];
+                    if (newHistory.length > 0 && newHistory[newHistory.length - 1].content === '') {
+                        newHistory[newHistory.length - 1].content = 'すみません、少し調子が悪いようです。もう一度試してみてください。';
+                    }
+                    return newHistory;
+                });
             } finally {
                 setIsProcessing(false);
             }
@@ -196,58 +234,57 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                     <h1 className="text-xl font-bold text-gray-900">{activity.title}</h1>
                     <p className="text-sm text-gray-600">{activity.emoji} {activity.duration}</p>
                 </div>
-                {activity.mode === 'dynamic_chat' && (
-                    <button
-                        onClick={() => onComplete(answers)}
-                        className="ml-auto rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
-                    >
-                        診断を終了する
-                    </button>
-                )}
+
             </div>
 
-            {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-6">
-                <div className="mx-auto max-w-3xl space-y-6 pb-48">
-                    {history.map((item, index) => (
-                        <div
-                            key={index}
-                            className={`flex w-full ${item.type === 'user' ? 'justify-end' : 'justify-start'
-                                }`}
-                        >
-                            {item.type === 'mikata' ? (
-                                <ChatBubble message={item.content} />
-                            ) : item.type === 'summary' ? (
-                                <div className="w-full pl-16">
-                                    <SummaryCard title={item.content.title} items={item.content.items} />
-                                </div>
-                            ) : (
-                                <div className="max-w-[75%] rounded-2xl rounded-tr-md bg-gray-100 border border-gray-200 px-5 py-4 text-gray-900 shadow-sm whitespace-pre-wrap leading-relaxed text-base animate-fade-in">
-                                    {item.content}
-                                </div>
-                            )}
-                        </div>
-                    ))}
+            {/* Main Content Area (Flex) */}
+            <div className="flex flex-1 overflow-hidden">
+                {/* Chat Area */}
+                <div className="flex-1 overflow-y-auto p-6">
+                    <div className="mx-auto max-w-3xl space-y-6 pb-48">
+                        {history.map((item, index) => (
+                            <div
+                                key={index}
+                                className={`flex w-full ${item.type === 'user' ? 'justify-end' : 'justify-start'
+                                    }`}
+                            >
+                                {item.type === 'mikata' ? (
+                                    <ChatBubble message={item.content} />
+                                ) : item.type === 'summary' ? (
+                                    <div className="w-full pl-16">
+                                        <SummaryCard title={item.content.title} items={item.content.items} />
+                                    </div>
+                                ) : (
+                                    <div className="max-w-[75%] rounded-2xl rounded-tr-md bg-gray-100 border border-gray-200 px-5 py-4 text-gray-900 shadow-sm whitespace-pre-wrap leading-relaxed text-base animate-fade-in">
+                                        {item.content}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
 
 
 
-                    {/* Current Step Options (Inline) */}
-                    {/* Show dynamic options if available, otherwise show static options (only if no dynamic options have been set yet) */}
-                    {(dynamicOptions || currentStep.options) && (dynamicOptions || currentStep.options)!.length > 0 && (
-                        <div className="flex w-full justify-start pl-16">
-                            <InlineOptions
-                                options={dynamicOptions || currentStep.options!}
-                                onSelect={(value) => {
-                                    const label = (dynamicOptions || currentStep.options)?.find(o => o.value === value)?.label || value;
-                                    handleOptionSelect(value, label);
-                                }}
-                                disabled={isProcessing}
-                            />
-                        </div>
-                    )}
+                        {/* Current Step Options (Inline) */}
+                        {/* Show dynamic options if available, otherwise show static options (only if no dynamic options have been set yet) */}
+                        {(dynamicOptions || currentStep.options) && (dynamicOptions || currentStep.options)!.length > 0 && (
+                            <div className="flex w-full justify-start pl-16">
+                                <InlineOptions
+                                    options={dynamicOptions || currentStep.options!}
+                                    onSelect={(value) => {
+                                        const label = (dynamicOptions || currentStep.options)?.find(o => o.value === value)?.label || value;
+                                        handleOptionSelect(value, label);
+                                    }}
+                                    disabled={isProcessing}
+                                />
+                            </div>
+                        )}
 
-                    <div ref={bottomRef} />
+                        <div ref={bottomRef} />
+                    </div>
                 </div>
+
+                {/* Real-time Analysis Panel (Sidebar) */}
+                <RealTimeAnalysisPanel activity={activity} stepCount={history.length} />
             </div>
 
             {/* Input Area (Fixed Bottom) */}
