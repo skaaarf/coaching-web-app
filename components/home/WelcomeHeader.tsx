@@ -1,16 +1,52 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import Link from 'next/link';
+import { Search, Sparkles } from 'lucide-react';
 
-export default function WelcomeHeader() {
+interface WelcomeHeaderProps {
+    title?: string;
+    subtitle?: string;
+    variantLabel?: string;
+    switchHref?: string;
+    switchLabel?: string;
+}
+
+export default function WelcomeHeader({
+    title = 'ようこそ、凌太朗さん 👋',
+    subtitle = '今日も一歩ずつキャリアを前進させましょう',
+    variantLabel,
+    switchHref,
+    switchLabel,
+}: WelcomeHeaderProps) {
     return (
         <div className="mb-10">
-            <h1 className="mb-2 text-3xl font-bold text-gray-900 sm:text-4xl">
-                ようこそ、凌太朗さん 👋
-            </h1>
-            <p className="mb-6 text-gray-600 text-lg">
-                今日も一歩ずつキャリアを前進させましょう
-            </p>
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        {variantLabel && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 border border-blue-200">
+                                <Sparkles className="h-4 w-4" />
+                                {variantLabel}
+                            </span>
+                        )}
+                    </div>
+                    <h1 className="mb-2 text-3xl font-bold text-gray-900 sm:text-4xl">
+                        {title}
+                    </h1>
+                    <p className="mb-6 text-gray-600 text-lg">
+                        {subtitle}
+                    </p>
+                </div>
+                {switchHref && switchLabel && (
+                    <Link
+                        href={switchHref}
+                        className="hidden sm:inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                        <Sparkles className="h-4 w-4 text-amber-500" />
+                        {switchLabel}
+                    </Link>
+                )}
+            </div>
 
             <div className="relative max-w-2xl">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">

@@ -16,6 +16,7 @@ import { a1_negative_values } from './activities/m2_value_discovery/a1_negative_
 
 import { a4_praise_strength } from './activities/m1_strength_discovery/a4_praise_strength';
 import { a5_role_model } from './activities/m2_value_discovery/a5_role_model';
+import { a6_recent_concerns } from './activities/m1_strength_discovery/a6_recent_concerns';
 
 export const activities: Record<string, ActivityDefinition> = {
     'a1-immersion': a1_immersion,
@@ -23,6 +24,7 @@ export const activities: Record<string, ActivityDefinition> = {
     'a2-excitement': a2_excitement,
     'a4-praise-strength': a4_praise_strength,
     'a5-role-model': a5_role_model,
+    'a6-recent-concerns': a6_recent_concerns,
 };
 
 export const modules: Module[] = [
@@ -33,7 +35,14 @@ export const modules: Module[] = [
         summary: '自己分析の決定版',
         description: '強み、価値観、キャリア志向。就活に必要な「自己分析」がこれ1つで完結します。',
         emoji: '💎',
-        activityIds: ['a1-immersion', 'a1-negative-values', 'a2-excitement', 'a4-praise-strength', 'a5-role-model'],
+        activityIds: [
+            'a1-immersion',
+            'a1-negative-values',
+            'a2-excitement',
+            'a4-praise-strength',
+            'a5-role-model',
+            'a6-recent-concerns',
+        ],
         progress: 0,
     },
 ];

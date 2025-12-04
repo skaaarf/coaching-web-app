@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Clock, User, MessageCircle } from 'lucide-react';
+import { Home, Search, Clock, User, MessageCircle, GraduationCap } from 'lucide-react';
 
 export default function BottomNavigation() {
     const pathname = usePathname();
 
     const navItems = [
         { name: 'ホーム', href: '/', icon: Home },
+        { name: '高校生版', href: '/highschool', icon: GraduationCap },
         { name: 'マイページ', href: '/profile', icon: User },
     ];
 

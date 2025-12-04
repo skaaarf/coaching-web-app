@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Clock, User, Settings, HelpCircle, ListChecks } from 'lucide-react';
+import { Home, Search, Clock, User, Settings, HelpCircle, ListChecks, GraduationCap } from 'lucide-react';
 import Image from 'next/image';
 
 export default function SidebarNavigation() {
@@ -11,6 +11,7 @@ export default function SidebarNavigation() {
     const navItems = [
         { name: 'ホーム', href: '/', icon: Home },
         { name: 'アクティビティ', href: '/activities', icon: ListChecks },
+        { name: '高校生版', href: '/highschool', icon: GraduationCap },
         { name: 'ES質問ビルダー', href: '/interactive/es-builder', icon: Search },
         { name: 'マイページ', href: '/profile', icon: User },
     ];
