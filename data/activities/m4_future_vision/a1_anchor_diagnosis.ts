@@ -1,0 +1,142 @@
+import { ActivityDefinition } from '@/types/activity';
+
+export const a1_anchor_diagnosis: ActivityDefinition = {
+    id: 'a1-anchor-diagnosis',
+    title: 'キャリア・アンカー診断',
+    style: 'chat',
+    initialStepId: 'intro',
+    steps: {
+        intro: {
+            id: 'intro',
+            type: 'message_only',
+            message: 'これから20問程度の質問をします。\n「非常にそう思う」〜「全くそう思わない」の5段階で答えてください。',
+            nextStepId: 'q1',
+        },
+        q1: {
+            id: 'q1',
+            type: 'button',
+            message: 'Q1. 新しいプロジェクトを0から立ち上げることに魅力を感じる',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'q2' },
+                { label: 'そう思う', value: '4', nextStepId: 'q2' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'q2' },
+                { label: 'そう思わない', value: '2', nextStepId: 'q2' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'q2' },
+            ],
+        },
+        q2: {
+            id: 'q2',
+            type: 'button',
+            message: 'Q2. リスクを取ってでも、新しいことに挑戦したい',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'q3' },
+                { label: 'そう思う', value: '4', nextStepId: 'q3' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'q3' },
+                { label: 'そう思わない', value: '2', nextStepId: 'q3' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'q3' },
+            ],
+        },
+        q3: {
+            id: 'q3',
+            type: 'button',
+            message: 'Q3. 自分の裁量で、自由に仕事を進めたい',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'q4' },
+                { label: 'そう思う', value: '4', nextStepId: 'q4' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'q4' },
+                { label: 'そう思わない', value: '2', nextStepId: 'q4' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'q4' },
+            ],
+        },
+        q4: {
+            id: 'q4',
+            type: 'button',
+            message: 'Q4. 指示されるよりも、自分で判断したい',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'q5' },
+                { label: 'そう思う', value: '4', nextStepId: 'q5' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'q5' },
+                { label: 'そう思わない', value: '2', nextStepId: 'q5' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'q5' },
+            ],
+        },
+        q5: {
+            id: 'q5',
+            type: 'button',
+            message: 'Q5. 自分の専門性を高めて、その道のプロになりたい',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'q6' },
+                { label: 'そう思う', value: '4', nextStepId: 'q6' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'q6' },
+                { label: 'そう思わない', value: '2', nextStepId: 'q6' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'q6' },
+            ],
+        },
+        q6: {
+            id: 'q6',
+            type: 'button',
+            message: 'Q6. 専門知識を深めることに喜びを感じる',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'q7' },
+                { label: 'そう思う', value: '4', nextStepId: 'q7' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'q7' },
+                { label: 'そう思わない', value: '2', nextStepId: 'q7' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'q7' },
+            ],
+        },
+        q7: {
+            id: 'q7',
+            type: 'button',
+            message: 'Q7. 将来は経営に関わりたい',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'q8' },
+                { label: 'そう思う', value: '4', nextStepId: 'q8' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'q8' },
+                { label: 'そう思わない', value: '2', nextStepId: 'q8' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'q8' },
+            ],
+        },
+        q8: {
+            id: 'q8',
+            type: 'button',
+            message: 'Q8. 組織を率いて、大きな責任を持ちたい',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'q9' },
+                { label: 'そう思う', value: '4', nextStepId: 'q9' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'q9' },
+                { label: 'そう思わない', value: '2', nextStepId: 'q9' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'q9' },
+            ],
+        },
+        q9: {
+            id: 'q9',
+            type: 'button',
+            message: 'Q9. 安定した雇用が何より大切',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'q10' },
+                { label: 'そう思う', value: '4', nextStepId: 'q10' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'q10' },
+                { label: 'そう思わない', value: '2', nextStepId: 'q10' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'q10' },
+            ],
+        },
+        q10: {
+            id: 'q10',
+            type: 'button',
+            message: 'Q10. 長く働ける会社を選びたい',
+            options: [
+                { label: '非常にそう思う', value: '5', nextStepId: 'analysis' },
+                { label: 'そう思う', value: '4', nextStepId: 'analysis' },
+                { label: 'どちらでもない', value: '3', nextStepId: 'analysis' },
+                { label: 'そう思わない', value: '2', nextStepId: 'analysis' },
+                { label: '全くそう思わない', value: '1', nextStepId: 'analysis' },
+            ],
+        },
+        analysis: {
+            id: 'analysis',
+            type: 'message_only',
+            message: 'お疲れ様でした！\n\nあなたのキャリア・アンカーTop3（暫定）：\n1位：起業家的創造性\n2位：自律・独立\n3位：純粋な挑戦\n\n新しいことを始めるのが好きなようですね。',
+            isFinal: true,
+        },
+    },
+};

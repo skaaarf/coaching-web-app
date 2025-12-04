@@ -13,6 +13,7 @@ export default function SidebarNavigation() {
         { name: '探す', href: '/activities', icon: Search },
         { name: '履歴', href: '/history', icon: Clock },
         { name: 'マイページ', href: '/profile', icon: User },
+        { name: 'ES質問ビルダー', href: '/interactive/es-builder', icon: Search }, // Added ES Builder
     ];
 
     const bottomItems = [

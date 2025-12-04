@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ActivityDefinition, ActivityStep } from '@/types/activity';
+import { ActivityDefinition, ActivityStep, Option } from '@/types/activity';
 import ChatBubble from './ui/ChatBubble';
 import InlineOptions from './ui/InlineOptions';
 import TextInput from './ui/TextInput';
@@ -26,6 +26,7 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [answers, setAnswers] = useState<Record<string, any>>({});
     const [isProcessing, setIsProcessing] = useState(false);
+    const [dynamicOptions, setDynamicOptions] = useState<Option[] | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
 
     const currentStep = activity.steps[currentStepId];
@@ -37,11 +38,13 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
         if (currentStep && lastProcessedStepId.current !== currentStepId) {
             lastProcessedStepId.current = currentStepId;
             setIsProcessing(false); // Re-enable input when new step loads
+            setDynamicOptions(null); // Reset dynamic options on new step
 
             setHistory((prev) => [
                 ...prev,
                 { type: 'mikata', content: currentStep.message },
             ]);
+            // ... (rest of useEffect)
 
             // If it's a summary step, add the summary card to history immediately
             if (currentStep.type === 'summary' && currentStep.summaryContent) {
@@ -88,7 +91,7 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
         }
     }, [currentStep, answers, onComplete]);
 
-    const handleInputSubmit = (value: any, label?: string) => {
+    const handleInputSubmit = async (value: any, label?: string) => {
         setIsProcessing(true); // Disable input immediately
 
         // Add user's answer to history (if it's not a silent update)
@@ -104,7 +107,57 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
         // Save answer
         setAnswers((prev) => ({ ...prev, [currentStepId]: value }));
 
-        // Move to next step
+        // Dynamic Chat Mode Logic
+        if (activity.mode === 'dynamic_chat') {
+            try {
+                // Prepare messages for API
+                const messages = history.map(h => ({
+                    role: h.type === 'user' ? 'user' : 'assistant',
+                    content: typeof h.content === 'string' ? h.content : JSON.stringify(h.content),
+                }));
+                // Add current user message
+                messages.push({
+                    role: 'user',
+                    content: typeof value === 'string' ? value : JSON.stringify(value),
+                });
+
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages,
+                        systemPrompt: activity.systemPrompt,
+                    }),
+                });
+
+                if (!response.ok) throw new Error('API request failed');
+
+                const data = await response.json();
+                const aiMessage = data.message;
+                const suggestions = data.suggested_replies;
+
+                if (aiMessage && typeof aiMessage === 'string' && aiMessage.trim().length > 0) {
+                    setHistory((prev) => [...prev, { type: 'mikata', content: aiMessage }]);
+                } else {
+                    // Fallback client-side if API returns empty for some reason
+                    setHistory((prev) => [...prev, { type: 'mikata', content: '（考え中...）' }]);
+                }
+
+                if (suggestions && Array.isArray(suggestions)) {
+                    setDynamicOptions(suggestions);
+                } else {
+                    setDynamicOptions([]); // Clear options if none returned
+                }
+            } catch (error) {
+                console.error('Chat API Error:', error);
+                setHistory((prev) => [...prev, { type: 'mikata', content: 'すみません、少し調子が悪いようです。もう一度試してみてください。' }]);
+            } finally {
+                setIsProcessing(false);
+            }
+            return; // Stop here for dynamic chat
+        }
+
+        // Static Mode: Move to next step
         const nextId = currentStep.nextStepId;
         if (nextId) {
             setTimeout(() => setCurrentStepId(nextId), 500);
@@ -143,6 +196,14 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                     <h1 className="text-xl font-bold text-gray-900">{activity.title}</h1>
                     <p className="text-sm text-gray-600">{activity.emoji} {activity.duration}</p>
                 </div>
+                {activity.mode === 'dynamic_chat' && (
+                    <button
+                        onClick={() => onComplete(answers)}
+                        className="ml-auto rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                    >
+                        診断を終了する
+                    </button>
+                )}
             </div>
 
             {/* Chat Area */}
@@ -168,13 +229,16 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
                         </div>
                     ))}
 
+
+
                     {/* Current Step Options (Inline) */}
-                    {currentStep.options && currentStep.options.length > 0 && (
+                    {/* Show dynamic options if available, otherwise show static options (only if no dynamic options have been set yet) */}
+                    {(dynamicOptions || currentStep.options) && (dynamicOptions || currentStep.options)!.length > 0 && (
                         <div className="flex w-full justify-start pl-16">
                             <InlineOptions
-                                options={currentStep.options}
+                                options={dynamicOptions || currentStep.options!}
                                 onSelect={(value) => {
-                                    const label = currentStep.options?.find(o => o.value === value)?.label || value;
+                                    const label = (dynamicOptions || currentStep.options)?.find(o => o.value === value)?.label || value;
                                     handleOptionSelect(value, label);
                                 }}
                                 disabled={isProcessing}
@@ -187,7 +251,7 @@ export default function ActivityRunner({ activity, onComplete }: ActivityRunnerP
             </div>
 
             {/* Input Area (Fixed Bottom) */}
-            {!currentStep.options && (
+            {(currentStep.type === 'text' || currentStep.type === 'multi-input') && (
                 <div className="fixed bottom-0 left-0 z-50 w-full bg-white/95 backdrop-blur-lg border-t border-gray-200 pb-safe pt-5 shadow-xl">
                     <div className="mx-auto max-w-3xl px-6 pb-6 pointer-events-auto">
                         {isProcessing && (

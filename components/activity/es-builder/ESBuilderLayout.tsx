@@ -5,7 +5,7 @@ import { EsQuestionTemplate, EsAnswer, EsChatSession, ChatMessage, EsStatus, EsS
 import QuestionSidebar from './QuestionSidebar';
 import ESChatPanel from './ESChatPanel';
 import ESEditorPanel from './ESEditorPanel';
-import { Menu, X, ArrowLeft } from 'lucide-react';
+import { Menu, X, ArrowLeft, Home } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { saveInteractiveModuleProgress, getInteractiveModuleProgress } from '@/lib/storage-unified';
 import { EsBuilderData } from '@/types';
@@ -484,7 +484,19 @@ ${answers[activeQuestionId].text}
 
     return (
         <div className="flex h-screen flex-col bg-gray-50">
-            {/* ... (Top Bar) ... */}
+            <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => router.push('/')}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                        <Home className="h-4 w-4" />
+                        <span>ホームに戻る</span>
+                    </button>
+                    <div className="h-6 w-px bg-gray-200" />
+                    <h1 className="text-lg font-bold text-gray-800">ES質問ビルダー</h1>
+                </div>
+            </header>
 
             {/* Main Content (3-pane) */}
             <div className="flex flex-1 overflow-hidden">

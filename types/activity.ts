@@ -34,9 +34,11 @@ export interface ActivityDefinition {
     description?: string;
     emoji?: string;
     duration?: string;
-    imageUrl?: string;
     category?: string;
     tags?: string[];
+    // Dynamic Chat Mode
+    mode?: 'static' | 'dynamic_chat';
+    systemPrompt?: string;
 }
 
 export interface Module {

@@ -17,13 +17,13 @@ export async function POST(request: NextRequest) {
       .find((msg: { role: string }) => msg.role === "user")?.content;
     const fallbackReply = () => {
       const summary = lastUserMessage
-        ? `「${lastUserMessage.slice(0, 60)}」について考えています。`
-        : "さっきの話の続きですね。";
-      return `${summary}\n\nいまの気持ちをもう少し教えてくれる？具体的な場面やきっかけがあると、一緒に整理しやすいよ。`;
+        ? `「${lastUserMessage}」ですね。`
+        : "なるほど。";
+      return `${summary}\n\nそれについて、もう少し詳しく教えてもらえますか？具体的なエピソードなどがあれば、ぜひ聞かせてください。`;
     };
 
     if (!apiKey) {
-      return NextResponse.json({ message: fallbackReply() });
+      return NextResponse.json({ message: fallbackReply(), suggested_replies: [] });
     }
 
     // Use provided systemPrompt or fall back to default
@@ -56,9 +56,23 @@ export async function POST(request: NextRequest) {
 
 常に日本語で応答し、ユーザーの発言を短く要約したうえで、キャリアに関する具体的な観点を一つ提案し、その観点を深掘りする1〜2つの問いかけで締めてください。`;
 
-    const finalSystemPrompt = systemPrompt || defaultSystemPrompt;
+    const finalSystemPrompt = (systemPrompt || defaultSystemPrompt) + `
+    
+    # 出力フォーマット（JSON推奨）
+    可能であれば以下のJSON形式で出力してください。
+    {
+      "message": "AIからの返信メッセージ（改行コード\\nを含むテキスト）",
+      "suggested_replies": [
+        { "label": "ユーザーが返しそうな短い言葉1", "value": "ユーザーが返しそうな短い言葉1" },
+        { "label": "ユーザーが返しそうな短い言葉2", "value": "ユーザーが返しそうな短い言葉2" },
+        { "label": "ユーザーが返しそうな短い言葉3", "value": "ユーザーが返しそうな短い言葉3" }
+      ]
+    }
+    suggested_repliesは、ユーザーがワンタップで返信できるような、短くて自然な選択肢を3つ提案してください。
+    JSON形式での出力が難しい場合は、通常のテキストで返信してください。`;
 
     let assistantMessage: string | null = null;
+    let suggestedReplies: any[] = [];
 
     try {
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -77,13 +91,34 @@ export async function POST(request: NextRequest) {
             })),
           ],
           temperature: 0.7,
-          max_tokens: 350,
+          max_tokens: 450,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        assistantMessage = data.choices?.[0]?.message?.content || null;
+        const content = data.choices?.[0]?.message?.content || null;
+        if (content) {
+          try {
+            const parsed = JSON.parse(content);
+            // Ensure message exists and is not empty
+            if (parsed.message && typeof parsed.message === 'string' && parsed.message.trim().length > 0) {
+              assistantMessage = parsed.message;
+              suggestedReplies = parsed.suggested_replies || [];
+            } else {
+              // JSON valid but message missing/empty
+              console.warn("JSON parsed but message missing or empty:", parsed);
+              assistantMessage = null;
+            }
+          } catch (e) {
+            console.error("Failed to parse JSON response", e);
+            // If JSON parsing fails, it might be raw text (though we asked for JSON)
+            // Or it might be broken JSON.
+            // Let's try to use content as message if it looks like text, 
+            // but if we asked for JSON, it might include ```json ... ```
+            assistantMessage = content.replace(/```json\n?|\n?```/g, '').trim();
+          }
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.warn("OpenAI responded with error status", response.status, errorData);
@@ -93,11 +128,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!assistantMessage) {
-      // Fallback response to keep UX smooth when OpenAI/network is unavailable
-      return NextResponse.json({ message: fallbackReply() });
+      // Fallback response to keep UX smooth when OpenAI/network is unavailable or returns bad data
+      return NextResponse.json({
+        message: fallbackReply(),
+        suggested_replies: []
+      });
     }
 
-    return NextResponse.json({ message: assistantMessage });
+    return NextResponse.json({ message: assistantMessage, suggested_replies: suggestedReplies });
   } catch (error) {
     console.error("Error calling OpenAI API:", error);
     return NextResponse.json(

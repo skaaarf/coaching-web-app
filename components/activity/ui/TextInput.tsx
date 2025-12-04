@@ -50,7 +50,7 @@ export default function TextInput({ placeholder, multiline, onSubmit, disabled }
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder={placeholder || "メッセージを入力..."}
+                            placeholder={placeholder ?? "メッセージを入力..."}
                             className="max-h-40 min-h-[3rem] flex-1 resize-none border-0 bg-transparent py-3 px-2 text-gray-900 placeholder:text-gray-500 focus:ring-0 text-base leading-relaxed disabled:text-gray-400"
                             rows={1}
                             disabled={disabled}
@@ -61,7 +61,7 @@ export default function TextInput({ placeholder, multiline, onSubmit, disabled }
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder={placeholder || "メッセージを入力..."}
+                            placeholder={placeholder ?? "メッセージを入力..."}
                             className="flex-1 border-0 bg-transparent py-3 px-2 text-gray-900 placeholder:text-gray-500 focus:ring-0 text-base disabled:text-gray-400"
                             disabled={disabled}
                         />
