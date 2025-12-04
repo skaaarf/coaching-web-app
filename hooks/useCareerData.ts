@@ -3,22 +3,56 @@
 import { useState, useEffect } from 'react';
 import { activities, modules } from '@/data/activities';
 import { ActivityDefinition, Module } from '@/types/activity';
+import { ProfileAnalysisData } from '@/types/profile';
+
+interface HistoryItem {
+    type: 'mikata' | 'user' | 'summary';
+    content: string | any;
+}
 
 interface CareerDataState {
     completedActivityIds: string[];
     inProgressModuleIds: string[];
     moduleProgress: Record<string, number>; // moduleId -> progress (0-100)
+    answers: Record<string, any>; // activityId -> stepId -> answer
+    chatHistory: Record<string, HistoryItem[]>; // activityId -> history
+    profileAnalysis: ProfileAnalysisData | null;
 }
 
+const STORAGE_KEY = 'career_app_data_v1';
+
+const INITIAL_STATE: CareerDataState = {
+    completedActivityIds: [],
+    inProgressModuleIds: [],
+    moduleProgress: {},
+    answers: {},
+    chatHistory: {},
+    profileAnalysis: null,
+};
+
 export function useCareerData() {
-    // Initialize with some mock data
-    const [state, setState] = useState<CareerDataState>({
-        completedActivityIds: ['act-1'],
-        inProgressModuleIds: ['mod-1'],
-        moduleProgress: {
-            'mod-1': 30,
-        },
-    });
+    const [state, setState] = useState<CareerDataState>(INITIAL_STATE);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    // Load from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                setState(JSON.parse(saved));
+            } catch (e) {
+                console.error('Failed to parse saved data', e);
+            }
+        }
+        setIsLoaded(true);
+    }, []);
+
+    // Save to localStorage on change
+    useEffect(() => {
+        if (isLoaded) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+    }, [state, isLoaded]);
 
     const getModule = (id: string) => modules.find((m) => m.id === id);
     const getActivity = (id: string) => activities[id];
@@ -55,6 +89,51 @@ export function useCareerData() {
         }));
     };
 
+    const saveActivityProgress = (activityId: string, history: HistoryItem[], answers: any) => {
+        setState((prev) => ({
+            ...prev,
+            chatHistory: {
+                ...prev.chatHistory,
+                [activityId]: history,
+            },
+            answers: {
+                ...prev.answers,
+                [activityId]: answers,
+            },
+        }));
+    };
+
+    const saveProfileAnalysis = (data: ProfileAnalysisData) => {
+        setState((prev) => ({
+            ...prev,
+            profileAnalysis: data,
+        }));
+    };
+
+    const clearData = () => {
+        setState(INITIAL_STATE);
+        localStorage.removeItem(STORAGE_KEY);
+    };
+
+    const clearActivityData = (activityId: string) => {
+        setState((prev) => {
+            const newHistory = { ...prev.chatHistory };
+            delete newHistory[activityId];
+
+            const newAnswers = { ...prev.answers };
+            delete newAnswers[activityId];
+
+            const newCompletedIds = prev.completedActivityIds.filter(id => id !== activityId);
+
+            return {
+                ...prev,
+                chatHistory: newHistory,
+                answers: newAnswers,
+                completedActivityIds: newCompletedIds,
+            };
+        });
+    };
+
     // Derived state
     const inProgressModules = state.inProgressModuleIds
         .map((id) => {
@@ -71,11 +150,16 @@ export function useCareerData() {
 
     return {
         state,
+        isLoaded,
         inProgressModules,
         completedActivities,
         lastActiveItem,
         startModule,
         completeActivity,
         updateModuleProgress,
+        saveActivityProgress,
+        saveProfileAnalysis,
+        clearData,
+        clearActivityData,
     };
 }
