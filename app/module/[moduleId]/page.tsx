@@ -115,6 +115,7 @@ export default function ModulePage() {
 
       if (progress && progress.messages.length > 0) {
         setMessages(progress.messages);
+        setIsLoading(false);
       } else {
         // Start new conversation with AI's greeting
         // Generate new sessionId if not provided
