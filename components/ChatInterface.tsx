@@ -32,10 +32,17 @@ export default function ChatInterface({
   const olderMessages = messages.length > 2 ? messages.slice(0, -2) : [];
   const latestMessages = messages.length > 2 ? messages.slice(-2) : messages;
 
+  // Scroll to bottom helper with slight delay for mobile keyboard adjustments
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100);
+  };
+
   // Fetch suggested questions based on conversation
   useEffect(() => {
     // Scroll to bottom whenever messages or loading state changes
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom();
   }, [messages, isLoading]);
 
   useEffect(() => {
@@ -81,7 +88,7 @@ export default function ChatInterface({
   useEffect(() => {
     // Scroll to bottom when suggestions are updated
     if (suggestedQuestions.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      scrollToBottom();
     }
   }, [suggestedQuestions]);
 
@@ -102,6 +109,8 @@ export default function ChatInterface({
 
     const userInput = input;
     setInput('');
+    // Trigger scroll immediately after send
+    scrollToBottom();
     await onSendMessage(userInput);
   };
 
@@ -127,6 +136,8 @@ export default function ChatInterface({
     if (suggestedQuestions.length > 0) {
       setSuggestedQuestions([]);
     }
+    // Ensure latest messages are visible when keyboard opens
+    scrollToBottom();
   };
 
   const renderMessage = (message: Message, index: number) => {
